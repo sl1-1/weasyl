@@ -121,7 +121,7 @@ def create(userid, character, friends, tags, thumbfile, submitfile):
         image.make_cover(
             tempthumb, files.make_resource(userid, charid, "char/.thumb"))
 
-    thumbnail.create(userid, 0, 0, 0, 0, charid=charid, remove=False)
+    thumbnail.create(0, 0, 0, 0, charid=charid, remove=False)
 
     # Create notifications
     welcome.character_insert(userid, charid, rating=character.rating.code,
@@ -355,7 +355,7 @@ def select_list(userid, rating, limit, otherid=None, backid=None, nextid=None):
 
 
 def edit(userid, character, friends_only):
-    query = define.execute("SELECT userid, settings FROM character WHERE charid = %i",
+    query = define.engine.execute("SELECT userid, settings FROM character WHERE charid = %i",
                            [character.charid], options="single")
 
     if not query or "h" in query[1]:
@@ -369,26 +369,28 @@ def edit(userid, character, friends_only):
     profile.check_user_rating_allowed(userid, character.rating)
 
     # Assign settings
-    settings = [query[1].replace("f", "")]
-    settings.append("f" if friends_only else "")
-    settings = "".join(settings)
+    settings = query[1].replace("f", "")
 
-    if "f" in settings:
+    if friends_only:
+        settings += "f"
         welcome.character_remove(character.charid)
 
-    define.engine.execute("""
-        UPDATE character
-          SET (char_name, age, gender,
-               height, weight, species,
-               content, rating, settings) =
-            (%(char_name)s, %(age)s, %(gender)s,
-            %(height)s, %(weight)s, %(species)s,
-            %(content)s, %(rating)s, %(settings)s)
-        WHERE charid = %(charid)s
-    """, char_name=character.char_name, age=character.age, gender=character.gender, height=character.height,
-                          weight=character.weight, species=character.species, content=character.content,
-                          rating=character.rating.code, settings=settings, charid=character.charid,
-                          )
+    ch = define.meta.tables["character"]
+    define.engine.execute(
+        ch.update()
+        .where(ch.c.charid == character.charid)
+        .values({
+            'char_name': character.char_name,
+            'age': character.age,
+            'gender': character.gender,
+            'height': character.height,
+            'weight': character.weight,
+            'species': character.species,
+            'content': character.content,
+            'rating': character.rating,
+            'settings': settings,
+        })
+    )
 
     if userid != query[0]:
         from weasyl import moderation

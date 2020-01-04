@@ -98,91 +98,35 @@ def log_exc(**kwargs):
     return get_current_request().log_exc(**kwargs)
 
 
-def execute(statement, argv=None, options=None):
+def execute(statement, argv=None):
     """
     Executes an SQL statement; if `statement` represents a SELECT or RETURNING
-    statement, the query results will be returned. Note that 'argv' and `options`
-    need not be lists if they would have contained only one element.
+    statement, the query results will be returned.
     """
     db = connect()
 
-    if argv is None:
-        argv = list()
-
-    if options is None:
-        options = list()
-
-    if argv and not isinstance(argv, list):
-        argv = [argv]
-
-    if options and not isinstance(options, list):
-        options = [options]
-
     if argv:
-        statement %= tuple([_sql_escape(i) for i in argv])
+        argv = tuple(argv)
+
+        for x in argv:
+            if type(x) not in (int, long):
+                raise TypeError("can't use %r as define.execute() parameter" % (x,))
+
+        statement %= argv
+
     query = db.connection().execute(statement)
 
     if statement.lstrip()[:6] == "SELECT" or " RETURNING " in statement:
-        query = query.fetchall()
-
-        if "list" in options or "zero" in options:
-            query = [list(i) for i in query]
-
-        if "zero" in options:
-            for i in range(len(query)):
-                for j in range(len(query[i])):
-                    if query[i][j] is None:
-                        query[i][j] = 0
-
-        if "bool" in options:
-            return query and query[0][0]
-        elif "within" in options:
-            return [x[0] for x in query]
-        elif "single" in options:
-            return query[0] if query else list()
-        elif "element" in options:
-            return query[0][0] if query else list()
-
-        return query
+        return query.fetchall()
     else:
         query.close()
 
 
-def _quote_string(s):
-    # NB: psycopg2/psycopg2cffi would otherwise return `quoted` as a bytes object. Decode it back to a string.
-    # There's probably a Very Good Reason(TM) why, but I am not seeing it.
-    quoted = QuotedString(s).getquoted().decode("utf-8")
-    assert quoted[0] == quoted[-1] == "'"
-    return quoted[1:-1].replace('%', '%%')
-
-
-def _sql_escape(target):
+def column(results):
     """
-    SQL-escapes `target`; pg_escape_string is used if `target` is a string or
-    unicode object, else the integer equivalent is returned.
+    Get a list of values from a single-column ResultProxy.
     """
-    if isinstance(target, str):
-        # Escape string (unicode)
-        return _quote_string(target)
-    else:
-        # Escape integer
-        try:
-            return int(target)
-        except:
-            return 0
-
-
-def sql_number_list(target):
-    """
-    Returns a list of numbers suitable for placement after the SQL IN operator in
-    a query statement, as in "(1, 2, 3)".
-    """
-    if not target:
-        raise ValueError
-    elif not isinstance(target, list):
-        target = [target]
-
-    return "(%s)" % (", ".join(["%d" % (i,) for i in target]))
+    return [x for x, in results]
 
 
 _PG_SERIALIZATION_FAILURE = '40001'
@@ -507,12 +451,15 @@ def get_display_name(userid):
 
 
 def get_int(target):
+    if target is None:
+        return 0
+
     if isinstance(target, numbers.Number):
         return int(target)
 
     try:
         return int("".join(i for i in target if i.isdigit()))
-    except:
+    except ValueError:
         return 0
 
 
@@ -625,10 +572,6 @@ def text_fix_url(target):
     return "http://" + target
 
 
-def text_bool(target, default=False):
-    return target.lower().strip() == "true" or default and target == ""
-
-
 def local_arrow(dt):
     tz = get_current_request().weasyl_session.timezone
     return arrow.Arrow.fromdatetime(tz.localtime(dt))
@@ -675,8 +618,8 @@ def convert_unixdate(day, month, year):
 
     try:
         ret = int(time.mktime(datetime.date(year, month, day).timetuple()))
-    except:
-        return
+    except ValueError:
+        return None
     # range of a postgres integer
     if ret > 2147483647 or ret < -2147483648:
         return None
