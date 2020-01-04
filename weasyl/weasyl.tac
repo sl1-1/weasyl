@@ -98,7 +98,7 @@ cache.region.configure(
     arguments=dict(
         reactor=reactor,
         url=d.config_read_setting(
-            'servers', 'tcp:127.0.0.1:11211', 'memcached').split(),
+            'servers', 'tcp:memcached:11211', 'memcached').split(),
         retryDelay=10,
         timeOut=0.4,
     ),
