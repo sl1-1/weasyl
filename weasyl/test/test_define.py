@@ -10,7 +10,7 @@ from weasyl import define as d
 
 
 def l2dl(l, k='k'):
-    "For list2dictlist."
+    """For list2dictlist."""
     return [{k: x} for x in l]
 
 

@@ -4,7 +4,7 @@
 
 
 class ConfigOption(object):
-    "A class representing options for ``Config``."
+    """A class representing options for ``Config``."""
 
     def __init__(self, name, value_map):
         self.name = name

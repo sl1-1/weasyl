@@ -53,7 +53,8 @@ def clear_thumbnail(userid, submitid):
         case, revisit this logic.
 
     Args:
-        userid: The userid requesting this operation. Used for permission checking.
+        :param userid: The userid requesting this operation. Used for permission checking.
+        :param submitid: The ID of the submission to check permission on.
 
     Returns:
         None

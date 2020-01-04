@@ -35,7 +35,7 @@ def average(data):
 
 class WeasylRequest(Request):
     def getClientIP(self):
-        "If there's an X-Forwarded-For, treat that as the client IP."
+        """If there's an X-Forwarded-For, treat that as the client IP."""
         forwarded_for = self.getHeader('x-forwarded-for')
         if forwarded_for is not None:
             return forwarded_for
@@ -70,7 +70,7 @@ class WeasylSite(Site):
         self._activeRequests = set()
 
     def log(self, request):
-        "Do nothing but increment the request count; we don't need request logging."
+        """Do nothing but increment the request count; we don't need request logging."""
         self.requestCount += 1
         if self.metrics:
             self.metrics.increment('requests')
@@ -80,7 +80,7 @@ class WeasylSite(Site):
                 self.metrics.increment('errors')
 
     def readRequestCount(self):
-        "Return and reset the request count, request error percentage, and maximum active client count."
+        """Return and reset the request count, request error percentage, and maximum active client count."""
         errorPercentage = 0.0
         if self.requestCount:
             errorPercentage = self.errorCount / self.requestCount * 100
@@ -90,12 +90,12 @@ class WeasylSite(Site):
         return ret
 
     def readRequestLengths(self):
-        "Return and reset the request lengths."
+        """Return and reset the request lengths."""
         ret, self.requestLengths = self.requestLengths, []
         return ret
 
     def getResourceFor(self, request):
-        "Fetch a resource and measure the time until it's finished writing."
+        """Fetch a resource and measure the time until it's finished writing."""
         resource = Site.getResourceFor(self, request)
         now = time.time()
         request.requestHeaders.addRawHeader('X-Request-Started-At', '%0.8f' % now)
@@ -109,18 +109,18 @@ class WeasylSite(Site):
         self._activeRequests.discard(request)
 
     def gotClient(self):
-        "A new client has connected."
+        """A new client has connected."""
         self.activeClients += 1
         self.mostActiveClients = max(self.mostActiveClients, self.activeClients)
 
     def lostClient(self):
-        "A client has disconnected."
+        """A client has disconnected."""
         self.activeClients -= 1
         if not self.activeClients and self._clientsStoppedDeferred:
             self._clientsStoppedDeferred.callback(None)
 
     def gracefullyStopActiveClients(self):
-        "Returns a Deferred that fires when all clients have disconnected."
+        """Returns a Deferred that fires when all clients have disconnected."""
         if not self.activeClients:
             return defer.succeed(None)
         for request in self._activeRequests:
@@ -130,19 +130,19 @@ class WeasylSite(Site):
 
 
 class TryChildrenBeforeLeaf(Resource):
-    "A Resource given a leaf resource tried after all of the put children."
+    """A Resource given a leaf resource tried after all of the put children."""
 
     def __init__(self, leaf):
         Resource.__init__(self)
         self.leaf = leaf
 
     def getChild(self, child, request):
-        "getChildWithDefault failed, so delegate to our leaf."
+        """getChildWithDefault failed, so delegate to our leaf."""
         request.postpath.insert(0, request.prepath.pop())
         return self.leaf
 
     def render(self, request):
-        "Delegate requests to the root to the leaf as well."
+        """Delegate requests to the root to the leaf as well."""
         return self.leaf.render(request)
 
 
@@ -180,7 +180,7 @@ def rewriteNonlocalImages(request):
 
 
 class FetchRequestStats(amp.Command):
-    "A command to request request statistics from a running weasyl backend."
+    """A command to request request statistics from a running weasyl backend."""
     arguments = []
     response = [
         (b'requestCount', amp.Integer()),
@@ -190,7 +190,7 @@ class FetchRequestStats(amp.Command):
 
 
 class FetchRequestLengthStats(amp.Command):
-    "A command to request request length statistics from a running weasyl backend."
+    """A command to request request length statistics from a running weasyl backend."""
     arguments = [
         (b'percentiles', amp.ListOf(amp.Integer())),
         (b'lengths', amp.ListOf(amp.Float())),
@@ -202,7 +202,7 @@ class FetchRequestLengthStats(amp.Command):
 
 
 class FetchRequestBreakdownStats(amp.Command):
-    "A command to request request breakdown statistics from a running weasyl backend."
+    """A command to request request breakdown statistics from a running weasyl backend."""
     arguments = [
         (b'percentiles', amp.ListOf(amp.Integer())),
     ]
@@ -220,7 +220,7 @@ class FetchRequestBreakdownStats(amp.Command):
 
 
 class FetchThreadPoolStats(amp.Command):
-    "A command to request thread pool statistics from a running weasyl backend."
+    """A command to request thread pool statistics from a running weasyl backend."""
     arguments = []
     response = [
         (b'threadsWaiting', amp.Integer()),
@@ -281,11 +281,11 @@ class WeasylSiteStats(amp.AMP):
         )
 
     def makeConnection(self, transport):
-        "Upcall to avoid noisy logging messages on connection open."
+        """Upcall to avoid noisy logging messages on connection open."""
         amp.BinaryBoxProtocol.makeConnection(self, transport)
 
     def connectionLost(self, reason):
-        "Upcall to avoid noisy logging messages on connection close."
+        """Upcall to avoid noisy logging messages on connection close."""
         amp.BinaryBoxProtocol.connectionLost(self, reason)
         self.transport = None
 

@@ -544,15 +544,14 @@ def edit_email_password(userid, username, password, newemail, newemailcheck,
     to the user's target email with a token which, if used, finalizes the email address change.
 
     Parameters:
-        userid: The `userid` of the Weasyl account to modify.
-        username: User-entered username for password-based authentication.
-        password: The user's current plaintext password.
-        newemail: If changing the email on the account, the new email address. Optional.
-        newemailcheck: A verification field for the above to serve as a typo-check. Optional,
-        but mandatory if `newemail` provided.
-        newpassword: If changing the password, the user's new password. Optional.
-        newpasswordcheck: Verification field for `newpassword`. Optional, but mandatory if
-        `newpassword` provided.
+       :param userid: The `userid` of the Weasyl account to modify.
+       :param username: User-entered username for password-based authentication.
+       :param password: The user's current plaintext password.
+       :param newemail: If changing the email on the account, the new email address. Optional.
+       :param newemailcheck: A verification field for the above to serve as a typo-check. Optional,
+       but mandatory if `newemail` provided.
+       :param newpassword: If changing the password, the user's new password. Optional.
+       :param newpasscheck: Verification field for `newpassword`. Optional, but mandatory if 'newpassword` provided.
     """
     from weasyl import login
 

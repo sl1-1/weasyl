@@ -1,7 +1,7 @@
 # Copyright (c) Aaron Gallagher <_@habnab.it>
 # See COPYING for details.
 
-"I HATE TWITTER"
+"""I HATE TWITTER"""
 
 
 from twisted.web.http_headers import Headers
@@ -62,7 +62,7 @@ def trapBadStatuses(response, goodStatuses=(200,)):
 
 
 class OAuthAgent(object):
-    "An Agent wrapper that adds OAuth authorization headers."
+    """An Agent wrapper that adds OAuth authorization headers."""
     def __init__(self, agent, consumer, token, signatureMethod=defaultSignature):
         self.agent = agent
         self.consumer = consumer
@@ -93,7 +93,7 @@ class OAuthAgent(object):
 
 
 class Twitter(object):
-    "Close to the most minimal twitter interface ever."
+    """Close to the most minimal twitter interface ever."""
     def __init__(self, agent, twitterAPI=defaultTwitterAPI):
         self.agent = agent
         self.twitterAPI = twitterAPI

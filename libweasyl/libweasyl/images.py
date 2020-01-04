@@ -246,7 +246,7 @@ def height_resize(im, height, bounds=None):
 
     Parameters:
         im: A sanpera ``Image``.
-        size: The desired height of the resulting image.
+        height: The desired height of the resulting image.
         bounds: Optionally, a sanpera ``Rectangle`` to use to crop *im* before
             resizing it.
 

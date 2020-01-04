@@ -49,7 +49,7 @@ def db(request):
     db.rollback()
 
     def tear_down():
-        "Clears all rows from the test database."
+        """Clears all rows from the test database."""
         for k, cls in list(registry.items()):
             if not k[0].isupper():
                 continue

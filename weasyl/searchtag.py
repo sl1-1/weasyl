@@ -512,11 +512,11 @@ def remove_restricted_tags(patterns, tags):
       restricted tag list.
 
     Parameters:
-        patterns: The result of ``query_user_restricted_tags(ownerid) +
+        :param patterns: The result of ``query_user_restricted_tags(ownerid) +
         query_global_restricted_tags()``. Consists
         of a list of titles of patterns which match a restricted tag.
 
-        tags: The reused SQL query result from ``associate()`` which consists of tagids
+        :param tags: The reused SQL query result from ``associate()`` which consists of tagids
         and titles for tags passed to the function.
 
     Returns:
