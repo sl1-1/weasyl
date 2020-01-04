@@ -109,7 +109,7 @@ def execute(statement, argv=None):
         argv = tuple(argv)
 
         for x in argv:
-            if type(x) not in (int, long):
+            if not isinstance(x, int):
                 raise TypeError("can't use %r as define.execute() parameter" % (x,))
 
         statement %= argv

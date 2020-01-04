@@ -31,7 +31,7 @@ class PaginatedResult(object):
 
     def strip_limit(self, select_list, args, kwargs):
         # Attempt to remove the 'limit' argument from args or kwargs
-        named_arguments = inspect.getargspec(select_list)[0]
+        named_arguments = inspect.getfullargspec(select_list)[0]
         if 'limit' not in named_arguments:
             return (args, kwargs)
         index = named_arguments.index('limit')
