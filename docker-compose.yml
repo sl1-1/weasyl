@@ -1,0 +1,81 @@
+version: '3'
+services:
+  postgres:
+    build:
+      context:  ./
+      dockerfile: postgres.dockerfile
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: weasyl_test
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: weasyl
+    volumes:
+    - "./create-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh"
+    ports:
+      - "5432:5432"
+  memcached:
+    image: "memcached:latest"
+    ports:
+      - "11211:11211"
+  nginx:
+    depends_on:
+       - weasyl
+    build:
+      context:  ./
+      dockerfile: nginx.dockerfile
+    ports:
+      - "8443:8443"
+    volumes:
+      - "./etc/nginx/weasyl.conf:/etc/nginx/conf.d/weasyl.conf"
+      - "./static:/vagrant/static"
+      - "./build:/vagrant/build"
+  weasyl:
+    depends_on:
+      - postgres
+      - memcached
+    build:
+      context:  ./
+      dockerfile: weasyl.dockerfile
+    environment:
+      - "WEASYL_APP_ROOT=."
+      - "WEASYL_TESTING_ENV=y"
+      - "WEASYL_STORAGE_ROOT=."
+      - "WEASYL_SERVE_STATIC_FILES=y"
+      - "WEASYL_RELOAD_TEMPLATES=y"
+      - "WEASYL_RELOAD_ASSETS=y"
+      - "WEASYL_REVERSE_PROXY_STATIC=y"
+      - "WEASYL_WEB_ENDPOINT=tcp:8880:interface=0.0.0.0"
+      - "WEASYL_WEB_STATS_ENDPOINT="
+      - "PYTHONPATH=/vagrant/"
+    volumes:
+    - "./weasyl:/vagrant/weasyl"
+    - "./libweasyl:/vagrant/libweasyl"
+    - "./build:/vagrant/build"
+    - "./.git:/vagrant/.git"
+    - "./templates:/vagrant/templates"
+    - "logs:/vagrant/log/"
+    ports:
+      - "8880:8880"
+  weasyl_test:
+    depends_on:
+      - postgres
+      - memcached
+      - nginx
+      - weasyl
+    build:
+      context:  ./
+      dockerfile: weasyl_test.dockerfile
+    environment:
+      - "WEASYL_APP_ROOT=."
+      - "WEASYL_TESTING_ENV=y"
+      - "WEASYL_STORAGE_ROOT=testing"
+      - "PYTHONPATH=/vagrant/"
+    volumes:
+    - "./weasyl:/vagrant/weasyl"
+    - "./libweasyl:/vagrant/libweasyl"
+    - "./build:/vagrant/build"
+    - "./.git:/vagrant/.git"
+    - "./templates:/vagrant/templates"
+    - "./static:/vagrant/static"
+
+volumes:
+  logs:
