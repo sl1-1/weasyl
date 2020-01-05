@@ -1,18 +1,12 @@
+# encoding: utf-8
+
 """
-Image manipulation.
-
-This module defines functions which work on sanpera_ ``Image`` objects.
-
-.. _sanpera: https://pypi.python.org/pypi/sanpera
+Image manipulation with Pillow.
 """
+import copy
+from io import BytesIO
 
-from __future__ import division
-
-from sanpera.image import Image
-from sanpera import geometry
-
-from libweasyl.exceptions import ThumbnailingError
-
+from PIL import Image, ImageSequence
 
 COVER_SIZE = 1024, 3000
 "The maximum size of a cover image, in pixels."
@@ -21,264 +15,250 @@ THUMB_HEIGHT = 250
 "The maximum height of a thumbnail, in pixels."
 
 
-read = Image.read
-"""
-libweasyl.images.read(*filename*)
+def process_gif(image: Image.Image, action, args):
+    image_frames = ImageSequence.Iterator(image)
 
-Read an ``Image`` from disk using the given filename.
+    # Wrap on-the-fly thumbnail generator
+    def thumbnails(frames):
+        for frame in frames:
+            thumbnail = frame.copy()
+            func = getattr(thumbnail, action)
+            thumbnail = func(**args)
+            yield thumbnail
 
-Parameters:
-    filename: The filename of the image to load.
+    thumbnail_frames = thumbnails(image_frames)
 
-Returns:
-    A sanpera ``Image``.
-"""
-
-from_buffer = Image.from_buffer
-"""
-libweasyl.images.from_buffer(*data*)
-
-Parse some data into an ``Image``.
-
-Parameters:
-    data: :term:`bytes`.
-
-Returns:
-    A sanpera ``Image``.
-"""
+    # Save output
+    om = next(thumbnail_frames)  # Handle first frame separately
+    om.info = image.info  # Copy sequence info
+    with BytesIO() as out:
+        om.save(out, format=image.format, save_all=True, append_images=list(thumbnail_frames))
+        image_data = out.getvalue()
+    return image_data, om.size
 
 
-IMAGE_EXTENSIONS = {
-    b'JPG': '.jpg',
-    b'JPEG': '.jpg',
-    b'PNG': '.png',
-    b'GIF': '.gif',
-}
+class WeasylImage:
+    _file_format = None
+    image_data = bytes()
+    webp = None
+    _size = (0, 0)
 
-
-def image_extension(im):
-    """
-    Given a sanpera ``Image``, return the file extension corresponding with the
-    original format of the image.
-
-    Parameters:
-        im: A sanpera ``Image``.
-
-    Returns:
-        :term:`native string`: one of ``.jpg``, ``.png``, ``.gif``, or ``None``
-        if the format was unknown.
-    """
-    return IMAGE_EXTENSIONS.get(im.original_format)
-
-
-def image_file_type(im):
-    """
-    Given a sanpera ``Image``, return the file type of the original format of
-    the image.
-
-    This is basically the same as :py:func:`.image_extension`, except it
-    doesn't return a leading ``.`` on the format.
-
-    Parameters:
-        im: A sanpera ``Image``.
-
-    Returns:
-        :term:`native string`: one of ``jpg``, ``png``, ``gif``, or ``None`` if
-        the format was unknown.
-    """
-    ret = image_extension(im)
-    if ret is not None:
-        ret = ret.lstrip('.')
-    return ret
-
-
-def unanimate(im):
-    """
-    Get the non-animated version of a sanpera ``Image``.
-
-    Paramters:
-        im: A sanpera ``Image``.
-
-    Returns:
-        *im*, if it wasn't animated, or a new ``Image`` with just the first
-        frame of *im* if it was.
-    """
-    if len(im) == 1:
-        return im
-    ret = Image()
-    ret.append(im[0])
-    return ret
-
-
-def correct_image_and_call(f, im, *a, **kw):
-    """
-    Call a function, passing in an image where the canvas size of each frame is
-    the same.
-
-    The function will be called as ``f(im, *a, **kw)`` and can return an image
-    to post-process or ``None``. Post-processing is currently limited to
-    optimizing animated GIFs.
-
-    Parameters:
-        f: The function to call.
-        im: A sanpera ``Image``.
-        *a: Positional arguments with which to call *f*.
-        **kw: Keyword arguments with which to call *f*.
-
-    Returns:
-        *im*, if *f* returned ``None``, or the ``Image`` returned by *f* after
-        post-processing.
-    """
-
-    animated = len(im) > 1
-    # either of these operations make the image satisfy the contraint
-    # `all(im.size == frame.size for frame in im)`
-    if animated:
-        im = im.coalesced()
-    else:
-        im = im.cropped(im[0].canvas)
-    # returns a new image to post-process or None
-    im = f(im, *a, **kw)
-    if animated and im is not None:
-        im = im.optimized_for_animated_gif()
-    return im
-
-
-def _resize(im, width, height):
-    # resize only if we need to; return None if we don't
-    if im.size.width > width or im.size.height > height:
-        im = im.resized(im.size.fit_inside((width, height)))
-        return im
-
-
-def resize_image(im, width, height):
-    """
-    Resize an image if necessary. Will not resize images that fit entirely
-    within target dimensions.
-
-    Parameters:
-        im: A sanpera ``Image``.
-        width: The maximum width, in pixels.
-        height: The maximum height, in pixels.
-
-    Returns:
-        *im*, if the image is smaller than the given *width* and *height*.
-        Otherwise, a new ``Image`` resized to fit.
-    """
-    return correct_image_and_call(_resize, im, width, height) or im
-
-
-def make_cover_image(im):
-    """
-    Make a cover image.
-
-    That is, resize an image to be smaller than :py:data:`COVER_SIZE` if
-    necessary.
-
-    Parameters:
-        im: A sanpera ``Image``.
-
-    Returns:
-        *im*, if the image is smaller than :py:data:`COVER_SIZE`. Otherwise, a
-        new ``Image`` resized to fit.
-    """
-    return resize_image(im, *COVER_SIZE)
-
-
-def _height_resize(im, height, bounds=None):
-    """Creates an image scaled to no more than the specified height with 0.5 <= aspect ratio <= 2."""
-    def crop_image_to_width(image, width):  # Crops from both sides equally.
-        overflow = image.size.width - width
-        border = overflow / 2
-        crop_rect = geometry.Rectangle(border, 0, border + width, image.size.height)
-        return image.cropped(crop_rect)
-
-    def crop_image_to_height(image, height):  # Crops from the bottom.
-        crop_rect = geometry.Rectangle(0, 0, image.size.width, height)
-        return image.cropped(crop_rect)
-
-    def scale_image_to_height(image, height):
-        new_width = (image.size.width * height) / image.size.height
-        return image.resized((new_width, height))
-
-    if bounds is not None:
-        # TODO: Add some checks here. e.g. make sure bounds are smaller
-        # than the original image.
-        if bounds.size != im.size:
-            im = im.cropped(bounds)
-
-    aspect_ratio = float(im.size.width) / im.size.height
-
-    if im.size.height > height:
-        if aspect_ratio > 2:  # Image is too wide.
-            thumb = crop_image_to_width(im, im.size.height * 2)
-        elif aspect_ratio < 0.5:  # Image is too tall.
-            new_height = im.size.width * 2
-            if new_height < height:
-                new_height = height
-            thumb = crop_image_to_height(im, new_height)
+    def __init__(self, fp=None, string=None):
+        if string:
+            self.image_data = string
+        elif fp:
+            with open(fp, 'rb') as in_file:
+                self.image_data = BytesIO(in_file.read()).getvalue()
         else:
-            thumb = im
-        thumb = scale_image_to_height(thumb, height)
-    else:  # Height `height` or less.
-        if im.size.width > height * 2:
-            thumb = crop_image_to_width(im, height * 2)
+            raise IOError
+        with BytesIO(self.image_data) as image_bytes:
+            image = Image.open(image_bytes)
+            self._file_format = image.format
+            self._size = image.size
+            self.is_animated = getattr(image, 'is_animated', False)
+
+    @property
+    def attributes(self):
+        return {'width': self._size[0], 'height': self._size[1]}
+
+    @property
+    def size(self):
+        return self._size
+
+    @size.setter
+    def size(self, value):
+        raise AttributeError('Use resize to change size')
+
+    @property
+    def file_format(self):
+        if self._file_format == "JPEG":
+            return "jpg"
         else:
-            thumb = im
-    return thumb
+            return self._file_format.lower()
+
+    @property
+    def image_extension(self):
+        return ".{}".format(self.file_format)
 
 
-def height_resize(im, height, bounds=None):
+    def to_buffer(self):
+        return self.image_data
+
+    def save(self, fp):
+        with open(fp, 'wb') as out:
+            out.write(self.image_data)
+
+    def resize(self, size: (int, int)):
+        """
+        Resize the image if necessary. Will not resize images that fit entirely
+        within target dimensions.
+
+        Parameters:
+            size: Tuple (width, height)
+        """
+        with BytesIO(self.image_data) as image_bytes:
+            image = Image.open(image_bytes)
+            if image.size[0] > size[0] or image.size[1] > size[1]:
+                if not getattr(image, 'is_animated', False):
+                    image.thumbnail(size)
+                    self._size = image.size
+                    with BytesIO() as out:
+                        image.save(out, format=self._file_format)
+                        self.image_data = out.getvalue()
+
+                else:
+                    self.image_data, self._size = process_gif(image, 'resize', {'size': size})
+
+    def crop(self, bounds: (int, int, int, int)):
+        """
+        Crops the image using the bounds provided
+        :param bounds: tuple of ( left, upper, right, lower)
+        :return: None
+        """
+        with BytesIO(self.image_data) as image_bytes:
+            image = Image.open(image_bytes)
+            # resize only if we need to; return None if we don't
+            if not getattr(image, 'is_animated', False):
+                image = image.crop(bounds)
+                self._size = image.size
+                with BytesIO() as out:
+                    image.save(out, format=self._file_format)
+                    self.image_data = out.getvalue()
+
+            else:
+                self.image_data, self._size = process_gif(image, 'crop', {'box': bounds})
+
+    def shrinkcrop(self, size: (int, int), bounds: (int, int, int, int) = None):
+        """
+
+        :param size: tuple of (width, height)
+        :param bounds: tuple of (left, upper, right, lower)
+        :return: None
+        """
+        if bounds:
+            if bounds[0:2] != (0, 0) or bounds[2:4] != self._size:
+                self.crop(bounds)
+            if self._size != size:
+                self.resize(size)
+            return
+        elif self._size == size:
+            return
+        shrunk_size = _fit_inside((0, 0, size[0], size[1]), self._size)
+        if self._size != shrunk_size:
+            self.resize((shrunk_size[2:4]))
+        x1 = (self._size[0] - size[0]) // 2
+        y1 = (self._size[1] - size[1]) // 2
+        bounds = (x1, y1, x1 + size[0], y1 + size[1])
+        self.crop(bounds)
+
+    def get_thumbnail(self, bounds: (int, int, int, int) = None):
+        save_kwargs = {}
+        with BytesIO(self.image_data) as image_bytes:
+            image = Image.open(image_bytes)
+            if image.mode in ('1', 'L', 'LA', 'I', 'P'):
+                image = image.convert(mode='RGBA' if image.mode == 'LA' or 'transparency' in image.info else 'RGB')
+
+            if bounds is None:
+                source_rect, result_size = get_thumbnail_spec(image.size, THUMB_HEIGHT)
+            else:
+                source_rect, result_size = get_thumbnail_spec_cropped(
+                    _fit_inside(bounds, image.size),
+                    THUMB_HEIGHT)
+            if source_rect == (0, 0, image.width, image.height):
+                image.draft(None, result_size)
+                image = image.resize(result_size, resample=Image.LANCZOS)
+            else:
+                # TODO: draft and adjust rectangle?
+                image = image.resize(result_size, resample=Image.LANCZOS, box=source_rect)
+
+            if self._file_format == 'JPEG':
+                with BytesIO() as f:
+                    image.save(f, format='JPEG', quality=95, optimize=True, progressive=True, subsampling='4:2:2')
+                    compatible = (f.getvalue(), 'JPG')
+
+                lossless = False
+            elif self._file_format in ('PNG', 'GIF'):
+                with BytesIO() as f:
+                    image.save(f, format='PNG', optimize=True, **save_kwargs)
+                    compatible = (f.getvalue(), 'PNG')
+
+                lossless = True
+            else:
+                raise Exception("Unexpected image format: %r" % (self._file_format,))
+
+            with BytesIO() as f:
+                image.save(f, format='WebP', lossless=lossless, quality=100 if lossless else 90, method=6,
+                           **save_kwargs)
+                webp = (f.getvalue(), 'WEBP')
+
+            if not len(webp[0]) >= len(compatible[0]):
+                self.webp = webp[0]
+
+            self._file_format = compatible[1]
+            self.image_data = compatible[0]
+            self._size = image.size
+
+    def copy(self):
+        """
+        Creates a deep copy of the image class
+        :return: WeasylImage()
+        """
+        return copy.deepcopy(self)
+
+
+def get_thumbnail_spec(size, height):
     """
-    Resize and crop an image to look good at a specified height.
-
-    The image is resized and cropped according to the following rules:
-    If *im* is not taller than *height*, its width is checked. If it is wider than
-    2 * *height*, it will be cropped from both sides down to 2 * *height* width.
-    If the *im* is taller than *height* its aspect ratio is considered: If *im* is
-    more than twice as wide as it is tall, it will be cropped equally from both
-    left and right to be twice as wide as it is tall. If *im* is more than twice as
-    tall as it is wide, it will be cropped from the bottom to be twice as tall as it
-    is wide, but not if this would make it shorter than *height*.
-    After cropping is considered, the image will be resized proportionally to be
-    *height* pixels tall.
-
-
-    Parameters:
-        im: A sanpera ``Image``.
-        height: The desired height of the resulting image.
-        bounds: Optionally, a sanpera ``Rectangle`` to use to crop *im* before
-            resizing it.
-
-    Returns:
-        *im*, if it is no taller than *height* and no wider than 2 * *height*.
-        Otherwise, a new ``Image`` resized and/or cropped according to the rules
-        above.
+    Get the source rectangle (x, y, x + w, y + h) and result size (w, h) for
+    the thumbnail of the specified height of an image with the specified size.
     """
-    ret = correct_image_and_call(_height_resize, im, height, bounds)
-    if ret.size.height > height or (len(ret) == 1 and ret[0].size.height > height):
-        # This is a sanity test to make sure the output of _height_resize()
-        # conforms to our height contract.
-        raise ThumbnailingError(ret.size, ret[0].size)
-    return ret
+    size_width, size_height = size
+
+    max_source_width = 2 * max(size_height, height)
+    max_source_height = max(2 * size_width, height)
+
+    source_width = min(size_width, max_source_width)
+    source_height = min(size_height, max_source_height)
+    source_left = (size_width - source_width) // 2
+    source_top = 0
+
+    result_height = min(size_height, height)
+    result_width = (source_width * result_height + source_height // 2) // source_height
+
+    return (
+        (source_left, source_top, source_left + source_width, source_top + source_height),
+        (result_width, result_height),
+    )
 
 
-def make_thumbnail(im, bounds=None):
+def get_thumbnail_spec_cropped(rect, height):
     """
-    Make a thumbnail.
-
-    That is, resize an image to be no taller than :py:data:`THUMB_HEIGHT` if
-    necessary after unanimating it and maintain a reasonable aspect ratio (2x)
-    if possible.
-
-    Parameters:
-        im: A sanpera ``Image``.
-        bounds: Optionally, a sanpera ``Rectangle`` to use to crop *im* before
-            generating a thumbnail from it.
-
-    Returns:
-        *im*, if the image is smaller than :py:data:`THUMB_HEIGHT` by twice
-        :py:data:`THUMB_HEIGHT` and contains only a single frame. Otherwise,
-        a new single-frame ``Image`` resized to fit within the bounds.
+    Get the source rectangle and result size for the thumbnail of the specified
+    height of a specified rectangular section of an image.
     """
-    return height_resize(unanimate(im), THUMB_HEIGHT, bounds)
+    left, top, right, bottom = rect
+    inner_rect, result_size = get_thumbnail_spec((right - left, bottom - top), height)
+    inner_left, inner_top, inner_right, inner_bottom = inner_rect
+
+    return (inner_left + left, inner_top + top, inner_right + left, inner_bottom + top), result_size
+
+
+def _fit_inside(rect, size):
+    left, top, right, bottom = rect
+    width, height = size
+
+    return (
+        max(0, left),
+        max(0, top),
+        min(width, right),
+        min(height, bottom),
+    )
+
+
+def check_crop(dim, x1, y1, x2, y2):
+    """
+    Return True if the specified crop coordinates are valid, else False.
+    """
+    return (
+        x1 >= 0 and y1 >= 0 and x2 >= 0 and y2 >= 0 and x1 <= dim[0] and
+        y1 <= dim[1] and x2 <= dim[0] and y2 <= dim[1] and x2 > x1 and y2 > y1)
+

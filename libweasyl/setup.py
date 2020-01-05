@@ -36,7 +36,6 @@ setup(
         'psycopg2cffi==2.8.1',
         'pyramid~=1.10.4',
         'pytz==2019.3',
-        'sanpera==0.1.1+weasyl.6',   # https://github.com/Weasyl/sanpera
         'sqlalchemy==1.3.12',
         'translationstring==1.3',
         'backports.lzma==0.0.12;python_version<"3.3"',
@@ -46,7 +45,7 @@ setup(
         'development': [
             'coverage==5.0',
             'flake8',
-            'pytest==4.6.7',
+            'pytest',
             'tox',
         ],
     },

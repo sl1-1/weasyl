@@ -55,10 +55,11 @@ def make_resized_media_item(data, size):
         A media item.
     """
     im, im_format = files.file_type_for_category(data, Category.visual)
-    resized = images.resize_image(im, *size)
-    if resized is not im:
-        data = resized.to_buffer(format=im_format)
-    return fetch_or_create_media_item(data, file_type=im_format, im=resized)
+    original_size = im.size
+    im.resize(*size)
+    if original_size != im.size:
+        data = im.to_buffer()
+    return fetch_or_create_media_item(data, file_type=im_format, attributes=im.attributes)
 
 
 def make_cover_media_item(coverfile):

@@ -213,7 +213,7 @@ class Submission(Base):
             if category == Category.visual:
                 submission_image = submission_decoded
             submission_media_item = fetch_or_create_media_item(
-                submission_data, file_type=submission_format, im=submission_image)
+                submission_data, file_type=submission_format, attributes=submission_image)
         elif category == Category.visual:
             raise ValueError('embedded visual submissions are not supported')
         elif submission_data is not None:

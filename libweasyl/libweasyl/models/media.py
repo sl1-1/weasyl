@@ -27,12 +27,12 @@ class MediaItem(Base):
                .first())
         if obj is None:
             attributes = dict(attributes)
-            if file_type is None and im is not None:
-                file_type = images.image_file_type(im)
+            # if file_type is None and im is not None:
+            #     file_type = images.image_file_type(im)
             if file_type is None:
                 raise ValueError('a file type is required')
-            if im is not None:
-                attributes.update({'width': im.size.width, 'height': im.size.height})
+            # if im is not None:
+            #     attributes.update({'width': im.size[0], 'height': im.size[1]})
             elif file_type == 'swf':
                 attributes.update(flash.parse_flash_header(BytesIO(data)))
             obj = cls(sha256=sha256, file_type=file_type, attributes=attributes)
@@ -68,13 +68,14 @@ class MediaItem(Base):
 
         if source_image is None:
             source_image = self.as_image()
-        cover = images.make_cover_image(source_image)
-        if cover is source_image:
+        cover = source_image.copy()
+        cover.resize(images.COVER_SIZE)
+        if cover.image_data is source_image.image_data:
             cover_media_item = self
         else:
             cover_media_item = fetch_or_create_media_item(
-                cover.to_buffer(format=self.file_type.encode()), file_type=self.file_type,
-                im=cover)
+                cover.to_buffer(), file_type=cover.file_format,
+                attributes=cover.attributes)
         self.dbsession.flush()
         MediaMediaLink.make_or_replace_link(self.mediaid, 'cover', cover_media_item)
         return cover_media_item
@@ -84,13 +85,14 @@ class MediaItem(Base):
             raise ValueError('can only auto-thumbnail image media items')
         if source_image is None:
             source_image = self.as_image()
-        thumbnail = images.make_thumbnail(source_image)
-        if thumbnail is source_image:
+        thumbnail = source_image.copy()
+        thumbnail.get_thumbnail()
+        if thumbnail.size == source_image.size:
             return self
         else:
             return fetch_or_create_media_item(
-                thumbnail.to_buffer(format=self.file_type.encode()), file_type=self.file_type,
-                im=thumbnail)
+                thumbnail, file_type=thumbnail.file_type,
+                attributes=thumbnail.attributes)
 
 
 class DiskMediaItem(MediaItem):
@@ -124,7 +126,7 @@ class DiskMediaItem(MediaItem):
         return ret
 
     def as_image(self):
-        return images.read(self.full_file_path.encode())
+        return images.WeasylImage(fp=self.full_file_path.encode())
 
 
 def fetch_or_create_media_item(*a, **kw):

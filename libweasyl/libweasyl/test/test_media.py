@@ -38,7 +38,7 @@ def test_fetch_or_create_disk_media_item_with_image(db):
     autodetects the file type.
     """
     data = datadir.join('1200x6566.png').read(mode='rb')
-    im = images.from_buffer(data)
+    im = images.WeasylImage(string=data)
     item = media.fetch_or_create_media_item(data, im=im)
     assert item.file_type == 'png'
     assert item.attributes == {'width': 1200, 'height': 6566}
@@ -49,7 +49,7 @@ def test_fetch_or_create_disk_media_item_with_image_and_attributes(db):
     Passing an image and attributes merges the two sets of attributes.
     """
     data = datadir.join('1200x6566.png').read(mode='rb')
-    im = images.from_buffer(data)
+    im = images.WeasylImage(string=data)
     item = media.fetch_or_create_media_item(data, file_type='png', im=im, attributes={'spam': 'eggs'})
     assert item.attributes == {'spam': 'eggs', 'width': 1200, 'height': 6566}
 
