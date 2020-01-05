@@ -24,7 +24,7 @@ class BaseQuery(Query):
 class _BaseObject(object):
     def to_dict(self):
         return {col.name: getattr(self, col.name)
-                for col in object_mapper(self).mapped_table.c}
+                for col in object_mapper(self).persist_selectable.c}
 
     def __json__(self, request):
         return self.to_dict()
