@@ -12,7 +12,7 @@ import datetime
 import functools
 import subprocess
 
-import anyjson as json
+import json
 import arrow
 from psycopg2cffi.extensions import QuotedString
 from pyramid.threadlocal import get_current_request

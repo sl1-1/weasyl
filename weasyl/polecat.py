@@ -5,7 +5,7 @@ Just bear with me here.
 import os
 import time
 
-import anyjson as json
+import json
 
 from bisect import bisect_left
 from twisted.application.internet import TimerService

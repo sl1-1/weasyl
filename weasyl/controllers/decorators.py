@@ -1,6 +1,6 @@
 
 
-import anyjson as json
+import json
 from pyramid.httpexceptions import HTTPForbidden
 from pyramid.response import Response
 
