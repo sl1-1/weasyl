@@ -534,7 +534,7 @@ def reupload(userid, submitid, submitfile):
     elif "v" in query[2] or "D" in query[2]:
         raise WeasylError("Unexpected")
 
-    subcat = query[1] / 1000 * 1000
+    subcat = query[1] // 1000 * 1000
     if subcat not in m.ALL_SUBMISSION_CATEGORIES:
         raise WeasylError("Unexpected")
 
@@ -567,7 +567,7 @@ def reupload(userid, submitid, submitfile):
         orm.SubmissionMediaLink.make_or_replace_link(submitid, 'cover', cover_media_item)
         generated_thumb = images.make_thumbnail(im)
         generated_thumb_media_item = orm.fetch_or_create_media_item(
-            generated_thumb.to_buffer(format=images.image_file_type(generated_thumb)),
+            generated_thumb.to_buffer(format=bytes(images.image_file_type(generated_thumb), 'utf-8')),
             file_type=submit_file_type,
             im=generated_thumb)
         orm.SubmissionMediaLink.make_or_replace_link(submitid, 'thumbnail-generated', generated_thumb_media_item)
