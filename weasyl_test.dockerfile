@@ -1,27 +1,28 @@
-FROM debian:stretch
+FROM alpine:latest
 
 LABEL Description="Weasyl Dev Image"
 
-RUN apt-get -y update
-RUN apt-get -y dist-upgrade
-RUN apt-get -y install \
-    apt-transport-https ca-certificates curl \
-    git-core libffi-dev libmagickcore-dev libpam-systemd libssl-dev \
-    libxml2-dev libxslt-dev pkg-config liblzma-dev \
-    python-dev python-virtualenv sassc build-essential python-pip
+RUN apk update && \
+    apk add postgresql-client postgresql-dev \
+    gcc g++ make \
+    python3 python3-dev \
+    py3-pillow==6.2.1-r0 py3-lxml==4.4.2-r0 py3-twisted==19.10.0-r0 \
+    py3-cryptography==2.8-r1 py3-bcrypt==3.1.7-r2 cython \
+    imagemagick6 imagemagick6-dev libffi libffi-dev \
+    zlib zlib-dev libxml2 libxml2-dev libxslt libxslt-dev \
+    xz xz-dev jpeg-dev libwebp libwebp-dev git
 
-ADD https://www.postgresql.org/media/keys/ACCC4CF8.asc /etc/apt/trusted.gpg.d/apt.postgresql.org.asc
-
-RUN echo >/etc/apt/sources.list.d/postgresql.list \
-    'deb https://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main 9.6'
-
-RUN apt-get -y --allow-unauthenticated install \
-    libpq-dev postgresql-9.6 postgresql-contrib-9.6
-
-RUN pip install -U pip setuptools
+RUN  pip3 install -U pip setuptools wheel
 ADD etc/pip.conf /etc/
 ADD etc/requirements.txt /etc/
-RUN pip install -r /etc/requirements.txt
+
+RUN mkdir /pytemp
+WORKDIR /pytemp
+ADD ./sanpera /pytemp/sanpera
+ADD ./misaka /pytemp/misaka
+RUN pip3 install /pytemp/sanpera
+RUN pip3 install -v /pytemp/misaka
+RUN pip3 install -r /etc/requirements.txt
 RUN pip install pytest==4.6.5 flake8
 
 RUN mkdir /vagrant
@@ -40,4 +41,4 @@ ADD config/weasyl-staff.example.py /vagrant/config/weasyl-staff.py
 
 WORKDIR /vagrant
 
-ENTRYPOINT pip install -Ue libweasyl && py.test weasyl/test
+ENTRYPOINT pip install -Ue libweasyl && py.test weasyl/test |tee /vagrant/testlogs/test.log

@@ -18,7 +18,7 @@ services:
       - "11211:11211"
   nginx:
     depends_on:
-       - weasyl
+       - weasyl3
     build:
       context:  ./
       dockerfile: nginx.dockerfile
@@ -28,7 +28,7 @@ services:
       - "./etc/nginx/weasyl.conf:/etc/nginx/conf.d/weasyl.conf"
       - "./static:/vagrant/static"
       - "./build:/vagrant/build"
-  weasyl:
+  weasyl3:
     depends_on:
       - postgres
       - memcached
@@ -55,12 +55,12 @@ services:
     - "logs:/vagrant/log/"
     ports:
       - "8880:8880"
-  weasyl_test:
+  weasyl_test3:
     depends_on:
       - postgres
       - memcached
       - nginx
-      - weasyl
+      - weasyl3
     build:
       context:  ./
       dockerfile: weasyl_test.dockerfile
@@ -76,6 +76,7 @@ services:
     - "./.git:/vagrant/.git"
     - "./templates:/vagrant/templates"
     - "./static:/vagrant/static"
+    - "./testlogs:/vagrant/testlogs"
 
 volumes:
   logs:
