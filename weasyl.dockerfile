@@ -18,9 +18,7 @@ ADD etc/requirements.txt /etc/
 
 RUN mkdir /pytemp
 WORKDIR /pytemp
-ADD ./sanpera /pytemp/sanpera
 ADD ./misaka /pytemp/misaka
-RUN pip3 install /pytemp/sanpera
 RUN pip3 install -v /pytemp/misaka
 RUN pip3 install -r /etc/requirements.txt
 

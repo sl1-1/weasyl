@@ -18,12 +18,10 @@ ADD etc/requirements.txt /etc/
 
 RUN mkdir /pytemp
 WORKDIR /pytemp
-ADD ./sanpera /pytemp/sanpera
 ADD ./misaka /pytemp/misaka
-RUN pip3 install /pytemp/sanpera
 RUN pip3 install -v /pytemp/misaka
 RUN pip3 install -r /etc/requirements.txt
-RUN pip install pytest==4.6.5 flake8
+RUN pip install pytest flake8 coverage pytest-cov
 
 RUN mkdir /vagrant
 RUN mkdir /vagrant/weasyl
@@ -40,5 +38,5 @@ ADD config/weasyl-staff.example.py /vagrant/config/weasyl-staff.py
 
 
 WORKDIR /vagrant
-
-ENTRYPOINT pip install -Ue libweasyl && py.test weasyl/test |tee /vagrant/testlogs/test.log
+ENTRYPOINT pip install -Ue libweasyl && pytest --cov=weasyl weasyl/test |tee /vagrant/testlogs/test.log \
+    && pytest --cov=libweasyl --cov-append libweasyl/libweasyl/test | tee -a /vagrant/testlogs/test.log && coverage html
