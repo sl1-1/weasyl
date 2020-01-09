@@ -12,6 +12,9 @@ from weasyl.media import format_media_link
 import weasyl.middleware as mw
 from weasyl import staff_config
 
+import sentry_sdk
+from sentry_sdk.integrations.pyramid import PyramidIntegration
+from sentry_sdk.integrations.sqlalchemy import SqlalchemyIntegration
 
 # Get a configurator and register some tweens to handle cleanup, etc.
 config = Configurator()
@@ -55,7 +58,12 @@ if d.config_read_bool('profile_responses', section='backend'):
     wsgi_app = ProfilerMiddleware(
         wsgi_app, profile_dir=m.MACRO_STORAGE_ROOT + 'profile-stats')
 if d.config_obj.has_option('sentry', 'dsn'):
-    wsgi_app = mw.SentryEnvironmentMiddleware(wsgi_app, d.config_obj.get('sentry', 'dsn'))
+    sentry_sdk.init(
+        dsn=d.config_obj.get('sentry', 'dsn'),
+        release=d.CURRENT_SHA,
+        integrations=[PyramidIntegration(), SqlalchemyIntegration()]
+    )
+    # wsgi_app = mw.SentryEnvironmentMiddleware(wsgi_app, d.config_obj.get('sentry', 'dsn'))
 
 
 configure_libweasyl(

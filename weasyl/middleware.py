@@ -2,13 +2,11 @@
 from __future__ import absolute_import
 
 import os
-import re
-import sys
 import time
 import base64
-import logging
-import raven
-import raven.processors
+import sentry_sdk
+
+
 import traceback
 
 import pyramid.compat
@@ -17,7 +15,6 @@ from pyramid.response import Response
 from pyramid.threadlocal import get_current_request
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
-from twisted.internet.threads import blockingCallFromThread
 from web.utils import storify
 
 from libweasyl import staff
@@ -25,7 +22,6 @@ from libweasyl.cache import ThreadCacheProxy
 from libweasyl.models.users import GuestSession
 from weasyl import define as d
 from weasyl import errorcode
-from weasyl import http
 from weasyl import orm
 from weasyl.error import WeasylError
 from weasyl.sessions import create_guest_session, is_guest_token
@@ -325,9 +321,9 @@ def weasyl_exception_view(exc, request):
     """
     A view for general exceptions thrown by weasyl code.
     """
+    print(request.environ)
     if isinstance(exc, ClientGoneAway):
-        if 'raven.captureMessage' in request.environ:
-            request.environ['raven.captureMessage']('HTTP client went away', level=logging.INFO)
+        sentry_sdk.capture_message('HTTP client went away', level='info')
         return request.response
     else:
         # Avoid using the reified request.userid property here. It might not be set and it might
@@ -341,61 +337,32 @@ def weasyl_exception_view(exc, request):
         if isinstance(exc, WeasylError):
             status_code = errorcode.error_status_code.get(exc.value, 422)
             if exc.render_as_json:
-                return Response(json={'error': {'name': exc.value}},
-                                status_code=status_code)
+                return Response(json={'error': {'name': exc.value}}, status_code=status_code)
             errorpage_kwargs = exc.errorpage_kwargs
             if exc.value in errorcode.error_messages:
                 message = errorcode.error_messages[exc.value]
                 if exc.error_suffix:
                     message = '%s %s' % (message, exc.error_suffix)
-                return Response(d.errorpage(userid, message, **errorpage_kwargs),
-                                status_code=status_code)
+                return Response(d.errorpage(userid, message, **errorpage_kwargs), status_code=status_code)
         request_id = None
-        if 'raven.captureException' in request.environ:
-            request_id = base64.b64encode(os.urandom(6), '+-')
-            event_id = request.environ['raven.captureException'](request_id=request_id)
-            request_id = '%s-%s' % (event_id, request_id)
-        print "unhandled error (request id %s) in %r" % (request_id, request.environ)
+        request_id = base64.b64encode(os.urandom(6), '+-')
+        with sentry_sdk.configure_scope() as scope:
+            scope.user = {
+                'id': userid,
+                'ip_address': d.get_address(),
+                'session': getattr(request, 'weasyl_session', None)
+            }
+            scope.set_extra("request_id", request_id)
+            scope.set_tag('sfw', d.is_sfw_mode())
+
+        event_id = sentry_sdk.capture_exception()
+        request_id = '%s-%s' % (event_id, request_id)
+        print("unhandled error (request id %s) in %r" % (request_id, request.environ))
         traceback.print_exc()
         if getattr(exc, "__render_as_json", False):
             return Response(json={'error': {}}, status_code=500)
         else:
             return Response(d.errorpage(userid, request_id=request_id, **errorpage_kwargs), status_code=500)
-
-
-class RemoveSessionCookieProcessor(raven.processors.Processor):
-    """
-    Removes Weasyl session cookies.
-    """
-    def _filter_header(self, value):
-        return re.sub(
-            r'WZL=(\w+)',
-            lambda match: 'WZL=' + '*' * len(match.group(1)),
-            value)
-
-    def filter_http(self, data):
-        if 'cookies' in data:
-            data['cookies'] = self._filter_header(data['cookies'])
-
-        if 'headers' in data and 'Cookie' in data['headers']:
-            data['headers']['Cookie'] = self._filter_header(data['headers']['Cookie'])
-
-        env = data.get('env')
-
-        if env is not None:
-            if 'HTTP_COOKIE' in env:
-                env['HTTP_COOKIE'] = self._filter_header(env['HTTP_COOKIE'])
-
-            # WebOb cache, like:
-            #  - webob._parsed_query_vars
-            #  - webob._body_file
-            #  - webob._parsed_post_vars
-            #  - webob._parsed_cookies
-            # These mostly just repeat information that can be found elsewhere,
-            # so they’re removed rather than filtered.
-            remove_keys = [key for key in env if key.startswith('webob._')]
-            for key in remove_keys:
-                del env[key]
 
 
 class URLSchemeFixingMiddleware(object):
@@ -405,64 +372,6 @@ class URLSchemeFixingMiddleware(object):
     def __call__(self, environ, start_response):
         if environ.get('HTTP_X_FORWARDED_PROTO') == 'https':
             environ['wsgi.url_scheme'] = 'https'
-        return self.app(environ, start_response)
-
-
-class SentryEnvironmentMiddleware(object):
-    def __init__(self, app, dsn, reactor=None):
-        self.app = app
-        self.client = raven.Client(
-            dsn=dsn,
-            release=d.CURRENT_SHA,
-            processors=[
-                'raven.processors.SanitizePasswordsProcessor',
-                'weasyl.middleware.RemoveSessionCookieProcessor',
-            ],
-        )
-        if reactor is None:
-            from twisted.internet import reactor
-        self.reactor = reactor
-
-    def ravenCaptureArguments(self, level=None, **extra):
-        request = get_current_request()
-        data = {
-            'level': level,
-            'user': {
-                'id': d.get_userid(),
-                'ip_address': d.get_address(),
-            },
-            'request': {
-                'url': request.environ['PATH_INFO'],
-                'method': request.environ['REQUEST_METHOD'],
-                'data': request.POST,
-                'query_string': request.environ['QUERY_STRING'],
-                'headers': http.get_headers(request.environ),
-                'env': request.environ,
-            },
-        }
-
-        return {
-            'data': data,
-            'extra': dict(
-                extra,
-                session=getattr(request, 'weasyl_session', None),
-            ),
-        }
-
-    def captureException(self, **extra):
-        kwargs = self.ravenCaptureArguments(**extra)
-        exc_info = sys.exc_info()
-        return blockingCallFromThread(
-            self.reactor, self.client.captureException, exc_info, **kwargs)
-
-    def captureMessage(self, message, **extra):
-        kwargs = self.ravenCaptureArguments(**extra)
-        return blockingCallFromThread(
-            self.reactor, self.client.captureMessage, message, **kwargs)
-
-    def __call__(self, environ, start_response):
-        environ['raven.captureException'] = self.captureException
-        environ['raven.captureMessage'] = self.captureMessage
         return self.app(environ, start_response)
 
 
