@@ -4,8 +4,8 @@ from pyramid import httpexceptions
 from pyramid.response import Response
 
 from weasyl import (
-    character, collection, commishinfo, define, errorcode, favorite, folder,
-    followuser, frienduser, journal, macro, media, profile, shout, submission,
+    collection, commishinfo, define, errorcode, favorite, folder,
+    followuser, frienduser, macro, media, profile, shout, submission,
     pagination)
 from weasyl.controllers.decorators import moderator_only
 from weasyl.error import WeasylError
@@ -61,7 +61,7 @@ def profile_(request):
         more_submissions = 'collections'
         featured = None
     elif 'A' in userprofile['config']:
-        submissions = character.select_list(request.userid, rating, 11, otherid=otherid)
+        submissions = submission.select_list(request.userid, rating, 11, otherid=otherid, subcat=5000)
         more_submissions = 'characters'
         featured = None
     else:
@@ -95,7 +95,7 @@ def profile_(request):
         # Folders preview
         folder.select_preview(request.userid, otherid, rating, 3),
         # Latest journal
-        journal.select_latest(request.userid, rating, otherid=otherid),
+        submission.select_latest(request.userid, rating, otherid=otherid, subcat=6000),
         # Recent shouts
         shout.select(request.userid, ownerid=otherid, limit=8),
         # Statistics information
@@ -223,7 +223,6 @@ def journals_(request):
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's journals" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
     page = define.common_page_start(request.userid, title=page_title)
-
     page.append(define.render('user/journals.html', [
         # Profile information
         userprofile,
@@ -233,9 +232,7 @@ def journals_(request):
         profile.select_relation(request.userid, otherid),
         # Journals list
         # TODO(weykent): use select_user_list
-        journal.select_list(request.userid, rating, 250, otherid=otherid),
-        # Latest journal
-        journal.select_latest(request.userid, rating, otherid=otherid),
+        submission.select_list(request.userid, rating, 250, otherid=otherid, subcat=6000)
     ]))
 
     return Response(define.common_page_end(request.userid, page))
@@ -261,10 +258,10 @@ def characters_(request):
 
     url_format = "/characters?userid={userid}&%s".format(userid=userprofile['userid'])
     result = pagination.PaginatedResult(
-        character.select_list, character.select_count,
-        'charid', url_format, request.userid, rating, 60,
+        submission.select_list, submission.select_count,
+        'submitid', url_format, request.userid, rating, 60,
         otherid=otherid, backid=define.get_int(form.backid),
-        nextid=define.get_int(form.nextid))
+        nextid=define.get_int(form.nextid), subcat=5000)
 
     page.append(define.render('user/characters.html', [
         # Profile information

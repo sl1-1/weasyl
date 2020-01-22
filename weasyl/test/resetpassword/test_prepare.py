@@ -19,7 +19,7 @@ def test_false_returned_if_token_does_not_exist():
 def test_true_returned_if_token_exists():
     user_id = db_utils.create_user(username='checktoken0002')
     token = "testtokentesttokentesttokentesttokentesttokentesttokentesttokentesttokentesttokentesttokentest000001"
-    d.engine.execute(d.meta.tables["forgotpassword"].insert(), {
+    d.engine.execute(d.meta.tables["forgotpassword"].insert(, None, {
         "userid": user_id,
         "token": token,
         "set_time": d.get_time(),

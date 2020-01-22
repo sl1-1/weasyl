@@ -5,7 +5,6 @@ import re
 import time
 import random
 import urllib
-import hashlib
 import hmac
 import itertools
 import logging
@@ -495,15 +494,6 @@ def get_timestamp():
     return time.strftime("%Y-%m", time.localtime(get_time()))
 
 
-def _get_hash_path(charid):
-    id_hash = hashlib.sha1(str(charid)).hexdigest()
-    return "/".join([id_hash[i:i + 2] for i in range(0, 11, 2)]) + "/"
-
-
-def get_character_directory(charid):
-    return macro.MACRO_SYS_CHAR_PATH + _get_hash_path(charid)
-
-
 def get_userid_list(target):
     query = engine.execute(
         "SELECT userid FROM login WHERE login_name = ANY (%(usernames)s)",
@@ -874,10 +864,6 @@ def common_view_content(userid, targetid, feature):
 
     if feature == "submit":
         engine.execute("UPDATE submission SET page_views = page_views + 1 WHERE submitid = %(id)s", id=targetid)
-    elif feature == "char":
-        engine.execute("UPDATE character SET page_views = page_views + 1 WHERE charid = %(id)s", id=targetid)
-    elif feature == "journal":
-        engine.execute("UPDATE journal SET page_views = page_views + 1 WHERE journalid = %(id)s", id=targetid)
     elif feature == "profile":
         engine.execute("UPDATE profile SET page_views = page_views + 1 WHERE userid = %(id)s", id=targetid)
 
@@ -890,84 +876,6 @@ def append_to_log(logname, **parameters):
     with open(log_path, 'a') as outfile:
         outfile.write(json.dumps(parameters))
         outfile.write('\n')
-
-
-_CHARACTER_SETTINGS_FEATURE_SYMBOLS = {
-    "char/thumb": "-",
-    "char/cover": "~",
-    "char/submit": "=",
-}
-
-_CHARACTER_SETTINGS_TYPE_EXTENSIONS = {
-    "J": ".jpg",
-    "P": ".png",
-    "G": ".gif",
-    "T": ".txt",
-    "H": ".htm",
-    "M": ".mp3",
-    "F": ".swf",
-    "A": ".pdf",
-}
-
-
-def url_type(settings, feature):
-    """
-    Return the file extension specified in `settings` for the passed feature.
-    """
-    symbol = _CHARACTER_SETTINGS_FEATURE_SYMBOLS[feature]
-    type_code = settings[settings.index(symbol) + 1]
-
-    return _CHARACTER_SETTINGS_TYPE_EXTENSIONS[type_code]
-
-
-def url_make(targetid, feature, query=None, root=False, file_prefix=None):
-    """
-    Return the URL to a resource; if `root` is True, the path will start from
-    the root.
-    """
-    result = [] if root else ["/"]
-
-    if root:
-        result.append(macro.MACRO_STORAGE_ROOT)
-
-    if "char/" in feature:
-        result.extend([macro.MACRO_URL_CHAR_PATH, _get_hash_path(targetid)])
-
-    if file_prefix is not None:
-        result.append("%s-" % (file_prefix,))
-
-    # Character file
-    if feature == "char/submit":
-        if query is None:
-            query = engine.execute("SELECT userid, settings FROM character WHERE charid = %(id)s", id=targetid).first()
-
-        if query and "=" in query[1]:
-            result.append("%i.submit.%i%s" % (targetid, query[0], url_type(query[1], feature)))
-        else:
-            return None
-    # Character cover
-    elif feature == "char/cover":
-        if query is None:
-            query = engine.execute("SELECT settings FROM character WHERE charid = %(id)s", id=targetid).first()
-
-        if query and "~" in query[0]:
-            result.append("%i.cover%s" % (targetid, url_type(query[0], feature)))
-        else:
-            return None
-    # Character thumbnail
-    elif feature == "char/thumb":
-        if query is None:
-            query = engine.execute("SELECT settings FROM character WHERE charid = %(id)s", id=targetid).first()
-
-        if query and "-" in query[0]:
-            result.append("%i.thumb%s" % (targetid, url_type(query[0], feature)))
-        else:
-            return None if root else macro.MACRO_BLANK_THUMB
-    # Character thumbnail selection
-    elif feature == "char/.thumb":
-        result.append("%i.new.thumb" % (targetid,))
-
-    return "".join(result)
 
 
 def cdnify_url(url):

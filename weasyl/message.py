@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from itertools import chain
 
-from weasyl import character
 from weasyl import define as d
 from weasyl import media
 
@@ -26,17 +25,6 @@ notification_clusters = {
 }
 
 _CONTYPE_CHAR = 20
-
-
-def _fake_media_items(i):
-    if i.contype == _CONTYPE_CHAR:
-        return character.fake_media_items(
-            i.id,
-            i.userid,
-            d.get_sysname(i.username),
-            i.settings)
-    else:
-        return None
 
 
 def remove(userid, messages):
@@ -113,31 +101,6 @@ def select_submissions(userid, limit, include_tags, backtime=None, nexttime=None
     statement = """
         SELECT * FROM (
             SELECT
-                20 AS contype,
-                ch.charid AS id,
-                ch.char_name AS title,
-                ch.rating,
-                we.unixtime,
-                ch.userid,
-                pr.username,
-                ch.settings,
-                we.welcomeid,
-                0 AS subtype
-                {char_tags_select}
-            FROM welcome we
-                INNER JOIN character ch ON we.targetid = ch.charid
-                INNER JOIN profile pr ON ch.userid = pr.userid
-                {char_tags_join}
-            WHERE
-                we.type = 2050 AND
-                we.userid = %(userid)s AND
-                ch.rating <= %(rating)s
-                {time_filter}
-            {char_tags_groupby}
-            ORDER BY welcomeid DESC LIMIT %(limit)s
-        ) t
-        UNION ALL SELECT * FROM (
-            SELECT
                 40 AS contype,
                 su.submitid AS id,
                 su.title,
@@ -184,6 +147,30 @@ def select_submissions(userid, limit, include_tags, backtime=None, nexttime=None
                 {time_filter}
             ORDER BY welcomeid DESC LIMIT %(limit)s
         ) t
+         UNION ALL SELECT * FROM (
+            SELECT
+                20 AS contype,
+                su.submitid AS id,
+                su.title,
+                su.rating,
+                we.unixtime,
+                su.userid,
+                pr.username,
+                su.settings,
+                we.welcomeid,
+                su.subtype
+                {submission_tags_select}
+            FROM welcome we
+                INNER JOIN submission su ON we.targetid = su.submitid
+                INNER JOIN profile pr ON su.userid = pr.userid
+                {submission_tags_join}
+            WHERE
+                we.type = 2050 AND
+                we.userid = %(userid)s AND
+                su.rating <= %(rating)s
+                {time_filter}
+            ORDER BY welcomeid DESC LIMIT %(limit)s 
+        ) t
         ORDER BY welcomeid DESC LIMIT %(limit)s
     """.format(
         time_filter=time_filter,
@@ -209,7 +196,7 @@ def select_submissions(userid, limit, include_tags, backtime=None, nexttime=None
 
         results = [{
             "contype": i.contype,
-            "submitid" if i.contype != _CONTYPE_CHAR else "charid": i.id,
+            "submitid": i.id,
             "welcomeid": i.welcomeid,
             "title": i.title,
             "rating": i.rating,
@@ -218,12 +205,11 @@ def select_submissions(userid, limit, include_tags, backtime=None, nexttime=None
             "username": i.username,
             "subtype": i.subtype,
             "tags": [tag_map[tag] for tag in i.tags],
-            "sub_media": _fake_media_items(i),
         } for i in query]
     else:
         results = [{
             "contype": i.contype,
-            "submitid" if i.contype != _CONTYPE_CHAR else "charid": i.id,
+            "submitid": i.id,
             "welcomeid": i.welcomeid,
             "title": i.title,
             "rating": i.rating,
@@ -231,11 +217,9 @@ def select_submissions(userid, limit, include_tags, backtime=None, nexttime=None
             "userid": i.userid,
             "username": i.username,
             "subtype": i.subtype,
-            "sub_media": _fake_media_items(i),
         } for i in query]
 
-    media.populate_with_submission_media(
-        [i for i in results if i["contype"] != _CONTYPE_CHAR])
+    media.populate_with_submission_media(results)
 
     return results
 
@@ -345,29 +329,26 @@ def select_notifications(userid):
     """, user=userid))
 
     # Favorite
-    for t, id_field, title_field, table_name in [(3020, "submitid", "title", "submission"),
-                                                 (3050, "submitid", "title", "submission"),
-                                                 (3100, "charid", "char_name", "character"),
-                                                 (3110, "journalid", "title", "journal")]:
+    for t in [3020, 3050, 3100, 3110]:
         queries.append([{
             "type": t,
             "id": i.welcomeid,
             "unixtime": i.unixtime,
             "userid": i.otherid,
             "username": i.username,
-            id_field: i.id,
+            'submitid': i.id,
             "title": i.title,
         } for i in d.engine.execute("""
             SELECT
-                we.welcomeid, we.unixtime, we.otherid, pr.username, {table}.{id_field}
-                AS id, {table}.{title_field} AS title
+                we.welcomeid, we.unixtime, we.otherid, pr.username, submission.submitid
+                AS id, submission.title AS title
             FROM welcome we
                 INNER JOIN profile pr ON we.otherid = pr.userid
-                INNER JOIN {table} ON we.referid = {table}.{id_field}
+                INNER JOIN submission ON we.referid = submission.submitid
             WHERE we.userid = %(user)s
                 AND we.type = %(type)s
             ORDER BY we.unixtime DESC
-        """.format(id_field=id_field, title_field=title_field, table=table_name), type=t, user=userid)])
+        """, type=t, user=userid)])
 
     # User changed submission tags
     queries.append({
@@ -507,14 +488,14 @@ def select_comments(userid):
         "unixtime": i.unixtime,
         "userid": i.otherid,
         "username": i.username,
-        "charid": i.referid,
-        "title": i.char_name,
+        "submitid": i.referid,
+        "title": i.title,
         "commentid": i.targetid,
     } for i in d.engine.execute("""
-        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, ch.char_name
+        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, su.title
         FROM welcome we
             INNER JOIN profile pr ON we.otherid = pr.userid
-            INNER JOIN character ch ON we.referid = ch.charid
+            INNER JOIN submission su ON we.referid = su.submitid
         WHERE we.userid = %(user)s
             AND we.type = 4040
         ORDER BY we.unixtime DESC
@@ -527,16 +508,16 @@ def select_comments(userid):
         "unixtime": i.unixtime,
         "userid": i.otherid,
         "username": i.username,
-        "charid": i.charid,
-        "title": i.char_name,
+        "submitid": i.submitid,
+        "title": i.title,
         "replyid": i.referid,
         "commentid": i.targetid,
     } for i in d.engine.execute("""
-        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, ch.charid, ch.char_name
+        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, su.submitid, su.title
         FROM welcome we
             INNER JOIN profile pr ON we.otherid = pr.userid
-            INNER JOIN charcomment cc ON we.referid = cc.commentid
-            INNER JOIN character ch ON cc.targetid = ch.charid
+            INNER JOIN comments cc ON we.referid = cc.commentid
+            INNER JOIN submission su ON cc.target_sub = su.submitid
         WHERE we.userid = %(user)s
             AND we.type = 4045
         ORDER BY we.unixtime DESC
@@ -549,14 +530,14 @@ def select_comments(userid):
         "unixtime": i.unixtime,
         "userid": i.otherid,
         "username": i.username,
-        "journalid": i.referid,
+        "submitid": i.referid,
         "title": i.title,
         "commentid": i.targetid,
     } for i in d.engine.execute("""
-        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, jo.title
+        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, su.title
         FROM welcome we
             INNER JOIN profile pr ON we.otherid = pr.userid
-            INNER JOIN journal jo ON we.referid = jo.journalid
+            INNER JOIN submission su ON we.referid = su.submitid
         WHERE we.userid = %(user)s
             AND we.type = 4030
         ORDER BY we.unixtime DESC
@@ -569,16 +550,16 @@ def select_comments(userid):
         "unixtime": i.unixtime,
         "userid": i.otherid,
         "username": i.username,
-        "journalid": i.journalid,
+        "submitid": i.submitid,
         "title": i.title,
         "replyid": i.referid,
         "commentid": i.targetid,
     } for i in d.engine.execute("""
-        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, jo.journalid, jo.title
+        SELECT we.welcomeid, we.unixtime, we.otherid, we.referid, we.targetid, pr.username, su.submitid, su.title
         FROM welcome we
             INNER JOIN profile pr ON we.otherid = pr.userid
-            INNER JOIN journalcomment jc ON we.referid = jc.commentid
-            INNER JOIN journal jo ON jc.targetid = jo.journalid
+            INNER JOIN comments jc ON we.referid = jc.commentid
+            INNER JOIN submission su ON jc.target_sub = su.submitid
         WHERE we.userid = %(user)s
             AND we.type = 4035
         ORDER BY we.unixtime DESC

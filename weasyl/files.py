@@ -75,31 +75,6 @@ def clear_temporary(userid):
     _remove_glob("{temp}{userid}.*".format(temp=m.MACRO_SYS_TEMP_PATH, userid=userid))
 
 
-def make_character_directory(target):
-    path = d.get_character_directory(target)
-    makedirs_exist_ok(path)
-
-
-def make_resource(userid, target, feature, extension=None):
-    """
-    Returns the full path to the specified resource.
-    """
-    root = d.get_character_directory(target)
-
-    if feature == "char/submit":
-        filename = "%d.submit.%d%s" % (target, userid, extension)
-    elif feature == "char/cover":
-        filename = "%d.cover%s" % (target, extension)
-    elif feature == "char/thumb":
-        filename = "%d.thumb%s" % (target, extension)
-    elif feature == "char/.thumb":
-        filename = "%d.new.thumb" % (target,)
-    else:
-        raise ValueError("Unknown character resource %r" % (feature,))
-
-    return os.path.join(root, filename)
-
-
 _feature_typeflags = {
     "submit": "=",
     "cover": "~",

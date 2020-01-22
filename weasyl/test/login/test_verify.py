@@ -14,7 +14,7 @@ email = 'test@weasyl.com'
 
 
 def _create_pending_account(invalid=False):
-    d.engine.execute(d.meta.tables["logincreate"].insert(), {
+    d.engine.execute(d.meta.tables["logincreate"].insert(, None, {
         "token": token,
         "username": username,
         "login_name": username,

@@ -10,7 +10,7 @@ from libweasyl import staff
 from libweasyl.text import slug_for
 
 from weasyl import (
-    character, comment, define, errorcode, folder, journal, macro, profile,
+    comment, define, errorcode, folder, macro, profile,
     report, searchtag, shout, submission, orm)
 from weasyl.controllers.decorators import login_required, supports_json, token_checked
 from weasyl.error import WeasylError
@@ -35,6 +35,7 @@ def submit_visual_get_(request):
         # Subtypes
         [i for i in macro.MACRO_SUBCAT_LIST if 1000 <= i[0] < 2000],
         profile.get_user_ratings(request.userid),
+        '/submit/visual',
         form,
     ], title="Visual Artwork"))
 
@@ -172,17 +173,27 @@ def submit_multimedia_post_(request):
 
 @login_required
 def submit_character_get_(request):
-    return Response(define.webpage(request.userid, "submit/character.html", [
+    form = request.web_input(title='', tags=[], description='', imageURL='', baseURL='')
+    if form.baseURL:
+        form.imageURL = urlparse.urljoin(form.baseURL, form.imageURL)
+
+    return Response(define.webpage(request.userid, "submit/visual.html", [
+        # Folders
+        [],
+        # Subtypes
+        [5000],
         profile.get_user_ratings(request.userid),
+        '/submit/character',
+        form,
     ], title="Character Profile"))
 
 
 @login_required
 @token_checked
 def submit_character_post_(request):
-    form = request.web_input(submitfile="", thumbfile="", title="", age="", gender="",
-                             height="", weight="", species="", rating="", friends="",
-                             content="", tags="")
+    form = request.web_input(submitfile="", thumbfile="", title="",
+                             rating="", friends="", critique="", content="",
+                             tags="")
 
     tags = searchtag.parse_tags(form.tags)
 
@@ -193,19 +204,24 @@ def submit_character_post_(request):
     if not rating:
         raise WeasylError("ratingInvalid")
 
-    c = orm.Character()
-    c.age = form.age
-    c.gender = form.gender
-    c.height = form.height
-    c.weight = form.weight
-    c.species = form.species
-    c.char_name = form.title
-    c.content = form.content
-    c.rating = rating
+    s = orm.Submission()
+    s.title = form.title
+    s.rating = rating
+    s.content = form.content
+    s.folderid = None
+    s.subtype = 5000
+    s.submitter_ip_address = request.client_addr
+    s.submitter_user_agent_id = get_user_agent_id(ua_string=request.user_agent)
 
-    charid = character.create(request.userid, c, form.friends, tags,
-                              form.thumbfile, form.submitfile)
-    raise HTTPSeeOther(location="/manage/thumbnail?charid=%i" % (charid,))
+    submitid = submission.create_visual(
+        request.userid, s, friends_only=form.friends, tags=tags,
+        imageURL=None, thumbfile=form.thumbfile, submitfile=form.submitfile,
+        critique=form.critique, create_notifications=('nonotification' not in form))
+
+    if 'customthumb' in form:
+        raise HTTPSeeOther(location="/manage/thumbnail?submitid=%i" % (submitid,))
+    else:
+        raise HTTPSeeOther(location="/submission/%i/%s" % (submitid, slug_for(form.title)))
 
 
 @login_required
@@ -228,15 +244,15 @@ def submit_journal_post_(request):
     if not rating:
         raise WeasylError("ratingInvalid")
 
-    j = orm.Journal()
+    j = orm.Submission()
     j.title = form.title
     j.rating = rating
     j.content = form.content
+    j.subtype = 6000
     j.submitter_ip_address = request.client_addr
     j.submitter_user_agent_id = get_user_agent_id(ua_string=request.user_agent)
-    journalid = journal.create(request.userid, j, friends_only=form.friends,
-                               tags=tags)
-    raise HTTPSeeOther(location="/journal/%i/%s" % (journalid, slug_for(form.title)))
+    journalid = submission.create_journal(request.userid, j, friends_only=form.friends, tags=tags)
+    raise HTTPSeeOther(location="/submission/%i/%s" % (journalid, slug_for(form.title)))
 
 
 @login_required
@@ -268,13 +284,12 @@ def submit_shout_(request):
 @token_checked
 @supports_json
 def submit_comment_(request):
-    form = request.web_input(submitid="", charid="", journalid="", updateid="", parentid="", content="", format="")
+    form = request.web_input(submitid="", updateid="", parentid="", content="", format="")
     updateid = define.get_int(form.updateid)
 
-    commentid = comment.insert(request.userid, charid=define.get_int(form.charid),
+    commentid = comment.insert(request.userid,
                                parentid=define.get_int(form.parentid),
                                submitid=define.get_int(form.submitid),
-                               journalid=define.get_int(form.journalid),
                                updateid=updateid,
                                content=form.content)
 
@@ -283,10 +298,6 @@ def submit_comment_(request):
 
     if define.get_int(form.submitid):
         raise HTTPSeeOther(location="/submission/%i#cid%i" % (define.get_int(form.submitid), commentid))
-    elif define.get_int(form.charid):
-        raise HTTPSeeOther(location="/character/%i#cid%i" % (define.get_int(form.charid), commentid))
-    elif define.get_int(form.journalid):
-        raise HTTPSeeOther(location="/journal/%i#cid%i" % (define.get_int(form.journalid), commentid))
     elif updateid:
         raise HTTPSeeOther(location="/site-updates/%i#cid%i" % (updateid, commentid))
     else:
@@ -296,33 +307,27 @@ def submit_comment_(request):
 @login_required
 @token_checked
 def submit_report_(request):
-    form = request.web_input(submitid="", charid="", journalid="", reportid="", violation="", content="")
+    form = request.web_input(submitid="", reportid="", violation="", content="")
 
     report.create(request.userid, form)
     if form.reportid:
         raise HTTPSeeOther(location="/modcontrol/report?reportid=%s" % (form.reportid,))
     elif define.get_int(form.submitid):
         raise HTTPSeeOther(location="/submission/%i" % (define.get_int(form.submitid),))
-    elif define.get_int(form.charid):
-        raise HTTPSeeOther(location="/character/%i" % (define.get_int(form.charid),))
-    else:
-        raise HTTPSeeOther(location="/journal/%i" % (define.get_int(form.journalid),))
 
 
 @login_required
 @token_checked
 def submit_tags_(request):
-    form = request.web_input(submitid="", charid="", journalid="", preferred_tags_userid="", optout_tags_userid="", tags="")
+    form = request.web_input(submitid="", preferred_tags_userid="", optout_tags_userid="", tags="")
 
     tags = searchtag.parse_tags(form.tags)
 
     submitid = define.get_int(form.submitid)
-    charid = define.get_int(form.charid)
-    journalid = define.get_int(form.journalid)
     preferred_tags_userid = define.get_int(form.preferred_tags_userid)
     optout_tags_userid = define.get_int(form.optout_tags_userid)
 
-    result = searchtag.associate(request.userid, tags, submitid, charid, journalid, preferred_tags_userid, optout_tags_userid)
+    result = searchtag.associate(request.userid, tags, submitid, preferred_tags_userid, optout_tags_userid)
     if result:
         failed_tag_message = ""
         if result["add_failure_restricted_tags"] is not None:
@@ -332,20 +337,6 @@ def submit_tags_(request):
         failed_tag_message += "Any other changes to this item's tags were completed."
     if submitid:
         location = "/submission/%i" % (submitid,)
-        if not result:
-            raise HTTPSeeOther(location=location)
-        else:
-            return Response(define.errorpage(request.userid, failed_tag_message,
-                                             [["Return to Content", location]]))
-    elif charid:
-        location = "/character/%i" % (charid,)
-        if not result:
-            raise HTTPSeeOther(location=location)
-        else:
-            return Response(define.errorpage(request.userid, failed_tag_message,
-                                             [["Return to Content", location]]))
-    elif journalid:
-        location = "/journal/%i" % (journalid,)
         if not result:
             raise HTTPSeeOther(location=location)
         else:
@@ -381,34 +372,6 @@ def reupload_submission_post_(request):
 
     submission.reupload(request.userid, form.targetid, form.submitfile)
     raise HTTPSeeOther(location="/submission/%i" % (form.targetid,))
-
-
-@login_required
-def reupload_character_get_(request):
-    form = request.web_input(charid="")
-    form.charid = define.get_int(form.charid)
-
-    if request.userid != define.get_ownerid(charid=form.charid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
-
-    return Response(define.webpage(request.userid, "submit/reupload_submission.html", [
-        "character",
-        # charid
-        form.charid,
-    ], title="Reupload Character Image"))
-
-
-@login_required
-@token_checked
-def reupload_character_post_(request):
-    form = request.web_input(targetid="", submitfile="")
-    form.targetid = define.get_int(form.targetid)
-
-    if request.userid != define.get_ownerid(charid=form.targetid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
-
-    character.reupload(request.userid, form.targetid, form.submitfile)
-    raise HTTPSeeOther(location="/character/%i" % (form.targetid,))
 
 
 @login_required
@@ -484,91 +447,6 @@ def edit_submission_post_(request):
     ))
 
 
-@login_required
-def edit_character_get_(request):
-    form = request.web_input(charid="", anyway="")
-    form.charid = define.get_int(form.charid)
-
-    detail = character.select_view(request.userid, form.charid, ratings.EXPLICIT.code, False, anyway=form.anyway)
-
-    if request.userid != detail['userid'] and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
-
-    return Response(define.webpage(request.userid, "edit/character.html", [
-        # Submission detail
-        detail,
-        profile.get_user_ratings(detail['userid']),
-    ], title="Edit Character"))
-
-
-@login_required
-@token_checked
-def edit_character_post_(request):
-    form = request.web_input(charid="", title="", age="", gender="", height="",
-                             weight="", species="", rating="", content="", friends="")
-
-    rating = ratings.CODE_MAP.get(define.get_int(form.rating))
-    if not rating:
-        raise WeasylError("ratingInvalid")
-
-    c = orm.Character()
-    c.charid = define.get_int(form.charid)
-    c.age = form.age
-    c.gender = form.gender
-    c.height = form.height
-    c.weight = form.weight
-    c.species = form.species
-    c.char_name = form.title
-    c.content = form.content
-    c.rating = rating
-
-    character.edit(request.userid, c, friends_only=form.friends)
-    raise HTTPSeeOther(location="/character/%i/%s%s" % (
-        define.get_int(form.charid),
-        slug_for(form.title),
-        ("?anyway=true" if request.userid in staff.MODS else '')
-    ))
-
-
-@login_required
-def edit_journal_get_(request):
-    form = request.web_input(journalid="", anyway="")
-    form.journalid = define.get_int(form.journalid)
-
-    detail = journal.select_view(request.userid, ratings.EXPLICIT.code, form.journalid, False, anyway=form.anyway)
-
-    if request.userid != detail['userid'] and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
-
-    return Response(define.webpage(request.userid, "edit/journal.html", [
-        # Journal detail
-        detail,
-        profile.get_user_ratings(detail['userid']),
-    ], title="Edit Journal"))
-
-
-@login_required
-@token_checked
-def edit_journal_post_(request):
-    form = request.web_input(journalid="", title="", rating="", friends="", content="")
-
-    rating = ratings.CODE_MAP.get(define.get_int(form.rating))
-    if not rating:
-        raise WeasylError("ratingInvalid")
-
-    j = orm.Journal()
-    j.journalid = define.get_int(form.journalid)
-    j.title = form.title
-    j.rating = rating
-    j.content = form.content
-    journal.edit(request.userid, j, friends_only=form.friends)
-    raise HTTPSeeOther(location="/journal/%i/%s%s" % (
-        define.get_int(form.journalid),
-        slug_for(form.title),
-        ("?anyway=true" if request.userid in staff.MODS else '')
-    ))
-
-
 # Content removal functions
 @login_required
 @token_checked
@@ -580,30 +458,6 @@ def remove_submission_(request):
         raise HTTPSeeOther(location="/control")  # todo
     else:
         raise HTTPSeeOther(location="/submissions?userid=%i" % (ownerid,))
-
-
-@login_required
-@token_checked
-def remove_character_(request):
-    form = request.web_input(charid="")
-
-    ownerid = character.remove(request.userid, define.get_int(form.charid))
-    if request.userid == ownerid:
-        raise HTTPSeeOther(location="/control")  # todo
-    else:
-        raise HTTPSeeOther(location="/characters?userid=%i" % (ownerid,))
-
-
-@login_required
-@token_checked
-def remove_journal_(request):
-    form = request.web_input(journalid="")
-
-    ownerid = journal.remove(request.userid, define.get_int(form.journalid))
-    if request.userid == ownerid:
-        raise HTTPSeeOther(location="/control")  # todo
-    else:
-        raise HTTPSeeOther(location="/journals?userid=%i" % (ownerid,))
 
 
 @login_required
@@ -625,7 +479,5 @@ def remove_comment_(request):
         raise HTTPSeeOther(location="/shouts?userid=%i" % (targetid,))
     elif form.feature == "submit":
         raise HTTPSeeOther(location="/submission/%i" % (targetid,))
-    elif form.feature == "char":
-        raise HTTPSeeOther(location="/character/%i" % (targetid,))
     elif form.feature == "journal":
         raise HTTPSeeOther(location="/journal/%i" % (targetid,))

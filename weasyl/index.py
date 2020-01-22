@@ -7,7 +7,6 @@ import operator
 from libweasyl import ratings
 
 from weasyl import blocktag
-from weasyl import character
 from weasyl import define as d
 from weasyl import ignoreuser
 from weasyl import macro as m
@@ -32,12 +31,12 @@ def recent_submissions():
     for s in submissions:
         s['tags'] = tag_map.get(s['submitid'], [])
 
-    characters = character.select_list(
-        userid=None, rating=ratings.EXPLICIT.code, limit=256)
+    characters = submission.select_list(
+        userid=None, rating=ratings.EXPLICIT.code, limit=256, subcat=5000, index_page_filter=True)
     tag_map = searchtag.select_list(
-        d.meta.tables['searchmapchar'], [c['charid'] for c in characters])
+        d.meta.tables['searchmapsubmit'], [c['submitid'] for c in characters])
     for c in characters:
-        c['tags'] = tag_map.get(c['charid'], [])
+        c['tags'] = tag_map.get(c['submitid'], [])
 
     submissions.extend(characters)
     submissions.sort(key=operator.itemgetter('unixtime'), reverse=True)
@@ -86,16 +85,13 @@ def filter_submissions(userid, submissions, incidence_limit=3):
 def partition_submissions(submissions):
     buckets = collections.defaultdict(list)
     for s in submissions:
-        if 'charid' in s:
-            bucket = 'char'
-        else:
-            bucket = s['subtype'] // 1000
+        bucket = s['subtype'] // 1000
         buckets[bucket].append(s)
     ret = [
         submissions[:22],
         d.get_random_set(submissions, 11),
     ]
-    for bucket in [1, 2, 3, 'char']:
+    for bucket in [1, 2, 3, 5]:
         ret.append(buckets[bucket][:11])
     return ret
 

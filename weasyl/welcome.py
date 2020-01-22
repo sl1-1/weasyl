@@ -261,23 +261,23 @@ def collectrequest_remove(userid, otherid, submitid):
 #   3100 user favorited character
 #   3110 user favorited journal
 
-def favorite_insert(db, userid, submitid=None, charid=None, journalid=None, otherid=None):
-    ownerid = d.get_ownerid(submitid, charid, journalid)
+def favorite_insert(db, userid, targetid=None, f_type=None, otherid=None):
+    ownerid = d.get_ownerid(targetid)
     if not otherid:
         otherid = ownerid
 
-    if submitid:
+    if f_type == "s":
         notiftype = 3020 if ownerid == otherid else 3050
-    elif charid:
+    elif f_type == "f":
         notiftype = 3100
-    elif journalid:
+    elif f_type == "j":
         notiftype = 3110
     else:
         raise WeasylError("Unexpected")
 
     db.execute(
         "INSERT INTO welcome (userid, otherid, referid, targetid, unixtime, type) VALUES (%s, %s, %s, 0, %s, %s)",
-        (otherid, userid, d.get_targetid(submitid, charid, journalid), d.get_time(), notiftype),
+        (otherid, userid, targetid, d.get_time(), notiftype),
     )
 
 
@@ -286,13 +286,9 @@ def favorite_insert(db, userid, submitid=None, charid=None, journalid=None, othe
 #   3100 user favorited character
 #   3110 user favorited journal
 
-def favorite_remove(db, userid, submitid=None, charid=None, journalid=None):
-    db.execute(
-        "DELETE FROM welcome WHERE (otherid, referid, type) = (%(user)s, %(refer)s, %(type)s)",
-        user=userid,
-        refer=d.get_targetid(submitid, charid, journalid),
-        type=3020 if submitid else 3100 if charid else 3110,
-    )
+def favorite_remove(userid, submitid=None):
+    q = d.connect().query(site.SavedNotification).filter_by(otherid=userid, referid=submitid)
+    q.delete(synchronize_session='fetch')
 
 
 # notifications
@@ -320,16 +316,19 @@ def shoutreply_insert(userid, commentid, otherid, parentid, staffnote=False):
 #   4050 collection comment
 #   4060 site update comment
 
-def comment_insert(userid, commentid, otherid, submitid, charid, journalid, updateid):
+def comment_insert(userid, commentid, otherid, submitid, updateid):
     assert otherid
 
     if submitid:
-        ownerid = d.get_ownerid(submitid, charid, journalid)
-        notiftype = 4020 if ownerid == otherid else 4050
-    elif charid:
-        notiftype = 4040
-    elif journalid:
-        notiftype = 4030
+        submission = content.Submission.query.get(submitid)
+        if submission.subtype < 5000:
+            notiftype = 4020 if submission.userid == otherid else 4050
+        elif submission.subtype == 5000:
+            notiftype = 4040
+        elif submission.subtype == 6000:
+            notiftype = 4030
+        else:
+            raise WeasylError("Unexpected")
     elif updateid:
         notiftype = 4060
     else:
@@ -337,7 +336,7 @@ def comment_insert(userid, commentid, otherid, submitid, charid, journalid, upda
 
     d.execute(
         "INSERT INTO welcome (userid, otherid, referid, targetid, unixtime, type) VALUES (%i, %i, %i, %i, %i, %i)",
-        [otherid, userid, d.get_targetid(submitid, charid, journalid, updateid), commentid, d.get_time(), notiftype])
+        [otherid, userid, d.get_targetid(submitid, updateid), commentid, d.get_time(), notiftype])
 
 
 # notifications
@@ -362,7 +361,7 @@ def comment_remove(commentid, feature):
     }[feature]
     reply_code = comment_code + 5
 
-    if feature == 'submit' or feature == 'shout':
+    if feature != 'journal':
         recursive_ids = d.engine.execute("""WITH RECURSIVE rc AS (
               SELECT commentid FROM comments WHERE commentid = %s
               UNION ALL
@@ -391,13 +390,17 @@ def comment_remove(commentid, feature):
 #   4045 character comment reply
 #   4065 site update comment reply
 
-def commentreply_insert(userid, commentid, otherid, parentid, submitid, charid, journalid, updateid):
+def commentreply_insert(userid, commentid, otherid, parentid, submitid, updateid):
     if submitid:
-        notiftype = 4025
-    elif charid:
-        notiftype = 4045
-    elif journalid:
-        notiftype = 4035
+        submission = content.Submission.query.get(submitid)
+        if submission.subtype < 5000:
+            notiftype = 4025
+        elif submission.subtype == 5000:
+            notiftype = 4045
+        elif submission.subtype == 6000:
+            notiftype = 4035
+        else:
+            raise WeasylError("Unexpected")
     elif updateid:
         notiftype = 4065
     else:

@@ -318,15 +318,15 @@ def _select_statistics(userid):
             (SELECT COUNT(*) FROM favorite WHERE userid = %(user)s),
             (SELECT
                 (SELECT COUNT(*) FROM favorite fa JOIN submission su ON fa.targetid = su.submitid
-                    WHERE su.userid = %(user)s AND fa.type = 's') +
-                (SELECT COUNT(*) FROM favorite fa JOIN character ch ON fa.targetid = ch.charid
-                    WHERE ch.userid = %(user)s AND fa.type = 'f') +
-                (SELECT COUNT(*) FROM favorite fa JOIN journal jo ON fa.targetid = jo.journalid
-                    WHERE jo.userid = %(user)s AND fa.type = 'j')),
+                    WHERE su.userid = %(user)s AND su.subtype < 5000 AND fa.type = 's') +
+                (SELECT COUNT(*) FROM favorite fa JOIN submission su ON fa.targetid = su.submitid
+                    WHERE su.userid = %(user)s AND su.subtype = 5000 AND  fa.type = 'f') +
+                (SELECT COUNT(*) FROM favorite fa JOIN submission su ON fa.targetid = su.submitid
+                    WHERE su.userid = %(user)s AND su.subtype = 6000 AND fa.type = 'j')),
             (SELECT COUNT(*) FROM watchuser WHERE otherid = %(user)s),
             (SELECT COUNT(*) FROM watchuser WHERE userid = %(user)s),
             (SELECT COUNT(*) FROM submission WHERE userid = %(user)s AND settings !~ 'h'),
-            (SELECT COUNT(*) FROM journal WHERE userid = %(user)s AND settings !~ 'h'),
+            (SELECT COUNT(*) FROM submission WHERE userid = %(user)s AND subtype = 6000 AND settings !~ 'h'),
             (SELECT COUNT(*) FROM comments WHERE target_user = %(user)s AND settings !~ 'h' AND settings ~ 's')
     """, user=userid).first()
 

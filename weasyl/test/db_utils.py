@@ -259,7 +259,7 @@ def create_blocktag(userid, tagid, rating):
 
 def create_favorite(userid, **kwargs):
     unixtime = kwargs.pop('unixtime', None)
-    favorite.insert(userid, **kwargs)
+    favorite.insert(userid, None)
 
     if unixtime is not None:
         if 'submitid' in kwargs:

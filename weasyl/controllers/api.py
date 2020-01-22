@@ -13,8 +13,8 @@ from weasyl.controllers.decorators import token_checked
 from weasyl.error import WeasylError
 from weasyl import define as d, macro as m
 from weasyl import (
-    api, character, collection, commishinfo, favorite, folder,
-    index, journal, media, message, profile, submission)
+    api, collection, commishinfo, favorite, folder,
+    index, media, message, profile, submission)
 
 
 _ERROR_UNEXPECTED = {
@@ -188,24 +188,6 @@ def api_submission_view_(request):
         anyway=bool(form.anyway), increment_views=bool(form.increment_views))
 
 
-@view_config(route_name='api_journal_view', renderer='json')
-@api_method
-def api_journal_view_(request):
-    form = request.web_input(anyway='', increment_views='')
-    return journal.select_view_api(
-        request.userid, int(request.matchdict['journalid']),
-        anyway=bool(form.anyway), increment_views=bool(form.increment_views))
-
-
-@view_config(route_name='api_character_view', renderer='json')
-@api_method
-def api_character_view_(request):
-    form = request.web_input(anyway='', increment_views='')
-    return character.select_view_api(
-        request.userid, int(request.matchdict['charid']),
-        anyway=bool(form.anyway), increment_views=bool(form.increment_views))
-
-
 @view_config(route_name='api_user_view', renderer='json')
 @api_method
 def api_user_view_(request):
@@ -321,7 +303,7 @@ def api_user_view_(request):
         more_submissions = 'collections'
         featured = None
     elif 'A' in o_config:
-        submissions = character.select_list(userid, rating, 11, otherid=otherid)
+        submissions = submission.select_list(userid, rating, 11, otherid=otherid, subcat=5000)
         more_submissions = 'characters'
         featured = None
     else:

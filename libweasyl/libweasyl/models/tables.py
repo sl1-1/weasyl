@@ -1,6 +1,6 @@
 from sqlalchemy import (
     MetaData, Table, Column, CheckConstraint, ForeignKeyConstraint, UniqueConstraint, Index,
-    Integer, String, Text, text, DateTime, func, Boolean)
+    Integer, String, Text, text, DateTime, func, Boolean, ForeignKey)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TIMESTAMP
 
 
@@ -57,26 +57,6 @@ blocktag = Table(
 )
 
 Index('ind_blocktag_userid', blocktag.c.userid)
-
-
-charcomment = Table(
-    'charcomment', metadata,
-    Column('commentid', Integer(), primary_key=True, nullable=False),
-    Column('userid', Integer(), nullable=False),
-    Column('targetid', Integer(), nullable=False),
-    Column('parentid', Integer(), nullable=False, server_default='0'),
-    Column('content', String(length=10000), nullable=False),
-    Column('unixtime', WeasylTimestampColumn(), nullable=False),
-    Column('indent', Integer(), nullable=False, server_default='0'),
-    Column('settings', String(length=20), nullable=False, server_default=''),
-    Column('hidden_by', Integer(), nullable=True),
-    default_fkey(['targetid'], ['character.charid'], name='charcomment_targetid_fkey'),
-    default_fkey(['userid'], ['login.userid'], name='charcomment_userid_fkey'),
-    default_fkey(['hidden_by'], ['login.userid'], name='charcomment_hidden_by_fkey'),
-)
-
-Index('ind_charcomment_targetid_commentid', charcomment.c.targetid, charcomment.c.commentid)
-
 
 collection = Table(
     'collection', metadata,
@@ -251,32 +231,6 @@ Index('ind_frienduser_otherid', frienduser.c.otherid)
 Index('ind_frienduser_userid', frienduser.c.userid)
 
 
-character = Table(
-    'character', metadata,
-    Column('charid', Integer(), primary_key=True, nullable=False),
-    Column('userid', Integer(), nullable=False),
-    Column('unixtime', WeasylTimestampColumn(), nullable=False),
-    Column('char_name', String(length=100), nullable=False, server_default=''),
-    Column('age', String(length=100), nullable=False, server_default=''),
-    Column('gender', String(length=100), nullable=False, server_default=''),
-    Column('height', String(length=100), nullable=False, server_default=''),
-    Column('weight', String(length=100), nullable=False, server_default=''),
-    Column('species', String(length=100), nullable=False, server_default=''),
-    Column('content', String(length=100000), nullable=False, server_default=u""),
-    Column('rating', RatingColumn, nullable=False),
-    Column('settings', CharSettingsColumn({
-        'h': 'hidden',
-        'f': 'friends-only',
-        't': 'tag-locked',
-        'c': 'comment-locked',
-    }, length=20), nullable=False, server_default=''),
-    Column('page_views', Integer(), nullable=False, server_default='0'),
-    default_fkey(['userid'], ['login.userid'], name='character_userid_fkey'),
-)
-
-Index('ind_character_userid', character.c.userid)
-
-
 google_doc_embeds = Table(
     'google_doc_embeds', metadata,
     Column('submitid', Integer(), primary_key=True, nullable=False),
@@ -294,55 +248,6 @@ ignoreuser = Table(
 )
 
 Index('ind_ignoreuser_userid', ignoreuser.c.userid)
-
-
-journal = Table(
-    'journal', metadata,
-    Column('journalid', Integer(), primary_key=True, nullable=False),
-    Column('userid', Integer(), nullable=False),
-    Column('title', String(length=200), nullable=False),
-    Column('content', String(length=100000), nullable=False),
-    Column('rating', RatingColumn, nullable=False),
-    Column('unixtime', WeasylTimestampColumn(), nullable=False),
-    Column('settings', CharSettingsColumn({
-        'h': 'hidden',
-        'f': 'friends-only',
-        't': 'tag-locked',
-        'c': 'comment-locked',
-    }, length=20), nullable=False, server_default=''),
-    Column('page_views', Integer(), nullable=False, server_default='0'),
-    Column('submitter_ip_address', String(length=45), nullable=True),
-    Column('submitter_user_agent_id', Integer(), nullable=True),
-    Column('is_spam', Boolean(), nullable=False, server_default='f'),
-    default_fkey(['userid'], ['login.userid'], name='journal_userid_fkey'),
-    ForeignKeyConstraint(
-        ['submitter_user_agent_id'],
-        ['user_agents.user_agent_id'],
-        name="journal_user_agent_id_fkey",
-    ),
-)
-
-Index('ind_journal_userid', journal.c.userid)
-Index('ind_journal_is_spam', journal.c.is_spam)
-
-
-journalcomment = Table(
-    'journalcomment', metadata,
-    Column('commentid', Integer(), primary_key=True, nullable=False),
-    Column('userid', Integer(), nullable=False),
-    Column('targetid', Integer(), nullable=False),
-    Column('parentid', Integer(), nullable=False, server_default='0'),
-    Column('content', String(length=10000), nullable=False),
-    Column('unixtime', WeasylTimestampColumn(), nullable=False),
-    Column('indent', Integer(), nullable=False, server_default='0'),
-    Column('settings', String(length=20), nullable=False, server_default=''),
-    Column('hidden_by', Integer(), nullable=True),
-    default_fkey(['targetid'], ['journal.journalid'], name='journalcomment_targetid_fkey'),
-    default_fkey(['userid'], ['login.userid'], name='journalcomment_userid_fkey'),
-    default_fkey(['hidden_by'], ['login.userid'], name='journalcomment_hidden_by_fkey'),
-)
-
-Index('ind_journalcomment_targetid_commentid', journalcomment.c.targetid, journalcomment.c.commentid)
 
 
 login = Table(
@@ -545,8 +450,6 @@ report = Table(
     'report', metadata,
     Column('target_user', Integer(), nullable=True),
     Column('target_sub', Integer(), nullable=True),
-    Column('target_char', Integer(), nullable=True),
-    Column('target_journal', Integer(), nullable=True),
     Column('target_comment', Integer(), nullable=True),
     Column('opened_at', ArrowColumn(), nullable=False),
     Column('urgency', Integer(), nullable=False),
@@ -564,13 +467,10 @@ report = Table(
     Column('closure_explanation', Text(), nullable=True),
     default_fkey(['target_user'], ['login.userid'], name='report_target_user_fkey'),
     default_fkey(['target_sub'], ['submission.submitid'], name='report_target_sub_fkey'),
-    default_fkey(['target_char'], ['character.charid'], name='report_target_char_fkey'),
-    default_fkey(['target_journal'], ['journal.journalid'], name='report_target_journal_fkey'),
     default_fkey(['target_comment'], ['comments.commentid'], name='report_target_comment_fkey'),
     default_fkey(['closerid'], ['login.userid'], name='report_closerid_fkey'),
     CheckConstraint(
         '((target_user IS NOT NULL)::int + (target_sub IS NOT NULL)::int '
-        '  + (target_char IS NOT NULL)::int + (target_journal IS NOT NULL)::int '
         '  + (target_comment IS NOT NULL)::int) = 1',
         name='report_target_check'),
     CheckConstraint(
@@ -591,32 +491,6 @@ reportcomment = Table(
     default_fkey(['userid'], ['login.userid'], name='reportcomment_userid_fkey'),
     default_fkey(['reportid'], ['report.reportid'], name='reportcomment_reportid_fkey'),
 )
-
-
-searchmapchar = Table(
-    'searchmapchar', metadata,
-    Column('tagid', Integer(), primary_key=True, nullable=False),
-    Column('targetid', Integer(), primary_key=True, nullable=False),
-    Column('settings', String(), nullable=False, server_default=''),
-    default_fkey(['targetid'], ['character.charid'], name='searchmapchar_targetid_fkey'),
-    default_fkey(['tagid'], ['searchtag.tagid'], name='searchmapchar_tagid_fkey'),
-)
-
-Index('ind_searchmapchar_tagid', searchmapchar.c.tagid)
-Index('ind_searchmapchar_targetid', searchmapchar.c.targetid)
-
-
-searchmapjournal = Table(
-    'searchmapjournal', metadata,
-    Column('tagid', Integer(), primary_key=True, nullable=False),
-    Column('targetid', Integer(), primary_key=True, nullable=False),
-    Column('settings', String(), nullable=False, server_default=''),
-    default_fkey(['targetid'], ['journal.journalid'], name='searchmapjournal_targetid_fkey'),
-    default_fkey(['tagid'], ['searchtag.tagid'], name='searchmapjournal_tagid_fkey'),
-)
-
-Index('ind_searchmapjournal_targetid', searchmapjournal.c.targetid)
-Index('ind_searchmapjournal_tagid', searchmapjournal.c.tagid)
 
 
 searchmapsubmit = Table(

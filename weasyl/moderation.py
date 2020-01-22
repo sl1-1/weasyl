@@ -11,7 +11,6 @@ from libweasyl import ratings, staff, text
 
 from weasyl import avatar
 from weasyl import banner
-from weasyl import character
 from weasyl import define as d
 from weasyl import index
 from weasyl import media
@@ -496,32 +495,34 @@ def submissionsbyuser(userid, form):
     return ret
 
 
-def charactersbyuser(userid, form):
-    if userid not in staff.MODS:
-        raise WeasylError("Unexpected")
 
-    query = d.engine.execute("""
-        SELECT
-            ch.charid, pr.username, ch.unixtime,
-            ch.char_name, ch.age, ch.gender, ch.height, ch.weight, ch.species,
-            ch.content, ch.rating, ch.settings, ch.page_views, pr.config
-        FROM character ch
-        INNER JOIN profile pr ON ch.userid = pr.userid
-        INNER JOIN login ON ch.userid = login.userid
-        WHERE login.login_name = %(sysname)s
-    """, sysname=d.get_sysname(form.name))
-
-    return [{
-        "contype": 20,
-        "userid": userid,
-        "charid": item[0],
-        "username": item[1],
-        "unixtime": item[2],
-        "title": item[3],
-        "rating": item[10],
-        "settings": item[11],
-        "sub_media": character.fake_media_items(item[0], userid, d.get_sysname(item[1]), item[11]),
-    } for item in query]
+# def charactersbyuser(userid, form):
+#     # TODO FIX THIS
+#     if userid not in staff.MODS:
+#         raise WeasylError("Unexpected")
+#
+#     query = d.engine.execute("""
+#         SELECT
+#             ch.charid, pr.username, ch.unixtime,
+#             ch.char_name, ch.age, ch.gender, ch.height, ch.weight, ch.species,
+#             ch.content, ch.rating, ch.settings, ch.page_views, pr.config
+#         FROM character ch
+#         INNER JOIN profile pr ON ch.userid = pr.userid
+#         INNER JOIN login ON ch.userid = login.userid
+#         WHERE login.login_name = %(sysname)s
+#     """, sysname=d.get_sysname(form.name))
+#
+#     return [{
+#         "contype": 20,
+#         "userid": userid,
+#         "charid": item[0],
+#         "username": item[1],
+#         "unixtime": item[2],
+#         "title": item[3],
+#         "rating": item[10],
+#         "settings": item[11],
+#         "sub_media": character.fake_media_items(item[0], userid, d.get_sysname(item[1]), item[11]),
+#     } for item in query]
 
 
 def journalsbyuser(userid, form):
@@ -691,8 +692,6 @@ def editcatchphrase(userid, otherid, content):
 
 _tables = [
     (d.meta.tables['submission'], 'submitid', 'title', 'submission'),
-    (d.meta.tables['character'], 'charid', 'char_name', 'character'),
-    (d.meta.tables['journal'], 'journalid', 'title', 'journal'),
 ]
 
 

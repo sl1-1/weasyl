@@ -8,6 +8,7 @@ import arrow
 import sqlalchemy as sa
 
 from libweasyl.cache import region
+from libweasyl.models import content, helpers
 from libweasyl import (
     html,
     images,
@@ -143,11 +144,11 @@ def check_for_duplicate_media(userid, mediaid):
 
 def _create_submission(expected_type):
     valid_types = {id for (id, name) in m.MACRO_SUBCAT_LIST if id // 1000 == expected_type}
+    valid_types = valid_types | {5000}
 
     def wrapper(create_specific):
         def create_generic(userid, submission, **kwargs):
             tags = kwargs['tags']
-
             if submission.subtype not in valid_types:
                 submission.subtype = expected_type * 1000 + 999
 
@@ -288,11 +289,16 @@ def create_visual(userid, submission,
 
     # Create notifications
     if create_notifications:
-        _create_notifications(userid, submitid, submission.rating, settings,
-                              submission.title, tags)
+        if submission.subtype != 5000:
+            _create_notifications(userid, submitid, submission.rating, settings, submission.title, tags)
+        else:
+            welcome.character_insert(userid, submitid, rating=submission.rating.code, settings=settings)
 
-    d.metric('increment', 'submissions')
-    d.metric('increment', 'visualsubmissions')
+    if submission.subtype == 5000:
+        d.metric('increment', 'characters')
+    else:
+        d.metric('increment', 'submissions')
+        d.metric('increment', 'visualsubmissions')
 
     return submitid
 
@@ -520,6 +526,45 @@ def create_multimedia(userid, submission, embedlink=None, friends_only=None,
     return submitid, bool(thumb_media_item)
 
 
+def create_journal(userid, journal, friends_only=False, tags=None):
+    # Check invalid arguments
+    if not journal.title:
+        raise WeasylError("titleInvalid")
+    elif not journal.content:
+        raise WeasylError("contentInvalid")
+    elif not journal.rating:
+        raise WeasylError("ratingInvalid")
+    profile.check_user_rating_allowed(userid, journal.rating)
+
+    journal.userid = userid
+    journal.unixtime = arrow.get()
+    journal.sorttime = arrow.get()
+
+    # Assign settings
+    settings = []
+    if friends_only:
+        settings.append('friends-only')
+    journal.settings = helpers.CharSettings(settings, {}, {})
+
+    # Run the journal through Akismet to check for spam
+    journal.is_spam = _check_for_spam(journal, userid)
+    db = d.connect()
+    db.add(journal)
+    db.flush()
+
+    # Assign search tags
+    searchtag.associate(userid, tags, journal.submitid)
+
+    # Create notifications
+    if "m" not in settings:
+        welcome.journal_insert(userid, journal.submitid, rating=journal.rating.code,
+                               settings=settings)
+
+    d.metric('increment', 'journals')
+
+    return journal.submitid
+
+
 def reupload(userid, submitid, submitfile):
     submitsize = len(submitfile)
 
@@ -602,10 +647,13 @@ def select_view(userid, submitid, rating, ignore=True, anyway=None):
 
     # Get submission filename
     submitfile = media.get_submission_media(submitid).get('submission', [None])[0]
+    print(submitfile)
 
     # Get submission text
     if submitfile and submitfile['file_type'] in ['txt', 'htm']:
         submittext = files.read(submitfile['full_file_path'])
+    elif query[6] == 6000:
+        submittext = query[5]
     else:
         submittext = None
 
@@ -822,6 +870,8 @@ def select_query(userid, rating, otherid=None, folderid=None,
 
     if subcat:
         statement.append(" AND su.subtype >= %i AND su.subtype < %i" % (subcat, subcat + 1000))
+    else:
+        statement.append(" AND su.subtype < 5000")
 
     if "critique" in options:
         statement.append(" AND su.settings ~ 'q' AND su.unixtime > %i" % (d.get_time() - 259200,))
@@ -905,8 +955,15 @@ def select_list(userid, rating, limit, otherid=None, folderid=None,
     statement.append(
         " ORDER BY %s%s LIMIT %i" % ("RANDOM()" if randomize else "su.submitid", "" if backid else " DESC", limit))
 
+    if subcat == 5000:
+        contype = 20
+    elif subcat == 6000:
+        contype = 30
+    else:
+        contype = 10
+
     query = [{
-        "contype": 10,
+        "contype": contype,
         "submitid": i[0],
         "title": i[1],
         "rating": i[2],
@@ -918,6 +975,38 @@ def select_list(userid, rating, limit, otherid=None, folderid=None,
     media.populate_with_submission_media(query)
 
     return query[::-1] if backid else query
+
+
+def select_latest(userid, rating, otherid=None, folderid=None, subcat=None, exclude=None,
+                  profile_page_filter=False, index_page_filter=False, featured_filter=False):
+
+    statement = [
+        "SELECT su.submitid, su.title, su.rating, su.unixtime, "
+        "su.userid, pr.username, su.settings, su.subtype, su.content "]
+
+    statement.extend(select_query(
+        userid, rating, otherid, folderid, None, None, subcat, exclude, [], profile_page_filter,
+        index_page_filter, featured_filter))
+
+    statement.append(" ORDER BY su.submitid DESC LIMIT 1")
+
+    query = [{
+        "submitid": i[0],
+        "title": i[1],
+        "rating": i[2],
+        "unixtime": i[3],
+        "userid": i[4],
+        "username": i[5],
+        "subtype": i[7],
+        "content": i[8],
+        "comments": d.engine.scalar(
+                "SELECT count(*) FROM comments WHERE target_sub = %(submitid)s AND settings !~ 'h'",
+                submitid=i[0],
+            ),
+    } for i in d.execute("".join(statement))]
+    media.populate_with_submission_media(query)
+
+    return query[0] if query else None
 
 
 def select_featured(userid, otherid, rating):

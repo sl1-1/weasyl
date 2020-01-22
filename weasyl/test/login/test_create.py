@@ -184,7 +184,7 @@ def test_create_fails_if_pending_account_has_same_email():
     in logincreate. If so, login.create() will not permit another account to be
     made for the same address.
     """
-    d.engine.execute(d.meta.tables["logincreate"].insert(), {
+    d.engine.execute(d.meta.tables["logincreate"].insert(, None, {
         "token": 40 * "a",
         "username": "existing",
         "login_name": "existing",
@@ -244,7 +244,7 @@ def test_usernames_must_be_unique():
 
 @pytest.mark.usefixtures('db')
 def test_usernames_cannot_match_pending_account_usernames():
-    d.engine.execute(d.meta.tables["logincreate"].insert(), {
+    d.engine.execute(d.meta.tables["logincreate"].insert(, None, {
         "token": 40 * "a",
         "username": user_name,
         "login_name": user_name,
@@ -293,7 +293,7 @@ class TestAccountCreationBlacklist(object):
         when the domain portion of the email address is contained in the emailblacklist
         table.
         """
-        d.engine.execute(d.meta.tables["emailblacklist"].insert(), {
+        d.engine.execute(d.meta.tables["emailblacklist"].insert(, None, {
             "domain_name": "blacklisted.com",
             "reason": "test case for login.create()",
             "added_by": db_utils.create_user(),
@@ -313,7 +313,7 @@ class TestAccountCreationBlacklist(object):
         Blocked: badsite.net
         Also blocked: subdomain.badsite.net
         """
-        d.engine.execute(d.meta.tables["emailblacklist"].insert(), {
+        d.engine.execute(d.meta.tables["emailblacklist"].insert(, None, {
             "domain_name": "blacklisted.com",
             "reason": "test case for login.create()",
             "added_by": db_utils.create_user(),
@@ -352,7 +352,7 @@ class TestAccountCreationBlacklist(object):
         /Not/ Blocked: notabadsite.net
         Also /Not/ blocked: subdomain.notabadsite.net
         """
-        d.engine.execute(d.meta.tables["emailblacklist"].insert(), {
+        d.engine.execute(d.meta.tables["emailblacklist"].insert(, None, {
             "domain_name": "blacklisted.com",
             "reason": "test case for login.create()",
             "added_by": db_utils.create_user(),

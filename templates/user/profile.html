@@ -50,9 +50,9 @@ $:{RENDER("common/user_tabs.html", [profile['username'], "profile", profile['sho
           <div id="uf-image">
             <a href="/submission/${featured['submitid']}/${SLUG(featured['title'])}"><img src="${cover['display_url']}" alt="${blurb} image: ${featured['title']}" /></a>
         $elif featured['contype'] == 20:
-          <h3>Most Recent: <a class="color-c" href="/character/${featured['charid']}/${SLUG(featured['title'])}">${featured['title']}</a></h3>
+          <h3>Most Recent: <a class="color-c" href="/character/${featured['submitid']}/${SLUG(featured['title'])}">${featured['title']}</a></h3>
           <div id="uf-image">
-            <a href="/character/${featured['charid']}/${SLUG(featured['title'])}"><img src="${cover['display_url']}" alt="${blurb} character: ${featured['title']}" /></a>
+            <a href="/character/${featured['submitid']}/${SLUG(featured['title'])}"><img src="${cover['display_url']}" alt="${blurb} character: ${featured['title']}" /></a>
         </div><!-- /uf-image -->
       </div><!-- /user-featured -->
 
@@ -78,14 +78,14 @@ $:{RENDER("common/user_tabs.html", [profile['username'], "profile", profile['sho
   $if(journal):
     <div id="user-journal" class="clear on-side">
       <h3>Latest Journal</h3>
-      <h4><a class="color-c" href="/journal/${journal['journalid']}/${SLUG(journal['title'])}">${journal['title']}</a></h4>
+      <h4><a class="color-c" href="/submission/${journal['submitid']}/${SLUG(journal['title'])}">${journal['title']}</a></h4>
       <h5><i>on</i> ${DATE(journal['unixtime'])} <i>at</i> ${TIME(journal['unixtime'])}</h5>
 
       <div class="formatted-content">
         $:{MARKDOWN(journal['content'])}
       </div>
 
-      <a class="more more-block" href="/journal/${journal['journalid']}/${SLUG(journal['title'])}"><i>View</i> <span>This Journal</span> <i>and</i> <span>${journal['comments']} Comments</span></a>
+      <a class="more more-block" href="/submission/${journal['submitid']}/${SLUG(journal['title'])}"><i>View</i> <span>This Journal</span> <i>and</i> <span>${journal['comments']} Comments</span></a>
     </div><!-- /user-journal -->
 
 

@@ -44,8 +44,6 @@ def _dict_of_targetid(submitid, charid, journalid):
 
 def create(userid, form):
     form.submitid = d.get_int(form.submitid)
-    form.charid = d.get_int(form.charid)
-    form.journalid = d.get_int(form.journalid)
     form.violation = d.get_int(form.violation)
     form.content = form.content.strip()[:_CONTENT]
 
@@ -55,23 +53,19 @@ def create(userid, form):
     except StopIteration:
         raise WeasylError("Unexpected")
 
-    if not form.submitid and not form.charid and not form.journalid:
+    if not form.submitid:
         raise WeasylError("Unexpected")
     elif form.violation == 0:
         if userid not in staff.MODS:
             raise WeasylError("Unexpected")
-    elif (form.submitid or form.charid) and not 2000 <= form.violation < 3000:
-        raise WeasylError("Unexpected")
-    elif form.journalid and not 3000 <= form.violation < 4000:
+    elif (form.submitid) and not 2000 <= form.violation < 3000:
         raise WeasylError("Unexpected")
     elif vtype[3] and not form.content:
         raise WeasylError("ReportCommentRequired")
 
     is_hidden = d.engine.scalar(
         "SELECT settings ~ 'h' FROM %s WHERE %s = %i" % (
-            ("submission", "submitid", form.submitid) if form.submitid else
-            ("character", "charid", form.charid) if form.charid else
-            ("journal", "journalid", form.journalid)
+            ("submission", "submitid", form.submitid)
         )
     )
 
@@ -79,7 +73,7 @@ def create(userid, form):
         raise WeasylError("TargetRecordMissing")
 
     now = arrow.get()
-    target_dict = _dict_of_targetid(form.submitid, form.charid, form.journalid)
+    target_dict = _dict_of_targetid(form.submitid)
     report = Report.query.filter_by(is_closed=False, **target_dict).first()
     if report is None:
         if form.violation == 0:
@@ -96,8 +90,6 @@ def create(userid, form):
 
 _report_types = [
     '_target_sub',
-    '_target_char',
-    '_target_journal',
 ]
 
 
@@ -244,10 +236,10 @@ def close(userid, form):
         note.send(userid, note_form)
 
 
-def check(submitid=None, charid=None, journalid=None):
+def check(submitid=None):
     return bool(
         Report.query
-        .filter_by(is_closed=False, **_dict_of_targetid(submitid, charid, journalid))
+        .filter_by(is_closed=False, target_sub=submitid)
         .count())
 
 
@@ -257,8 +249,6 @@ def select_reported_list(userid):
         .join(ReportComment)
         .options(contains_eager(Report.comments))
         .options(joinedload('_target_sub'))
-        .options(joinedload('_target_char'))
-        .options(joinedload('_target_journal'))
         .filter(ReportComment.violation != 0)
         .filter_by(userid=userid))
 

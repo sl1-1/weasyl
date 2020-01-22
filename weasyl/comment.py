@@ -66,7 +66,7 @@ def thread(query, reverse_top_level):
     return result
 
 
-def select(userid, submitid=None, charid=None, journalid=None, updateid=None):
+def select(userid, submitid=None, journalid=None, updateid=None):
     is_hidden = "cm.settings ~ 'h'"
 
     if submitid:
@@ -81,9 +81,7 @@ def select(userid, submitid=None, charid=None, journalid=None, updateid=None):
     else:
         unixtime = "cm.unixtime"
 
-        if charid:
-            table = "charcomment"
-        elif journalid:
+        if journalid:
             table = "journalcomment"
         elif updateid:
             table = "siteupdatecomment"
@@ -99,7 +97,7 @@ def select(userid, submitid=None, charid=None, journalid=None, updateid=None):
             FROM %s cm
                 INNER JOIN profile pr USING (userid)
             WHERE cm.targetid = %i
-        """ % (unixtime, is_hidden, table, d.get_targetid(submitid, charid, journalid, updateid))]
+        """ % (unixtime, is_hidden, table, d.get_targetid(submitid, journalid, updateid))]
 
     # moderators get to view hidden comments
     if userid not in staff.MODS:
@@ -115,8 +113,8 @@ def select(userid, submitid=None, charid=None, journalid=None, updateid=None):
     return result
 
 
-def insert(userid, submitid=None, charid=None, journalid=None, updateid=None, parentid=None, content=None):
-    if not submitid and not charid and not journalid and not updateid:
+def insert(userid, submitid=None, updateid=None, parentid=None, content=None):
+    if not submitid and not updateid:
         raise WeasylError("Unexpected")
     elif not content:
         raise WeasylError("commentInvalid")
@@ -130,9 +128,7 @@ def insert(userid, submitid=None, charid=None, journalid=None, updateid=None, pa
                 raise WeasylError("Unexpected")
         else:
             parent = d.engine.execute(
-                "SELECT userid, indent FROM {table} WHERE commentid = %(parentid)s".format(
-                    table="comments" if submitid else "charcomment" if charid else "journalcomment",
-                ),
+                "SELECT userid, indent FROM comments WHERE commentid = %(parentid)s",
                 parentid=parentid,
             ).first()
 
@@ -156,12 +152,7 @@ def insert(userid, submitid=None, charid=None, journalid=None, updateid=None, pa
     else:
         # Determine the owner of the target
         otherid = d.engine.scalar(
-            "SELECT userid FROM %s WHERE %s = %i AND settings !~ 'h'" % (
-                ("submission", "submitid", submitid) if submitid else
-                ("character", "charid", charid) if charid else
-                ("journal", "journalid", journalid)
-            )
-        )
+            "SELECT userid FROM submission WHERE submitid = %i AND settings !~ 'h'" % (submitid,))
 
         # Check permissions
         if not otherid:
@@ -195,22 +186,10 @@ def insert(userid, submitid=None, charid=None, journalid=None, updateid=None, pa
             parent=parentid,
             content=content,
         )
-    else:
-        commentid = d.engine.scalar(
-            "INSERT INTO {table} (userid, targetid, parentid, content, unixtime, indent)"
-            " VALUES (%(user)s, %(target)s, %(parent)s, %(content)s, %(now)s, %(indent)s)"
-            " RETURNING commentid".format(table="charcomment" if charid else "journalcomment"),
-            user=userid,
-            target=d.get_targetid(charid, journalid),
-            parent=parentid or 0,
-            content=content,
-            now=d.get_time(),
-            indent=indent,
-        )
 
     # Create notification
     if parentid and (userid != parentuserid):
-        welcome.commentreply_insert(userid, commentid, parentuserid, parentid, submitid, charid, journalid, updateid)
+        welcome.commentreply_insert(userid, commentid, parentuserid, parentid, submitid, updateid)
     elif not parentid:
         # build a list of people this comment should notify
         # circular imports are cool and fun
@@ -230,7 +209,7 @@ def insert(userid, submitid=None, charid=None, journalid=None, updateid=None, pa
         notified.discard(userid)
 
         for other in notified:
-            welcome.comment_insert(userid, commentid, other, submitid, charid, journalid, updateid)
+            welcome.comment_insert(userid, commentid, other, submitid, updateid)
 
     d.metric('increment', 'comments')
 
@@ -238,7 +217,7 @@ def insert(userid, submitid=None, charid=None, journalid=None, updateid=None, pa
 
 
 def remove(userid, feature=None, commentid=None):
-    if feature not in ["submit", "char", "journal", "siteupdate"]:
+    if feature not in ["submit", "siteupdate"]:
         raise WeasylError("Unexpected")
 
     if feature == 'submit':

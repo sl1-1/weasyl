@@ -30,7 +30,7 @@ class ProfileManageTestCase(unittest.TestCase):
                 'link_value': 'mailto:support@weasyl.com',
             },
         ]
-        d.engine.execute(d.meta.tables['user_links'].insert().values(links))
+        d.engine.execute(d.meta.tables['user_links'].insert(, None.values(links))
 
         test_user_profile = profile.select_manage(user)
         self.assertEqual(len(test_user_profile['sorted_user_links']), 2)
@@ -50,7 +50,7 @@ class ProfileManageTestCase(unittest.TestCase):
                 'link_value': 'mailto:support@weasyl.com',
             },
         ]
-        d.engine.execute(d.meta.tables['user_links'].insert().values(links))
+        d.engine.execute(d.meta.tables['user_links'].insert(, None.values(links))
 
         profile.do_manage(self.mod, user, remove_social=['Email'])
 
@@ -77,7 +77,7 @@ class ProfileManageTestCase(unittest.TestCase):
                 'link_value': 'WeasylDev',
             }
         ]
-        d.engine.execute(d.meta.tables['user_links'].insert().values(links))
+        d.engine.execute(d.meta.tables['user_links'].insert(, None.values(links))
 
         test_user_profile = profile.select_manage(user)
         self.assertEqual(test_user_profile['sorted_user_links'], [

@@ -3,10 +3,12 @@ from __future__ import absolute_import
 from pyramid import httpexceptions
 from pyramid.response import Response
 
-from libweasyl.models.content import Submission
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
+from libweasyl.models.content import Submission, JournalToSubmission, CharacterToSubmission
 from libweasyl.text import slug_for
 from weasyl import (
-    character, define, journal, macro, media, profile, searchtag, submission)
+    define, macro, media, profile, searchtag, submission)
 from weasyl.error import WeasylError
 
 
@@ -114,68 +116,33 @@ def submission_tag_history_(request):
 
 
 def character_(request):
+    """
+    Remaps old character url to it's new submission
+    :param request:
+    :return:
+    """
     form = request.web_input(charid="", ignore="", anyway="")
-
-    rating = define.get_rating(request.userid)
     charid = define.get_int(request.matchdict.get('charid', form.charid))
 
-    try:
-        item = character.select_view(
-            request.userid, charid, rating,
-            ignore=form.ignore != 'false', anyway=form.anyway
-        )
-    except WeasylError as we:
-        if we.value in ("UserIgnored", "TagBlocked"):
-            we.errorpage_kwargs['links'] = [
-                ("View Character", "?ignore=false"),
-                ("Return to the Home Page", "/index"),
-            ]
-        raise
+    character = CharacterToSubmission.query.get_or_404(charid)
 
-    canonical_url = "/character/%d/%s" % (charid, slug_for(item["title"]))
+    canonical_path = request.route_path('submission_detail', submitid=character.submitid, ignore_name="")
 
-    page = define.common_page_start(request.userid, canonical_url=canonical_url, title=item["title"])
-    page.append(define.render('detail/character.html', [
-        # Profile
-        profile.select_myself(request.userid),
-        # Character detail
-        item,
-        # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+    raise httpexceptions.HTTPMovedPermanently(location=canonical_path)
 
 
 def journal_(request):
+    """
+    Remaps old journal url to it's new submission
+    :param request:
+    :return:
+    """
     form = request.web_input(journalid="", ignore="", anyway="")
-
-    rating = define.get_rating(request.userid)
     journalid = define.get_int(request.matchdict.get('journalid', form.journalid))
 
-    try:
-        item = journal.select_view(
-            request.userid, rating, journalid,
-            ignore=form.ignore != 'false', anyway=form.anyway
-        )
-    except WeasylError as we:
-        if we.value in ("UserIgnored", "TagBlocked"):
-            we.errorpage_kwargs['links'] = [
-                ("View Journal", "?ignore=false"),
-                ("Return to the Home Page", "/index"),
-            ]
-        raise
+    journal = JournalToSubmission.query.get_or_404(journalid)
 
-    canonical_url = "/journal/%d/%s" % (journalid, slug_for(item["title"]))
+    canonical_path = request.route_path('submission_detail', submitid=journal.submitid, ignore_name="")
 
-    page = define.common_page_start(request.userid, canonical_url=canonical_url, title=item["title"])
-    page.append(define.render('detail/journal.html', [
-        # Myself
-        profile.select_myself(request.userid),
-        # Journal detail
-        item,
-        # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 3000 <= i[0] < 4000],
-    ]))
+    raise httpexceptions.HTTPMovedPermanently(location=canonical_path)
 
-    return Response(define.common_page_end(request.userid, page))

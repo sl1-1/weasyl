@@ -580,28 +580,18 @@ def manage_collections_post_(request):
 
 @login_required
 def manage_thumbnail_get_(request):
-    form = request.web_input(submitid="", charid="", auto="")
+    form = request.web_input(submitid="", auto="")
     submitid = define.get_int(form.submitid)
-    charid = define.get_int(form.charid)
 
     if submitid and request.userid not in staff.ADMINS and request.userid != define.get_ownerid(submitid=submitid):
-        return Response(define.errorpage(request.userid, errorcode.permissions))
-    elif charid and request.userid not in staff.ADMINS and request.userid != define.get_ownerid(charid=charid):
         return Response(define.errorpage(request.userid, errorcode.permissions))
     elif not submitid and not charid:
         return Response(define.errorpage(request.userid))
 
-    if charid:
-        source_path = define.url_make(charid, "char/.thumb", root=True)
-        if os.path.exists(source_path):
-            source = define.url_make(charid, "char/.thumb")
-        else:
-            source = define.url_make(charid, "char/cover")
-    else:
-        try:
-            source = thumbnail.thumbnail_source(submitid)['display_url']
-        except WeasylError:
-            source = None
+    try:
+        source = thumbnail.thumbnail_source(submitid)['display_url']
+    except WeasylError:
+        source = None
 
     return Response(define.webpage(request.userid, "manage/thumbnail.html", [
         # Feature
@@ -618,13 +608,10 @@ def manage_thumbnail_get_(request):
 @login_required
 @token_checked
 def manage_thumbnail_post_(request):
-    form = request.web_input(submitid="", charid="", x1="", y1="", x2="", y2="", thumbfile="")
+    form = request.web_input(submitid="", x1="", y1="", x2="", y2="", thumbfile="")
     submitid = define.get_int(form.submitid)
-    charid = define.get_int(form.charid)
 
     if submitid and request.userid not in staff.ADMINS and request.userid != define.get_ownerid(submitid=submitid):
-        return Response(define.errorpage(request.userid))
-    if charid and request.userid not in staff.ADMINS and request.userid != define.get_ownerid(charid=charid):
         return Response(define.errorpage(request.userid))
     if not submitid and not charid:
         return Response(define.errorpage(request.userid))
@@ -636,7 +623,7 @@ def manage_thumbnail_post_(request):
         else:
             raise HTTPSeeOther(location="/manage/thumbnail?charid=%i" % (charid,))
     else:
-        thumbnail.create(form.x1, form.y1, form.x2, form.y2, submitid=submitid, charid=charid)
+        thumbnail.create(form.x1, form.y1, form.x2, form.y2, submitid=submitid)
         if submitid:
             raise HTTPSeeOther(location="/submission/%i" % (submitid,))
         else:

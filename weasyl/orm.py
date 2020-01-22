@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from libweasyl.models.api import OAuthBearerToken, OAuthConsumer, APIToken
-from libweasyl.models.content import Character, Comment, Journal, Submission, SubmissionTag, Tag
+from libweasyl.models.content import Comment, Submission, SubmissionTag, Tag
 from libweasyl.models.media import (
     MediaItem, DiskMediaItem, SubmissionMediaLink, UserMediaLink, MediaMediaLink, fetch_or_create_media_item)
 from libweasyl.models.users import Follow, Login, Profile, Session, UserTimezone
@@ -18,7 +18,7 @@ class CommishPrice(object):
 
 
 __all__ = [
-    'Character', 'Comment', 'Journal', 'Submission', 'SubmissionTag', 'Tag',
+    'Comment', 'Submission', 'SubmissionTag', 'Tag',
     'MediaItem', 'DiskMediaItem', 'SubmissionMediaLink', 'UserMediaLink', 'MediaMediaLink',
     'fetch_or_create_media_item',
     'OAuthBearerToken', 'OAuthConsumer', 'APIToken',

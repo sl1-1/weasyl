@@ -177,19 +177,12 @@ def notes_remove_(request):
 @login_required
 @token_checked
 def favorite_(request):
-    form = request.web_input(submitid="", charid="", journalid="")
-    form.charid = define.get_int(form.charid)
+    form = request.web_input(submitid="")
     form.submitid = define.get_int(form.submitid)
-    form.journalid = define.get_int(form.journalid)
 
     if form.action == "favorite":
-        favorite.insert(request.userid, form.submitid, form.charid, form.journalid)
+        favorite.insert(request.userid, form.submitid)
     elif form.action == "unfavorite":
-        favorite.remove(request.userid, form.submitid, form.charid, form.journalid)
+        favorite.remove(request.userid, form.submitid)
 
-    if form.submitid:
-        raise HTTPSeeOther(location="/submission/%i" % (form.submitid,))
-    elif form.charid:
-        raise HTTPSeeOther(location="/character/%i" % (form.charid,))
-    else:
-        raise HTTPSeeOther(location="/journal/%i" % (form.journalid,))
+    raise HTTPSeeOther(location="/submission/%i" % (form.submitid,))

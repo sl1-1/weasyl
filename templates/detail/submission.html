@@ -3,6 +3,7 @@ $code:
   def _CAT(x):
     if x // 1000 == 1:   return "Visual"
     elif x // 1000 == 2: return "Literary"
+    elif x // 1000 == 5: return "Character"
     else:                return "Multimedia"
 
   def _SUBCAT(x):
@@ -105,7 +106,7 @@ $code:
       </a>
     </div><!-- /detail-art -->
 
-  $if query['folder_more']['older'] or query['folder_more']['newer']:
+  $if (query['folder_more']['older'] or query['folder_more']['newer']) and query['subtype'] != 5000:
     <div class="detail-folder-nav clear">
 
       <a class="folder-title" href="/submissions/${LOGIN(query['username'])}?folderid=${query['folderid']}"><i class="folder-title-label">Folder:</i><br /><span class="folder-title-title">${query['folder_title']}</span></a>

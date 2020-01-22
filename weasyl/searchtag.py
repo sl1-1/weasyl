@@ -21,15 +21,13 @@ _TAG_DELIMITER = re.compile(r"[\s,]+")
 MAX_PREFERRED_TAGS = 50
 
 
-def select(submitid=None, charid=None, journalid=None):
+def select(submitid):
     return d.column(d.engine.execute(
         "SELECT st.title FROM searchtag st"
-        " INNER JOIN searchmap{suffix} sm USING (tagid)"
+        " INNER JOIN searchmapsubmit sm USING (tagid)"
         " WHERE sm.targetid = %(target)s"
-        " ORDER BY st.title".format(
-            suffix="submit" if submitid else "char" if charid else "journal",
-        ),
-        target=submitid if submitid else charid if charid else journalid,
+        " ORDER BY st.title",
+        target=submitid
     ))
 
 
@@ -171,7 +169,7 @@ def is_tag_restriction_pattern_valid(text):
     return False
 
 
-def associate(userid, tags, submitid=None, charid=None, journalid=None, preferred_tags_userid=None, optout_tags_userid=None):
+def associate(userid, tags, submitid=None, preferred_tags_userid=None, optout_tags_userid=None):
     """
     Associates searchtags with a content item.
 
@@ -179,10 +177,6 @@ def associate(userid, tags, submitid=None, charid=None, journalid=None, preferre
         userid: The userid of the user associating tags
         tags: A set of tags
         submitid: The ID number of a submission content item to associate
-        ``tags`` to. (default: None)
-        charid: The ID number of a character content item to associate
-        ``tags`` to. (default: None)
-        journalid: The ID number of a journal content item to associate
         ``tags`` to. (default: None)
         preferred_tags_userid: The ID number of a user to associate
         ``tags`` to for Preferred tags. (default: None)
@@ -199,18 +193,12 @@ def associate(userid, tags, submitid=None, charid=None, journalid=None, preferre
         If an element does not have tags, the element is set to None. If neither elements are set,
         the function returns None.
     """
-    targetid = d.get_targetid(submitid, charid, journalid)
+    targetid = submitid
 
     # Assign table, feature, ownerid
     if submitid:
         table, feature = "searchmapsubmit", "submit"
         ownerid = d.get_ownerid(submitid=targetid)
-    elif charid:
-        table, feature = "searchmapchar", "char"
-        ownerid = d.get_ownerid(charid=targetid)
-    elif journalid:
-        table, feature = "searchmapjournal", "journal"
-        ownerid = d.get_ownerid(journalid=targetid)
     elif preferred_tags_userid:
         table, feature = "artist_preferred_tags", "user"
         targetid = ownerid = preferred_tags_userid

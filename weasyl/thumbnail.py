@@ -27,22 +27,6 @@ def thumbnail_source(submitid):
     return source
 
 
-def _upload_char(filedata, charid):
-    """
-    Creates a preview-size copy of an uploaded image file for a new thumbnail
-    selection file.
-    """
-    filename = d.url_make(charid, "char/.thumb", root=True)
-
-    files.write(filename, filedata)
-
-    if image.check_type(filename):
-        image.make_cover(filename)
-    else:
-        os.remove(filename)
-        raise WeasylError("FileType")
-
-
 def clear_thumbnail(userid, submitid):
     """
     Clears a submission's custom thumbnail.
@@ -72,46 +56,13 @@ def clear_thumbnail(userid, submitid):
         orm.SubmissionMediaLink.clear_link(submitid, 'thumbnail-generated')
 
 
-def upload(filedata, submitid=None, charid=None):
-    if charid:
-        return _upload_char(filedata, charid)
+def upload(filedata, submitid=None):
 
     media_item = media.make_cover_media_item(filedata, error_type='FileType')
     orm.SubmissionMediaLink.make_or_replace_link(submitid, 'thumbnail-source', media_item)
 
 
-def _create_char(x1, y1, x2, y2, charid, remove=True):
-    x1, y1, x2, y2 = d.get_int(x1), d.get_int(y1), d.get_int(x2), d.get_int(y2)
-    filename = d.url_make(charid, "char/.thumb", root=True)
-    if not m.os.path.exists(filename):
-        filename = d.url_make(charid, "char/cover", root=True)
-        if not filename:
-            return
-        remove = False
-
-    im = image.read(filename)
-    size = im.size.width, im.size.height
-
-    d.engine.execute("""
-        UPDATE character
-        SET settings = REGEXP_REPLACE(settings, '-.', '') || '-' || %(image_setting)s
-        WHERE charid = %(char)s
-    """, image_setting=image.image_setting(im), char=charid)
-    dest = os.path.join(d.get_character_directory(charid), '%i.thumb%s' % (charid, images.image_extension(im)))
-
-    bounds = None
-    if image.check_crop(size, x1, y1, x2, y2):
-        bounds = geometry.Rectangle(x1, y1, x2, y2)
-    thumb = images.make_thumbnail(im, bounds)
-    thumb.write(dest, format=images.image_file_type(thumb))
-    if remove:
-        os.remove(filename)
-
-
-def create(x1, y1, x2, y2, submitid=None, charid=None,
-           remove=True):
-    if charid:
-        return _create_char(x1, y1, x2, y2, charid, remove)
+def create(x1, y1, x2, y2, submitid=None):
 
     db = d.connect()
     x1, y1, x2, y2 = d.get_int(x1), d.get_int(y1), d.get_int(x2), d.get_int(y2)

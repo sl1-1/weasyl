@@ -6,7 +6,7 @@ import re
 
 from libweasyl.ratings import GENERAL, MATURE, EXPLICIT
 
-from weasyl import character, journal, media, searchtag, submission
+from weasyl import media, searchtag, submission
 from weasyl import define as d
 
 
@@ -388,9 +388,7 @@ def select(**kwargs):
     if search.find == 'submit':
         media.populate_with_submission_media(results)
     elif search.find == 'char':
-        for r in results:
-            r['sub_media'] = character.fake_media_items(
-                r['charid'], r['userid'], d.get_sysname(r['username']), r['settings'])
+        media.populate_with_submission_media(results)
     elif search.find == 'journal':
         media.populate_with_user_media(results)
 
@@ -409,9 +407,9 @@ def browse(userid, rating, limit, form, find=None):
         form.find = find
 
     if form.find == "char":
-        return character.select_list(userid, rating, limit, backid=backid, nextid=nextid)
+        return submission.select_list(userid, rating, limit, backid=backid, nextid=nextid, subcat=5000)
     elif form.find == "journal":
-        return journal.select_user_list(userid, rating, limit, backid=backid, nextid=nextid)
+        return submission.select_list(userid, rating, limit, backid=backid, nextid=nextid, subcat=6000)
     else:
         return submission.select_list(userid, rating, limit, backid=backid, nextid=nextid,
                                       subcat=d.get_int(form.cat) if d.get_int(form.cat) in [1000, 2000, 3000] else None)
