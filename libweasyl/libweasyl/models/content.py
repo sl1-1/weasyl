@@ -179,6 +179,39 @@ class Submission(Base):
                 .where(SubmissionTag.tagid.in_(tag_ids_to_remove)))
             self.dbsession.execute(q)
 
+    @reify
+    def fav_count(self):
+        if self.favorites:
+            return self.favorites
+        else:
+            return len(self.favorites_ref)
+
+    @reify
+    def next_sub(self):
+        q = self.query.filter_by(userid=self.userid) \
+            .filter(Submission.submitid > self.submitid).order_by(Submission.submitid.asc())
+        if self.folderid:
+            q = q.filter(Submission.folderid == self.folderid)
+        if self.subtype in ('5000', '6000'):
+            q = q.filter(Submission.subtype == self.subtype)
+        else:
+            q = q.filter(Submission.subtype < 5000)
+        q = q.limit(1).all()
+        return q[0] if q else None
+
+    @reify
+    def prev_sub(self):
+        q = self.query.filter_by(userid=self.userid) \
+            .filter(Submission.submitid < self.submitid).order_by(Submission.submitid.desc())
+        if self.folderid:
+            q = q.filter(Submission.folderid == self.folderid)
+        if self.subtype in ('5000', '6000'):
+            q = q.filter(Submission.subtype == self.subtype)
+        else:
+            q = q.filter(Submission.subtype < 5000)
+        q = q.limit(1).all()
+        return q[0] if q else None
+
     @classmethod
     def create(cls, owner, title, rating, description, category, subtype, folder, tags, friends_only=False,
                critique_requested=False, submission_data=None, cover_data=None, thumbnail_data=None, embed_link=None,
