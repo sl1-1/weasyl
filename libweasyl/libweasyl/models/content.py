@@ -71,15 +71,13 @@ class Submission(Base):
             'media': minimize_media(request, getattr(self, 'media', None)),
         }
 
-    def canonical_path(self, request, operation='view', with_slug=None, mod=False):
-        if with_slug is None:
-            with_slug = operation == 'view'
-        parts = ['submissions', str(self.submitid), operation]
-        if mod:
-            parts.insert(2, 'mod')
-        if with_slug:
-            parts.append(slug_for(self.title))
-        return request.resource_path(None, *parts)
+    def canonical_path(self, request):
+
+        return request.route_path(
+            "submission_detail_profile",
+            name=self.owner.login_name,
+            submitid=self.submitid,
+            slug=slug_for(self.title))
 
     def legacy_path(self, mod=False):
         """
