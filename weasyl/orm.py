@@ -4,7 +4,7 @@ from libweasyl.models.api import OAuthBearerToken, OAuthConsumer, APIToken
 from libweasyl.models.content import Comment, Submission, SubmissionTag, Tag
 from libweasyl.models.media import (
     MediaItem, DiskMediaItem, SubmissionMediaLink, UserMediaLink, MediaMediaLink, fetch_or_create_media_item)
-from libweasyl.models.users import Follow, Login, Profile, Session, UserTimezone
+from libweasyl.models.users import Follow, Login, Profile, Session, UserTimezone, Ignorama
 
 
 # TODO: Implement these are real models in libweasyl.
@@ -22,6 +22,6 @@ __all__ = [
     'MediaItem', 'DiskMediaItem', 'SubmissionMediaLink', 'UserMediaLink', 'MediaMediaLink',
     'fetch_or_create_media_item',
     'OAuthBearerToken', 'OAuthConsumer', 'APIToken',
-    'Follow', 'Login', 'Profile', 'Session', 'UserTimezone',
+    'Follow', 'Login', 'Profile', 'Session', 'UserTimezone', 'Ignorama'
     'CommishClass', 'CommishPrice',
 ]
