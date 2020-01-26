@@ -1,47 +1,36 @@
 from __future__ import absolute_import
 
 import arrow
-
 from libweasyl import staff
+from sqlalchemy import not_, and_
 
 from weasyl import define as d
 from weasyl import frienduser
 from weasyl import ignoreuser
-from weasyl import macro as m
-from weasyl import media
+from weasyl import orm
 from weasyl import welcome
-from weasyl.comment import thread
 from weasyl.error import WeasylError
 
 
 def select(userid, ownerid, limit=None, staffnotes=False):
-    statement = ["""
-        SELECT
-            sh.commentid, sh.parentid, sh.userid, pr.username,
-            sh.content, sh.unixtime, sh.settings, sh.indent,
-            sh.hidden_by
-        FROM comments sh
-            INNER JOIN profile pr USING (userid)
-        WHERE sh.target_user = %i
-            AND sh.settings %s~ 's'
-    """ % (ownerid, "" if staffnotes else "!")]
-
+    ignore_q = orm.Ignorama.query.filter(and_(orm.Ignorama.userid == userid, orm.Ignorama.otherid == orm.Comment.userid))
+    q = orm.Comment.query.filter(orm.Comment.target_user == ownerid)
     # moderators get to view hidden comments
     if userid not in staff.MODS:
-        statement.append(" AND sh.settings !~ 'h'")
-
+        q = q.filter(not_(orm.Comment.is_hidden))
     if userid:
-        statement.append(m.MACRO_IGNOREUSER % (userid, "sh"))
+        q = q.filter(not_(ignore_q.exists()))
 
-    statement.append(" ORDER BY sh.commentid")
-    query = d.execute("".join(statement))
-    result = thread(query, reverse_top_level=True)
+    if not staffnotes:
+        q = q.filter(not_(orm.Comment.is_staff_note))
 
+    q = q.order_by(orm.Comment.commentid.desc())
+
+    # result = thread(query, reverse_top_level=True) # TODO: Implement this
     if limit:
-        result = result[:limit]
+        q = q.limit(limit)
 
-    media.populate_with_user_media(result)
-    return result
+    return q.all()
 
 
 def count(ownerid, staffnotes=False):
