@@ -177,6 +177,7 @@ favorite = Table(
     Column('type', String(length=5), primary_key=True, nullable=False, server_default=''),
     Column('unixtime', WeasylTimestampColumn(), nullable=False),
     default_fkey(['userid'], ['login.userid'], name='favorite_userid_fkey'),
+    default_fkey(['targetid'], ['submission.submitid'], name='favorite_submission_fkey'),
 )
 
 Index('ind_favorite_userid', favorite.c.userid)
