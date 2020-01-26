@@ -298,6 +298,9 @@ class Comment(Base):
     parent = relationship('Comment', remote_side=[__table__.c.commentid])
     owner = relationship(Login, backref='comments', foreign_keys=[__table__.c.userid])
 
+    with clauses_for(__table__) as c:
+        is_hidden = c('hidden')
+        is_staff_note = c('staff-note')
 
     @property
     def target(self):
