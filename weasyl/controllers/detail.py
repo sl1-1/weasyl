@@ -3,13 +3,16 @@ from __future__ import absolute_import
 from pyramid import httpexceptions
 from pyramid.response import Response
 
-from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
 from libweasyl.models.content import Submission, JournalToSubmission, CharacterToSubmission
-from libweasyl.text import slug_for
 from weasyl import (
     define, macro, media, profile, searchtag, submission)
 from weasyl.error import WeasylError
+
+
+from weasyl import report
+from weasyl import favorite
+from weasyl import collection
 
 
 # Content detail functions
@@ -56,8 +59,8 @@ def submission_(request):
             ]
         raise
 
-    login = define.get_sysname(item['username'])
-    canonical_path = request.route_path('submission_detail_profile', name=login, submitid=submitid, slug=slug_for(item['title']))
+    login = item.owner.login_name
+    canonical_path = item.canonical_path(request)
 
     if request.GET.get('anyway'):
         canonical_path += '?anyway=true'
@@ -65,18 +68,26 @@ def submission_(request):
     if login != username:
         raise httpexceptions.HTTPMovedPermanently(location=canonical_path)
     extras["canonical_url"] = canonical_path
-    extras["title"] = item["title"]
+    extras["title"] = item.title
 
+    reported = report.check(submitid=submitid)
+    favorited = favorite.check(request.userid, submitid=submitid)
+    collected = collection.owns(request.userid, submitid),
     page = define.common_page_start(request.userid, **extras)
+
     page.append(define.render('detail/submission.html', [
         # Myself
         profile.select_myself(request.userid),
         # Submission detail
         item,
+        reported,
+        favorited,
+        collected,
         # Subtypes
         macro.MACRO_SUBCAT_LIST,
         # Violations
         [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
+        request
     ]))
 
     return Response(define.common_page_end(request.userid, page))

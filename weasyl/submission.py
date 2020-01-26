@@ -621,108 +621,25 @@ def reupload(userid, submitid, submitfile):
 
 
 def select_view(userid, submitid, rating, ignore=True, anyway=None):
-    query = d.engine.execute("""
-        SELECT
-            su.userid, pr.username, su.folderid, su.unixtime, su.title, su.content, su.subtype, su.rating, su.settings,
-            su.page_views, fd.title, su.favorites
-        FROM submission su
-            INNER JOIN profile pr USING (userid)
-            LEFT JOIN folder fd USING (folderid)
-        WHERE su.submitid = %(id)s
-    """, id=submitid).first()
+    q = orm.Submission.query.get(submitid)
 
     # Sanity check
-    if query and userid in staff.MODS and anyway == "true":
+    if q and userid in staff.MODS and anyway == "true":
         pass
-    elif not query or "h" in query[8]:
+    elif not q or "hidden" in q.settings.settings:
         raise WeasylError("submissionRecordMissing")
-    elif query[7] > rating and ((userid != query[0] and userid not in staff.MODS) or d.is_sfw_mode()):
+    elif q.rating.code > rating and ((userid != q.userid and userid not in staff.MODS) or d.is_sfw_mode()):
         raise WeasylError("RatingExceeded")
-    elif "f" in query[8] and not frienduser.check(userid, query[0]):
+    elif "friends-only" in q.settings.settings and not frienduser.check(userid, q.userid):
         raise WeasylError("FriendsOnly")
-    elif ignore and ignoreuser.check(userid, query[0]):
+    elif ignore and ignoreuser.check(userid, q.userid):
         raise WeasylError("UserIgnored")
     elif ignore and blocktag.check(userid, submitid=submitid):
         raise WeasylError("TagBlocked")
 
-    # Get submission filename
-    submitfile = media.get_submission_media(submitid).get('submission', [None])[0]
-    print(submitfile)
+    # embedlink = d.text_first_line(query[5]) if "v" in query[8] else None
 
-    # Get submission text
-    if submitfile and submitfile['file_type'] in ['txt', 'htm']:
-        submittext = files.read(submitfile['full_file_path'])
-    elif query[6] == 6000:
-        submittext = query[5]
-    else:
-        submittext = None
-
-    embedlink = d.text_first_line(query[5]) if "v" in query[8] else None
-
-    google_doc_embed = None
-    if 'D' in query[8]:
-        db = d.connect()
-        gde = d.meta.tables['google_doc_embeds']
-        q = (sa.select([gde.c.embed_url])
-             .where(gde.c.submitid == submitid))
-        results = db.execute(q).fetchall()
-        if not results:
-            raise WeasylError("can't find embed information")
-        google_doc_embed = results[0]
-
-    tags, artist_tags = searchtag.select_with_artist_tags(submitid)
-    settings = d.get_profile_settings(query[0])
-
-    fave_count = query[11]
-
-    if fave_count is None:
-        fave_count = d.engine.scalar(
-            "SELECT COUNT(*) FROM favorite WHERE (targetid, type) = (%(target)s, 's')",
-            target=submitid)
-
-    return {
-        "submitid": submitid,
-        "userid": query[0],
-        "username": query[1],
-        "folderid": query[2],
-        "unixtime": query[3],
-        "title": query[4],
-        "content": (d.text_first_line(query[5], strip=True) if "v" in query[8] else query[5]),
-        "subtype": query[6],
-        "rating": query[7],
-        "settings": query[8],
-        "page_views": (
-            query[9] + 1 if d.common_view_content(userid, 0 if anyway == "true" else submitid, "submit") else query[9]),
-        "fave_count": fave_count,
-
-
-        "mine": userid == query[0],
-        "reported": report.check(submitid=submitid),
-        "favorited": favorite.check(userid, submitid=submitid),
-        "friends_only": "f" in query[8],
-        "hidden_submission": "h" in query[8],
-        "collected": collection.owns(userid, submitid),
-        "no_request": not settings.allow_collection_requests,
-
-        "text": submittext,
-        "sub_media": media.get_submission_media(submitid),
-        "user_media": media.get_user_media(query[0]),
-        "submit": submitfile,
-        "embedlink": embedlink,
-        "embed": embed.html(embedlink) if embedlink is not None else None,
-        "google_doc_embed": google_doc_embed,
-
-
-        "tags": tags,
-        "artist_tags": artist_tags,
-        "removable_tags": searchtag.removable_tags(userid, query[0], tags, artist_tags),
-        "can_remove_tags": searchtag.can_remove_tags(userid, query[0]),
-        "folder_more": select_near(userid, rating, 1, query[0], query[2], submitid),
-        "folder_title": query[10] if query[10] else "Root",
-
-
-        "comments": comment.select(userid, submitid=submitid),
-    }
+    return q
 
 
 def select_view_api(userid, submitid, anyway=False, increment_views=False):
