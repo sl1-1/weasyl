@@ -119,7 +119,10 @@ class Submission(Base):
     @reify
     def thumbnail_media(self):
         # TODO: Fix this to use the right keys, post-migration.
-        ret = self.media.get('thumbnail-legacy') or self.media.get('thumbnail')
+        ret = self.media.get('thumbnail-legacy') \
+              or self.media.get('thumbnail') \
+              or self.media.get('thumbnail-generated') \
+              or self.media.get('thumbnail-custom')
         if ret:
             return ret[0]
         return None
