@@ -53,6 +53,7 @@ class Submission(Base):
     owner = relationship(Login, backref='submissions')
     tag_objects = relationship(Tag, secondary=SubmissionTag.__table__)
     tags = association_proxy('tag_objects', 'title')
+    submission_tags = relationship(SubmissionTag)
 
     with clauses_for(__table__) as c:
         is_hidden = c('hidden')
@@ -295,6 +296,7 @@ class Comment(Base):
     _target_sub = relationship(Submission, backref='comments')
     poster = relationship(Login, foreign_keys=[__table__.c.userid])
     parent = relationship('Comment', remote_side=[__table__.c.commentid])
+    owner = relationship(Login, backref='comments', foreign_keys=[__table__.c.userid])
 
 
     @property
@@ -395,6 +397,8 @@ class Blocktag(Base):
 
 class Favorite(Base):
     __table__ = tables.favorite
+
+    submission = relationship(Submission, backref='favorites_ref')
 
 
 class ReportComment(Base):
