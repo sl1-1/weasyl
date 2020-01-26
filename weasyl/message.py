@@ -2,6 +2,9 @@ from __future__ import absolute_import
 
 from itertools import chain
 
+from libweasyl.models.site import SavedNotification
+from libweasyl.models.content import Submission
+
 from weasyl import define as d
 from weasyl import media
 
@@ -58,166 +61,67 @@ def remove_all_submissions(userid, only_before=None):
 
 
 def select_journals(userid):
-    journals = d.engine.execute("""
-        SELECT we.welcomeid, we.unixtime, we.otherid, we.targetid, pr.username, jo.title
-        FROM welcome we
-            INNER JOIN profile pr ON we.otherid = pr.userid
-            INNER JOIN journal jo ON we.targetid = jo.journalid
-        WHERE
-            (we.userid, we.type) = (%(user)s, 1010) AND
-            rating <= %(rating)s
-        ORDER BY we.unixtime DESC
-    """, user=userid, rating=d.get_rating(userid))
-
+    session = d.connect()
+    q = session.query(SavedNotification, Submission).join(Submission, Submission.submitid == SavedNotification.targetid)
+    q = q.order_by(SavedNotification.unixtime.desc())
+    q = q.filter(SavedNotification.type == 1010)
+    q = q.filter(SavedNotification.userid == userid, Submission.rating <= d.get_rating(userid))
     return [{
         "type": 1010,
-        "id": j.welcomeid,
-        "unixtime": j.unixtime,
-        "userid": j.otherid,
-        "username": j.username,
-        "journalid": j.targetid,
-        "title": j.title,
-    } for j in journals]
+        "id": j[0].welcomeid,
+        "unixtime": j[1].unixtime,
+        "userid": j[0].otherid,
+        "username": j[1].owner.username,
+        "journalid": j[1].submitid,
+        "title": j[1].title,
+    } for j in q.all()]
+
+
+map_notification_contype = {
+    2010: 10,
+    2050: 20,
+    2030: 40,
+}
 
 
 def select_submissions(userid, limit, include_tags, backtime=None, nexttime=None):
+    session = d.connect()
+    q = session.query(SavedNotification, Submission) \
+        .join(Submission, Submission.submitid == SavedNotification.targetid) \
+        .order_by(SavedNotification.welcomeid.desc()) \
+        .filter(SavedNotification.type.in_([2010, 2030, 2050])) \
+        .filter(SavedNotification.userid == userid, Submission.rating <= d.get_rating(userid)) \
+        .limit(limit)
     if backtime:
-        time_filter = "AND we.unixtime > %(backtime)s"
+        q = q.filter(SavedNotification.unixtime > backtime)
     elif nexttime:
-        time_filter = "AND we.unixtime < %(nexttime)s"
-    else:
-        time_filter = ""
+        q = q.filter(SavedNotification.unixtime < nexttime)
 
     if include_tags:
-        char_tags_select = ", COALESCE(array_agg(tagid) FILTER (WHERE tagid IS NOT NULL), '{}') AS tags"
-        char_tags_join = "LEFT JOIN searchmapchar AS smc ON ch.charid = smc.targetid"
-        char_tags_groupby = "GROUP BY ch.charid, pr.username, we.welcomeid"
-
-        submission_tags_select = ", tags"
-        submission_tags_join = "INNER JOIN submission_tags USING (submitid)"
-    else:
-        char_tags_select = char_tags_join = char_tags_groupby = submission_tags_select = submission_tags_join = ""
-
-    statement = """
-        SELECT * FROM (
-            SELECT
-                40 AS contype,
-                su.submitid AS id,
-                su.title,
-                su.rating,
-                we.unixtime,
-                we.otherid AS userid,
-                pr.username,
-                su.settings,
-                we.welcomeid,
-                su.subtype
-                {submission_tags_select}
-            FROM welcome we
-                INNER JOIN submission su ON we.targetid = su.submitid
-                INNER JOIN profile pr ON we.otherid = pr.userid
-                {submission_tags_join}
-            WHERE
-                we.type = 2030 AND
-                we.userid = %(userid)s AND
-                su.rating <= %(rating)s
-                {time_filter}
-            ORDER BY welcomeid DESC LIMIT %(limit)s
-        ) t
-        UNION ALL SELECT * FROM (
-            SELECT
-                10 AS contype,
-                su.submitid AS id,
-                su.title,
-                su.rating,
-                we.unixtime,
-                su.userid,
-                pr.username,
-                su.settings,
-                we.welcomeid,
-                su.subtype
-                {submission_tags_select}
-            FROM welcome we
-                INNER JOIN submission su ON we.targetid = su.submitid
-                INNER JOIN profile pr ON su.userid = pr.userid
-                {submission_tags_join}
-            WHERE
-                we.type = 2010 AND
-                we.userid = %(userid)s AND
-                su.rating <= %(rating)s
-                {time_filter}
-            ORDER BY welcomeid DESC LIMIT %(limit)s
-        ) t
-         UNION ALL SELECT * FROM (
-            SELECT
-                20 AS contype,
-                su.submitid AS id,
-                su.title,
-                su.rating,
-                we.unixtime,
-                su.userid,
-                pr.username,
-                su.settings,
-                we.welcomeid,
-                su.subtype
-                {submission_tags_select}
-            FROM welcome we
-                INNER JOIN submission su ON we.targetid = su.submitid
-                INNER JOIN profile pr ON su.userid = pr.userid
-                {submission_tags_join}
-            WHERE
-                we.type = 2050 AND
-                we.userid = %(userid)s AND
-                su.rating <= %(rating)s
-                {time_filter}
-            ORDER BY welcomeid DESC LIMIT %(limit)s 
-        ) t
-        ORDER BY welcomeid DESC LIMIT %(limit)s
-    """.format(
-        time_filter=time_filter,
-        char_tags_select=char_tags_select,
-        char_tags_join=char_tags_join,
-        char_tags_groupby=char_tags_groupby,
-        submission_tags_select=submission_tags_select,
-        submission_tags_join=submission_tags_join,
-    )
-
-    query = d.engine.execute(
-        statement,
-        userid=userid,
-        rating=d.get_rating(userid),
-        nexttime=nexttime,
-        backtime=backtime,
-        limit=limit,
-    ).fetchall()
-
-    if include_tags:
-        all_tags = list(frozenset(chain.from_iterable(i.tags for i in query)))
-        tag_map = {t.tagid: t.title for t in d.engine.execute("SELECT tagid, title FROM searchtag WHERE tagid = ANY (%(tags)s)", tags=all_tags)}
-
         results = [{
-            "contype": i.contype,
-            "submitid": i.id,
-            "welcomeid": i.welcomeid,
-            "title": i.title,
-            "rating": i.rating,
-            "unixtime": i.unixtime,
-            "userid": i.userid,
-            "username": i.username,
-            "subtype": i.subtype,
-            "tags": [tag_map[tag] for tag in i.tags],
-        } for i in query]
+            "contype": map_notification_contype[i[0].type],
+            "submitid": i[1].submitid,
+            "welcomeid": i[0].welcomeid,
+            "title": i[1].title,
+            "rating": i[1].rating,
+            "unixtime": i[0].unixtime,
+            "userid": i[1].userid,
+            "username": i[1].owner.profile.username,
+            "subtype": i[1].subtype,
+            "tags": i[1].tags,
+        } for i in q.all()]
     else:
         results = [{
-            "contype": i.contype,
-            "submitid": i.id,
-            "welcomeid": i.welcomeid,
-            "title": i.title,
-            "rating": i.rating,
-            "unixtime": i.unixtime,
-            "userid": i.userid,
-            "username": i.username,
-            "subtype": i.subtype,
-        } for i in query]
+            "contype": map_notification_contype[i[0].type],
+            "submitid": i[1].submitid,
+            "welcomeid": i[0].welcomeid,
+            "title": i[1].title,
+            "rating": i[1].rating,
+            "unixtime": i[0].unixtime,
+            "userid": i[1].userid,
+            "username": i[1].owner.profile.username,
+            "subtype": i[1].subtype,
+        } for i in q.all()]
 
     media.populate_with_submission_media(results)
 
