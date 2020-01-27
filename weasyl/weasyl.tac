@@ -92,13 +92,12 @@ if statsdServer:
 
 crochet.no_setup()
 
-
 cache.region.configure(
     'txyam',
     arguments=dict(
         reactor=reactor,
         url=d.config_read_setting(
-            'servers', 'tcp:127.0.0.1:11211', 'memcached').split(),
+            'servers', os.environ.get('WEASYL_MEMCACHED', 'tcp:127.0.0.1:11211'), 'memcached').split(),
         retryDelay=10,
         timeOut=0.4,
     ),
