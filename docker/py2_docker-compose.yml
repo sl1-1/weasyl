@@ -1,0 +1,108 @@
+version: '3'
+services:
+  postgres:
+    image: weasyl_postgres
+    build:
+      context:  ..
+      dockerfile: ./docker/postgres.dockerfile
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: weasyl_test
+      #      POSTGRES_DB: weasyl_test
+      POSTGRES_PASSWORD: example
+      POSTGRES_USER: weasyl
+    volumes:
+      - "./create-multiple-postgresql-databases.sh:/docker-entrypoint-initdb.d/create-multiple-postgresql-databases.sh"
+    ports:
+      - "5432:5432"
+  memcached:
+    image: "memcached:latest"
+    ports:
+      - "11211:11211"
+  nginx:
+    image: weasyl_nginx
+    depends_on:
+      - weasyl
+    build:
+      context:  ..
+      dockerfile: ./docker/nginx.dockerfile
+    ports:
+      - "8443:8443"
+    volumes:
+      - "../etc/nginx/weasyl.conf:/etc/nginx/conf.d/weasyl.conf"
+      - "../static:/vagrant/static"
+      - "../build:/vagrant/build"
+  base:
+    image: weasyl_base
+    build:
+      context:  ..
+      dockerfile: ./docker/py2_docker_weasyl_base.dockerfile
+  weasyl:
+    image: weasyl_server
+    depends_on:
+      - postgres
+      - memcached
+    build:
+      context:  ..
+      dockerfile: ./docker/py2_weasyl.dockerfile
+    environment:
+      - "WEASYL_APP_ROOT=."
+      - "WEASYL_TESTING_ENV=y"
+      - "WEASYL_STORAGE_ROOT=."
+      - "WEASYL_SERVE_STATIC_FILES=y"
+      - "WEASYL_RELOAD_TEMPLATES=y"
+      - "WEASYL_RELOAD_ASSETS=y"
+      - "WEASYL_REVERSE_PROXY_STATIC=y"
+      - "WEASYL_WEB_ENDPOINT=tcp:8880:interface=0.0.0.0"
+      - "WEASYL_WEB_STATS_ENDPOINT="
+      - "WEASYL_MEMCACHED=tcp:memcached:11211"
+      - "WEASYL_SQLALCHEMY_URL=postgresql+psycopg2cffi://weasyl:example@postgres:5432/weasyl"
+      - "PYTHONPATH=/vagrant/"
+    volumes:
+      - "../weasyl:/vagrant/weasyl"
+      - "../libweasyl:/vagrant/libweasyl"
+      - "../static:/vagrant/static"
+      - "../build:/vagrant/build"
+      - "../.git:/vagrant/.git"
+      - "../templates:/vagrant/templates"
+      - "logs:/vagrant/log/"
+    ports:
+      - "8880:8880"
+  test:
+    image: weasyl_test
+    depends_on:
+      - postgres
+      - memcached
+    build:
+      context:  ..
+      dockerfile: ./docker/py2_weasyl_test.dockerfile
+    environment:
+      - "WEASYL_APP_ROOT=."
+      - "WEASYL_TESTING_ENV=y"
+      - "WEASYL_STORAGE_ROOT=testing"
+      - "PYTHONPATH=/vagrant/"
+      - "WEASYL_TEST_SQLALCHEMY_URL=postgresql+psycopg2cffi://weasyl:example@postgres:5432/weasyl_test"
+    volumes:
+      - "../weasyl:/vagrant/weasyl"
+      - "../libweasyl:/vagrant/libweasyl"
+      - "../build:/vagrant/build"
+      - "../.git:/vagrant/.git"
+      - "../templates:/vagrant/templates"
+      - "../static:/vagrant/static"
+      - "../testlogs:/vagrant/testlogs"
+      - "../profiling/:/vagrant/prof"
+      - "../.coveragerc:/vagrant/.coveragerc"
+      - "../etc/testscript.sh:/testscript.sh"
+
+  nodejs:
+    image: weasyl_nodejs
+    build:
+      context:  ..
+      dockerfile: ./docker/py2_weasyl_nodejs.dockerfile
+    volumes:
+      - "../assets/:/vagrant/assets"
+      - "../build/:/vagrant/build"
+      - "../.git/:/vagrant/.git"
+      - "../static/:/vagrant/static"
+
+volumes:
+  logs:
