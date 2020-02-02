@@ -120,13 +120,12 @@ def submit_literary_post_(request):
 
 @login_required
 def submit_multimedia_get_(request):
-    return Response(define.webpage(request.userid, "submit/multimedia.html", [
-        # Folders
-        folder.select_list(request.userid, "drop/all"),
-        # Subtypes
-        [i for i in macro.MACRO_SUBCAT_LIST if 3000 <= i[0] < 4000],
-        profile.get_user_ratings(request.userid),
-    ], title="Multimedia Artwork"))
+    return {
+        'folders': folder.select_list(request.userid, "drop/all"),
+        'subtypes': [i for i in macro.MACRO_SUBCAT_LIST if 3000 <= i[0] < 4000],
+        'ratings': profile.get_user_ratings(request.userid),
+        'title': "Multimedia Artwork"
+    }
 
 
 @login_required
