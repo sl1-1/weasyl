@@ -250,6 +250,7 @@ def signup_post_(request):
 
 @guest_required
 def verify_account_(request):
+    # TODO: Don't redirect back here after signing in for the first time. Errors due to being logged in
     login.verify(token=request.web_input(token="").token, ip_address=request.client_addr)
     return Response(define.errorpage(
         request.userid,
