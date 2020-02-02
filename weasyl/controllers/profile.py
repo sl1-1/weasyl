@@ -354,7 +354,6 @@ def favorites_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's favorites" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     if form.feature:
         nextid = define.get_int(form.nextid)
@@ -385,20 +384,19 @@ def favorites_(request):
             "journal": favorite.select_journal(request.userid, rating, 22, otherid=otherid),
         }
 
-    page.append(define.render('user/favorites.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Feature
-        form.feature,
+        'feature': form.feature,
         # Favorites
-        faves,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'result': faves,
+    }
 
 
 def friends_(request):
