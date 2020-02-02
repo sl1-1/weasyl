@@ -168,9 +168,10 @@ def submit_multimedia_post_(request):
 
 @login_required
 def submit_character_get_(request):
-    return Response(define.webpage(request.userid, "submit/character.html", [
-        profile.get_user_ratings(request.userid),
-    ], title="Character Profile"))
+    return {
+        'ratings': profile.get_user_ratings(request.userid),
+        'title': "Character Profile"
+    }
 
 
 @login_required
