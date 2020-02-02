@@ -23,10 +23,11 @@ from weasyl.controllers.decorators import (
 
 @guest_required
 def signin_get_(request):
-    return Response(define.webpage(request.userid, "etc/signin.html", [
-        False,
-        request.environ.get('HTTP_REFERER', ''),
-    ], title="Sign In"))
+    return {
+        'error': False,
+        'referer': request.environ.get('HTTP_REFERER', ''),
+        'title': "Sign In"
+    }
 
 
 @guest_required
@@ -73,7 +74,7 @@ def signin_post_(request):
             title="Sign In - 2FA"
         ))
     elif logerror == "invalid":
-        return Response(define.webpage(request.userid, "etc/signin.html", [True, form.referer]))
+        return {'error': True, 'referer': form.referer}
     elif logerror == "banned":
         reason = moderation.get_ban_reason(logid)
         return Response(define.errorpage(

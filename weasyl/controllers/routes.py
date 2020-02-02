@@ -39,6 +39,10 @@ routes_with_templates = (
     Route_Template("/search", "search", general.search_, renderer='weasyl:templates/etc/search.jinja2'),
     Route_Template("/popular", "popular", general.popular_, renderer='weasyl:templates/etc/popular.jinja2'),
     Route_Template("/streaming", "streaming", general.streaming_, renderer='weasyl:templates/etc/streaming.jinja2'),
+
+    # Signin and out views.
+    Route_Template("/signin", "signin", {'GET': user.signin_get_, 'POST': user.signin_post_},
+                   renderer='weasyl:templates/etc/signin.jinja2'),
 )
 
 routes = (
@@ -46,7 +50,6 @@ routes = (
     Route("/marketplace", "marketplace", marketplace.search_),
 
     # Signin and out views.
-    Route("/signin", "signin", {'GET': user.signin_get_, 'POST': user.signin_post_}),
     Route("/signin/2fa-auth", "signin_2fa_auth", {'GET': user.signin_2fa_auth_get_, 'POST': user.signin_2fa_auth_post_}),
     Route("/signin/unicode-failure", "signin-unicode-failure", {
         'GET': user.signin_unicode_failure_get_, 'POST': user.signin_unicode_failure_post_
