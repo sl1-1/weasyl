@@ -400,8 +400,6 @@ def favorites_(request):
 
 
 def friends_(request):
-    cachename = "user/friends.html"
-
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
     form.userid = define.get_int(form.userid)
@@ -415,22 +413,21 @@ def friends_(request):
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
-    return Response(define.webpage(request.userid, cachename, [
+    return {
+        'feature': 'friends',
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Friends
-        frienduser.select_friends(request.userid, otherid, limit=44,
-                                  backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
-    ]))
+        'query': frienduser.select_friends(request.userid, otherid, limit=44,
+                                           backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
+    }
 
 
 def following_(request):
-    cachename = "user/following.html"
-
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
     form.userid = define.get_int(form.userid)
@@ -444,22 +441,21 @@ def following_(request):
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
-    return Response(define.webpage(request.userid, cachename, [
+    return {
+        'feature': 'following',
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Following
-        followuser.select_following(request.userid, otherid, limit=44,
-                                    backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
-    ]))
+        'query': followuser.select_following(request.userid, otherid, limit=44,
+                                             backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
+    }
 
 
 def followed_(request):
-    cachename = "user/followed.html"
-
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
     form.userid = define.get_int(form.userid)
@@ -473,14 +469,15 @@ def followed_(request):
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
-    return Response(define.webpage(request.userid, cachename, [
+    return {
+        'feature': 'followed',
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Followed
-        followuser.select_followed(request.userid, otherid, limit=44,
+        'query': followuser.select_followed(request.userid, otherid, limit=44,
                                    backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
-    ]))
+    }
