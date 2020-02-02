@@ -114,6 +114,16 @@ routes_with_templates = (
                    renderer='weasyl:templates/user/friends.jinja2'),
     Route_Template("/followed/{name:[^/]*}", "profile_followed", profile.followed_,
                    renderer='weasyl:templates/user/friends.jinja2'),
+
+    # Details of specific content
+    Route_Template("/view", "submission_detail_view_unnamed", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/view/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail_view", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/submission", "submission_detail_unnamed", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/submission/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
 )
 
 routes = (
@@ -150,12 +160,6 @@ routes = (
           "submission_detail_media", detail.submission_media_),
 
     # Details of specific content
-    Route("/view", "submission_detail_view_unnamed", detail.submission_),
-    Route("/view/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail_view",
-          detail.submission_),
-    Route("/submission", "submission_detail_unnamed", detail.submission_),
-    Route("/submission/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail",
-          detail.submission_),
     Route("/submission/tag-history/{submitid:[0-9]+}", "submission_tag_history",
           detail.submission_tag_history_),
     Route("/character", "character_detail_unnamed", detail.character_),
