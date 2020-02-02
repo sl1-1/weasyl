@@ -203,17 +203,6 @@ routes = (
           "submission_detail_media", detail.submission_media_),
 
     # # Submitting, reuploading, and removing content
-    # Route("/submit", "submit", content.submit_),
-    # Route("/submit/visual", "submit_visual",
-    #       {'GET': content.submit_visual_get_, 'POST': content.submit_visual_post_}),
-    # Route("/submit/literary", "submit_literary",
-    #       {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_}),
-    # Route("/submit/multimedia", "submit_multimedia",
-    #       {'GET': content.submit_multimedia_get_, 'POST': content.submit_multimedia_post_}),
-    # Route("/submit/character", "submit_character",
-    #       {'GET': content.submit_character_get_, 'POST': content.submit_character_post_}),
-    # Route("/submit/journal", "submit_journal",
-    #       {'GET': content.submit_journal_get_, 'POST': content.submit_journal_post_}),
     Route("/submit/shout", "submit_shout", {'POST': content.submit_shout_}),
     Route("/submit/comment", "submit_comment", {'POST': content.submit_comment_}),
     Route("/submit/report", "submit_report", {'POST': content.submit_report_}),
