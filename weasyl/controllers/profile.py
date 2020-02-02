@@ -247,7 +247,6 @@ def characters_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's characters" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     url_format = "/characters?userid={userid}&%s".format(userid=userprofile['userid'])
     result = pagination.PaginatedResult(
@@ -256,18 +255,17 @@ def characters_(request):
         otherid=otherid, backid=define.get_int(form.backid),
         nextid=define.get_int(form.nextid))
 
-    page.append(define.render('user/characters.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Characters list
-        result,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'result': result,
+    }
 
 
 def shouts_(request):
