@@ -539,11 +539,12 @@ def edit_journal_get_(request):
     if request.userid != detail['userid'] and request.userid not in staff.MODS:
         return Response(define.errorpage(request.userid, errorcode.permission))
 
-    return Response(define.webpage(request.userid, "edit/journal.html", [
+    return {
         # Journal detail
-        detail,
-        profile.get_user_ratings(detail['userid']),
-    ], title="Edit Journal"))
+        'query': detail,
+        'ratings': profile.get_user_ratings(detail['userid']),
+        'title': "Edit Journal"
+    }
 
 
 @login_required
