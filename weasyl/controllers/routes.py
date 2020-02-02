@@ -142,6 +142,9 @@ routes_with_templates = (
     Route_Template("/reupload/character", "reupload_character",
                    {'GET': content.reupload_character_get_, 'POST': content.reupload_character_post_},
                    renderer='weasyl:templates/submit/reupload_submission.jinja2'),
+    Route_Template("/edit/submission", "edit_submission",
+                   {'GET': content.edit_submission_get_, 'POST': content.edit_submission_post_},
+                   renderer='weasyl:templates/edit/submission.jinja2'),
 
 )
 
@@ -196,8 +199,6 @@ routes = (
     Route("/submit/tags", "submit_tags", {'POST': content.submit_tags_}),
     Route("/reupload/cover", "reupload_cover",
           {'GET': content.reupload_cover_get_, 'POST': content.reupload_cover_post_}),
-    Route("/edit/submission", "edit_submission",
-          {'GET': content.edit_submission_get_, 'POST': content.edit_submission_post_}),
     Route("/edit/character", "edit_character",
           {'GET': content.edit_character_get_, 'POST': content.edit_character_post_}),
     Route("/edit/journal", "edit_journal",

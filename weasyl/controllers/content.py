@@ -446,16 +446,13 @@ def edit_submission_get_(request):
 
     submission_category = detail['subtype'] // 1000 * 1000
 
-    return Response(define.webpage(request.userid, "edit/submission.html", [
-        # Submission detail
-        detail,
-        # Folders
-        folder.select_list(detail['userid'], "drop/all"),
-        # Subtypes
-        [i for i in macro.MACRO_SUBCAT_LIST
-         if submission_category <= i[0] < submission_category + 1000],
-        profile.get_user_ratings(detail['userid']),
-    ], title="Edit Submission"))
+    return {
+        'query': detail,
+        'folders': folder.select_list(detail['userid'], "drop/all"),
+        'subtypes': [i for i in macro.MACRO_SUBCAT_LIST if submission_category <= i[0] < submission_category + 1000],
+        'ratings': profile.get_user_ratings(detail['userid']),
+        'title': "Edit Submission",
+    }
 
 
 @login_required
