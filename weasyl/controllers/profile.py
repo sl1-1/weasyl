@@ -53,7 +53,6 @@ def profile_(request):
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     extras['title'] = u"%s's profile" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
 
-    page = define.common_page_start(request.userid, **extras)
     define.common_view_content(request.userid, otherid, "profile")
 
     if 'O' in userprofile['config']:
@@ -77,37 +76,35 @@ def profile_(request):
         favorites = None
 
     statistics, show_statistics = profile.select_statistics(otherid)
-
-    page.append(define.render('user/profile.html', [
+    return {
         # Profile information
-        userprofile,
+        "profile": userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
-        macro.SOCIAL_SITES,
+        "userinfo": profile.select_userinfo(otherid, config=userprofile['config']),
+        'social_sites': macro.SOCIAL_SITES,
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Recent submissions
-        submissions, more_submissions,
-        favorites,
-        featured,
+        'submissions': submissions,
+        'more_submissions': more_submissions,
+        'favorites': favorites,
+        'featured': featured,
         # Folders preview
-        folder.select_preview(request.userid, otherid, rating, 3),
+        'folders': folder.select_preview(request.userid, otherid, rating, 3),
         # Latest journal
-        journal.select_latest(request.userid, rating, otherid=otherid),
+        'journal': journal.select_latest(request.userid, rating, otherid=otherid),
         # Recent shouts
-        shout.select(request.userid, ownerid=otherid, limit=8),
+        'shouts': shout.select(request.userid, ownerid=otherid, limit=8),
         # Statistics information
-        statistics,
-        show_statistics,
+        'statistics': statistics,
+        'show_statistics': show_statistics,
         # Commission information
-        commishinfo.select_list(otherid),
+        'commishinfo': commishinfo.select_list(otherid),
         # Friends
-        lambda: frienduser.has_friends(otherid),
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'has_friends': lambda: frienduser.has_friends(otherid),
+    }
 
 
 def profile_media_(request):

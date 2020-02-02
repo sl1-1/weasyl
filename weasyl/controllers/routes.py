@@ -59,6 +59,13 @@ routes_with_templates = (
     Route_Template("/resetpassword", "reset_password",
                    {'GET': user.resetpassword_get_, 'POST': user.resetpassword_post_},
                    renderer='weasyl:templates/etc/resetpassword.jinja2'),
+    # Profile views.
+    Route_Template("/~", "profile_tilde_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/~{name}", "profile_tilde", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/user", "profile_user_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/user/{name}", "profile_user", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/profile", "profile_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/profile/{name}", "profile", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
 )
 
 routes = (
@@ -89,13 +96,7 @@ routes = (
     Route("/control/2fa/generate_recovery_codes", "control_2fa_generate_recovery_codes",
           {'GET': two_factor_auth.tfa_generate_recovery_codes_get_, 'POST': two_factor_auth.tfa_generate_recovery_codes_post_}),
 
-    # Profile views.
-    Route("/~", "profile_tilde_unnamed", profile.profile_),
-    Route("/~{name}", "profile_tilde", profile.profile_),
-    Route("/user", "profile_user_unnamed", profile.profile_),
-    Route("/user/{name}", "profile_user", profile.profile_),
-    Route("/profile", "profile_unnamed", profile.profile_),
-    Route("/profile/{name}", "profile", profile.profile_),
+    # # Profile views.
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),
     Route("/~{name}/submission/{submitid:[0-9]+}",
           "submission_detail_profile;no_s;no_slug", detail.submission_),
