@@ -200,7 +200,7 @@ def signin_2fa_auth_post_(request):
 
 @login_required
 def signin_unicode_failure_get_(request):
-    return Response(define.webpage(request.userid, 'etc/unicode_failure.html'))
+    return {'title': 'Fix Your Password'}
 
 
 @login_required

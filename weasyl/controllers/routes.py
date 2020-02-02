@@ -46,6 +46,9 @@ routes_with_templates = (
     Route_Template("/signin/2fa-auth", "signin_2fa_auth",
                    {'GET': user.signin_2fa_auth_get_, 'POST': user.signin_2fa_auth_post_},
                    renderer='weasyl:templates/etc/signin_2fa_auth.jinja2'),
+    Route_Template("/signin/unicode-failure", "signin-unicode-failure",
+                   {'GET': user.signin_unicode_failure_get_, 'POST': user.signin_unicode_failure_post_},
+                   renderer='weasyl:templates/etc/unicode_failure.jinja2'),
 )
 
 routes = (
@@ -53,9 +56,6 @@ routes = (
     Route("/marketplace", "marketplace", marketplace.search_),
 
     # Signin and out views.
-    Route("/signin/unicode-failure", "signin-unicode-failure", {
-        'GET': user.signin_unicode_failure_get_, 'POST': user.signin_unicode_failure_post_
-    }),
     Route("/signout", "signout", user.signout_),
     Route("/signup", "signup", {'GET': user.signup_get_, 'POST': user.signup_post_}),
 
