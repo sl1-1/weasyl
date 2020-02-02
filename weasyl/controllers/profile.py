@@ -216,23 +216,21 @@ def journals_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's journals" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
-    page.append(define.render('user/journals.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Journals list
         # TODO(weykent): use select_user_list
-        journal.select_list(request.userid, rating, 250, otherid=otherid),
+        'journals': journal.select_list(request.userid, rating, 250, otherid=otherid),
         # Latest journal
-        journal.select_latest(request.userid, rating, otherid=otherid),
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'latest': journal.select_latest(request.userid, rating, otherid=otherid),
+    }
 
 
 def characters_(request):
