@@ -67,12 +67,14 @@ def signin_post_(request):
         # The number of times the user has attempted to authenticate via 2FA
         sess.additional_data['2fa_pwd_auth_attempts'] = 0
         sess.save = True
-        return Response(define.webpage(
-            request.userid,
-            "etc/signin_2fa_auth.html",
-            [define.get_display_name(logid), form.referer, remaining_recovery_codes, None],
-            title="Sign In - 2FA"
-        ))
+        return {
+            'username': define.get_display_name(logid),
+            'referer': form.referer,
+            'remaining_recovery_codes': remaining_recovery_codes,
+            'error': None,
+            'title': "Sign In - 2FA"
+        }
+
     elif logerror == "invalid":
         return {'error': True, 'referer': form.referer}
     elif logerror == "banned":
@@ -130,11 +132,13 @@ def signin_2fa_auth_get_(request):
             [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
     else:
         ref = request.params["referer"] if "referer" in request.params else "/"
-        return Response(define.webpage(
-            request.userid,
-            "etc/signin_2fa_auth.html",
-            [define.get_display_name(tfa_userid), ref, two_factor_auth.get_number_of_recovery_codes(tfa_userid),
-             None], title="Sign In - 2FA"))
+        return {
+            'username': define.get_display_name(tfa_userid),
+            'referer': ref,
+            'remaining_recovery_codes': two_factor_auth.get_number_of_recovery_codes(tfa_userid),
+            'error': None,
+            'title': "Sign In - 2FA"
+        }
 
 
 @guest_required
@@ -185,11 +189,13 @@ def signin_2fa_auth_post_(request):
         sess.additional_data['2fa_pwd_auth_attempts'] += 1
         sess.save = True
         # 2FA failed; redirect to 2FA input page & inform user that authentication failed.
-        return Response(define.webpage(
-            request.userid,
-            "etc/signin_2fa_auth.html",
-            [define.get_display_name(tfa_userid), request.params["referer"], two_factor_auth.get_number_of_recovery_codes(tfa_userid),
-             "2fa"], title="Sign In - 2FA"))
+        return {
+            'username': define.get_display_name(tfa_userid),
+            'referer': request.params["referer"],
+            'remaining_recovery_codes': two_factor_auth.get_number_of_recovery_codes(tfa_userid),
+            'error': "2fa",
+            'title': "Sign In - 2FA"
+        }
 
 
 @login_required
