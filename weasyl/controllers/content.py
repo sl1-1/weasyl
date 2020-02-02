@@ -75,13 +75,12 @@ def submit_visual_post_(request):
 
 @login_required
 def submit_literary_get_(request):
-    return Response(define.webpage(request.userid, "submit/literary.html", [
-        # Folders
-        folder.select_list(request.userid, "drop/all"),
-        # Subtypes
-        [i for i in macro.MACRO_SUBCAT_LIST if 2000 <= i[0] < 3000],
-        profile.get_user_ratings(request.userid),
-    ], title="Literary Artwork"))
+    return {
+        'folders': folder.select_list(request.userid, "drop/all"),
+        'subtypes': [i for i in macro.MACRO_SUBCAT_LIST if 2000 <= i[0] < 3000],
+        'ratings': profile.get_user_ratings(request.userid),
+        'title': "Literary Artwork"
+    }
 
 
 @login_required

@@ -156,6 +156,7 @@ routes_with_templates = (
                    renderer='weasyl:templates/edit/journal.jinja2'),
     Route_Template("/submit", "submit", content.submit_, renderer='weasyl:templates/submit/submit.jinja2'),
     Route_Template("/submit/visual", "submit_visual", {'GET': content.submit_visual_get_, 'POST': content.submit_visual_post_}, renderer='weasyl:templates/submit/visual.jinja2'),
+    Route_Template("/submit/literary", "submit_literary", {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_}, renderer='weasyl:templates/submit/literary.jinja2'),
 
     # Site Updates
     Route_Template("/site-updates", "site_update_list", general.site_update_list_,
@@ -202,8 +203,8 @@ routes = (
     # Route("/submit", "submit", content.submit_),
     # Route("/submit/visual", "submit_visual",
     #       {'GET': content.submit_visual_get_, 'POST': content.submit_visual_post_}),
-    Route("/submit/literary", "submit_literary",
-          {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_}),
+    # Route("/submit/literary", "submit_literary",
+    #       {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_}),
     Route("/submit/multimedia", "submit_multimedia",
           {'GET': content.submit_multimedia_get_, 'POST': content.submit_multimedia_post_}),
     Route("/submit/character", "submit_character",
