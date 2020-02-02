@@ -28,15 +28,13 @@ def submit_visual_get_(request):
     form = request.web_input(title='', tags=[], description='', imageURL='', baseURL='')
     if form.baseURL:
         form.imageURL = urlparse.urljoin(form.baseURL, form.imageURL)
-
-    return Response(define.webpage(request.userid, "submit/visual.html", [
-        # Folders
-        folder.select_list(request.userid, "drop/all"),
-        # Subtypes
-        [i for i in macro.MACRO_SUBCAT_LIST if 1000 <= i[0] < 2000],
-        profile.get_user_ratings(request.userid),
-        form,
-    ], title="Visual Artwork"))
+    return {
+        'folders': folder.select_list(request.userid, "drop/all"),
+        'subtypes': [i for i in macro.MACRO_SUBCAT_LIST if 1000 <= i[0] < 2000],
+        'ratings': profile.get_user_ratings(request.userid),
+        'form': form,
+        'title': "Visual Artwork",
+    }
 
 
 @login_required
