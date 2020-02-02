@@ -274,6 +274,15 @@ def userid_request_property(request):
         return 0 if userid is None else userid
 
 
+def user_request_property(request):
+    if request.weasyl_session.userid:
+        return orm.Login.query.get(request.weasyl_session.userid)
+    else:
+        return None
+
+
+
+
 def log_exc_request_method(request, **kwargs):
     """
     Method on requests to log exceptions.

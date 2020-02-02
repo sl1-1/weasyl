@@ -68,6 +68,39 @@ class Login(Base):
     def is_staff(self):
         return self.userid in staff.MODS
 
+    @reify
+    def is_mod(self):
+        return self.userid in staff.MODS
+
+    @reify
+    def is_admin(self):
+        return self.userid in staff.ADMINS
+
+    @reify
+    def is_director(self):
+        return self.userid in staff.DIRECTORS
+
+    @reify
+    def is_tech(self):
+        return self.userid in staff.TECHNICAL
+
+    @reify
+    def is_dev(self):
+        return self.userid in staff.DEVELOPERS
+
+    @reify
+    def user_type(self):
+        if self.is_director:
+            return "director"
+        if self.is_tech:
+            return "tech"
+        if self.is_admin:
+            return "admin"
+        if self.is_mod:
+            return "mod"
+        if self.is_dev:
+            return "dev"
+
     def is_friends_with(self, other):
         """
         Returns True if this user is in a friendship with the other user, or
