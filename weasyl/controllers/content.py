@@ -419,8 +419,10 @@ def reupload_cover_get_(request):
 
     if request.userid != define.get_ownerid(submitid=form.submitid):
         return Response(define.errorpage(request.userid, errorcode.permission))
-
-    return Response(define.webpage(request.userid, "submit/reupload_cover.html", [form.submitid], title="Reupload Cover Artwork"))
+    return {
+        'submitid': form.submitid,
+        'title': "Reupload Cover Artwork"
+    }
 
 
 @login_required
