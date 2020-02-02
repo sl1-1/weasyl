@@ -207,8 +207,10 @@ def submit_character_post_(request):
 
 @login_required
 def submit_journal_get_(request):
-    return Response(define.webpage(request.userid, "submit/journal.html",
-                                   [profile.get_user_ratings(request.userid)], title="Journal Entry"))
+    return {
+        'ratings': profile.get_user_ratings(request.userid),
+        'title': "Journal Entry"
+    }
 
 
 @login_required

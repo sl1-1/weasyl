@@ -159,6 +159,7 @@ routes_with_templates = (
     Route_Template("/submit/literary", "submit_literary", {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_}, renderer='weasyl:templates/submit/literary.jinja2'),
     Route_Template("/submit/multimedia", "submit_multimedia", {'GET': content.submit_multimedia_get_, 'POST': content.submit_multimedia_post_}, renderer='weasyl:templates/submit/multimedia.jinja2'),
     Route_Template("/submit/character", "submit_character", {'GET': content.submit_character_get_, 'POST': content.submit_character_post_}, renderer='weasyl:templates/submit/character.jinja2'),
+    Route_Template("/submit/journal", "submit_journal", {'GET': content.submit_journal_get_, 'POST': content.submit_journal_post_}, renderer='weasyl:templates/submit/journal.jinja2'),
 
     # Site Updates
     Route_Template("/site-updates", "site_update_list", general.site_update_list_,
@@ -211,8 +212,8 @@ routes = (
     #       {'GET': content.submit_multimedia_get_, 'POST': content.submit_multimedia_post_}),
     # Route("/submit/character", "submit_character",
     #       {'GET': content.submit_character_get_, 'POST': content.submit_character_post_}),
-    Route("/submit/journal", "submit_journal",
-          {'GET': content.submit_journal_get_, 'POST': content.submit_journal_post_}),
+    # Route("/submit/journal", "submit_journal",
+    #       {'GET': content.submit_journal_get_, 'POST': content.submit_journal_post_}),
     Route("/submit/shout", "submit_shout", {'POST': content.submit_shout_}),
     Route("/submit/comment", "submit_comment", {'POST': content.submit_comment_}),
     Route("/submit/report", "submit_report", {'POST': content.submit_report_}),
