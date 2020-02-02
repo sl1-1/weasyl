@@ -101,13 +101,11 @@ def submission_media_(request):
 def submission_tag_history_(request):
     submitid = int(request.matchdict['submitid'])
 
-    page_title = "Tag updates"
-    page = define.common_page_start(request.userid, title=page_title)
-    page.append(define.render('detail/tag_history.html', [
-        submission.select_view_api(request.userid, submitid),
-        searchtag.tag_history(submitid),
-    ]))
-    return Response(define.common_page_end(request.userid, page))
+    return {
+        'title': "Tag updates",
+        'detail': submission.select_view_api(request.userid, submitid),
+        'history': searchtag.tag_history(submitid),
+    }
 
 
 def character_(request):
