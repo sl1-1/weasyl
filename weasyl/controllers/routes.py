@@ -130,6 +130,10 @@ routes_with_templates = (
                    renderer='weasyl:templates/detail/character.jinja2'),
     Route_Template("/character/{charid:[0-9]+}*remainder", "character_detail", detail.character_,
                    renderer='weasyl:templates/detail/character.jinja2'),
+    Route_Template("/journal", "journal_detail_unnamedited", detail.journal_,
+                   renderer='weasyl:templates/detail/journal.jinja2'),
+    Route_Template("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_,
+                   renderer='weasyl:templates/detail/journal.jinja2'),
 )
 
 routes = (
@@ -164,10 +168,6 @@ routes = (
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),
     Route("/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}",
           "submission_detail_media", detail.submission_media_),
-
-    # Details of specific content
-    Route("/journal", "journal_detail_unnamedited", detail.journal_),
-    Route("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_),
 
     # Submitting, reuploading, and removing content
     Route("/submit", "submit", content.submit_),
