@@ -116,17 +116,10 @@ def streaming_(request):
 
 
 def site_update_list_(request):
-    updates = (
-        SiteUpdate.query
-        .order_by(SiteUpdate.updateid.desc())
-        .options(joinedload('owner'))
-        .all()
-    )
+    updates = (SiteUpdate.query.order_by(SiteUpdate.updateid.desc()).options(joinedload('owner')).all())
     get_multi_user_media(*[update.userid for update in updates])
 
-    can_edit = request.userid in staff.ADMINS
-
-    return Response(define.webpage(request.userid, 'etc/site_update_list.html', (updates, can_edit), title="Site Updates"))
+    return {"updates": updates, "title": "Site Updates"}
 
 
 def site_update_(request):
