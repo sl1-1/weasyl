@@ -134,6 +134,15 @@ routes_with_templates = (
                    renderer='weasyl:templates/detail/journal.jinja2'),
     Route_Template("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_,
                    renderer='weasyl:templates/detail/journal.jinja2'),
+
+    # Submitting, reuploading, and removing content
+    Route_Template("/reupload/submission", "reupload_submission",
+                   {'GET': content.reupload_submission_get_, 'POST': content.reupload_submission_post_},
+                   renderer='weasyl:templates/submit/reupload_submission.jinja2'),
+    Route_Template("/reupload/character", "reupload_character",
+                   {'GET': content.reupload_character_get_, 'POST': content.reupload_character_post_},
+                   renderer='weasyl:templates/submit/reupload_submission.jinja2'),
+
 )
 
 routes = (
@@ -185,10 +194,6 @@ routes = (
     Route("/submit/comment", "submit_comment", {'POST': content.submit_comment_}),
     Route("/submit/report", "submit_report", {'POST': content.submit_report_}),
     Route("/submit/tags", "submit_tags", {'POST': content.submit_tags_}),
-    Route("/reupload/submission", "reupload_submission",
-          {'GET': content.reupload_submission_get_, 'POST': content.reupload_submission_post_}),
-    Route("/reupload/character", "reupload_character",
-          {'GET': content.reupload_character_get_, 'POST': content.reupload_character_post_}),
     Route("/reupload/cover", "reupload_cover",
           {'GET': content.reupload_cover_get_, 'POST': content.reupload_cover_post_}),
     Route("/edit/submission", "edit_submission",

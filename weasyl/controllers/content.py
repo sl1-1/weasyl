@@ -363,11 +363,12 @@ def reupload_submission_get_(request):
     if request.userid != define.get_ownerid(submitid=form.submitid):
         return Response(define.errorpage(request.userid, errorcode.permission))
 
-    return Response(define.webpage(request.userid, "submit/reupload_submission.html", [
-        "submission",
+    return {
+        'feature': "submission",
         # SubmitID
-        form.submitid,
-    ], title="Reupload Submission"))
+        'targetid': form.submitid,
+        'title': "Reupload Submission"
+    }
 
 
 @login_required
@@ -390,12 +391,12 @@ def reupload_character_get_(request):
 
     if request.userid != define.get_ownerid(charid=form.charid):
         return Response(define.errorpage(request.userid, errorcode.permission))
-
-    return Response(define.webpage(request.userid, "submit/reupload_submission.html", [
-        "character",
-        # charid
-        form.charid,
-    ], title="Reupload Character Image"))
+    return {
+        'feature': "character",
+        # SubmitID
+        'targetid': form.charid,
+        'title': "Reupload Character Image"
+    }
 
 
 @login_required
