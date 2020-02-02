@@ -2,11 +2,9 @@ from __future__ import absolute_import
 
 import itertools
 
-from pyramid.response import Response
 from sqlalchemy.orm import joinedload
 
 from libweasyl import ratings
-from libweasyl import staff
 from libweasyl.media import get_multi_user_media
 from libweasyl.models.site import SiteUpdate
 
