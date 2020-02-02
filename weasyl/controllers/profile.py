@@ -295,7 +295,7 @@ def shouts_(request):
         # Myself
         'myself': profile.select_myself(request.userid),
         # Comments
-        shout.select(request.userid, ownerid=otherid),
+        'shouts': shout.select(request.userid, ownerid=otherid),
         # Feature
         'feature': "shouts",
     }
@@ -310,29 +310,27 @@ def staffnotes_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's staff notes" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     userinfo = profile.select_userinfo(otherid, config=userprofile['config'])
     reportstats = profile.select_report_stats(otherid)
     userinfo['reportstats'] = reportstats
     userinfo['reporttotal'] = sum(reportstats.values())
 
-    page.append(define.render('user/shouts.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        userinfo,
+        'userinfo': userinfo,
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Comments
-        shout.select(request.userid, ownerid=otherid, staffnotes=True),
+        'shouts': shout.select(request.userid, ownerid=otherid, staffnotes=True),
         # Feature
-        "staffnotes",
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'feature': "staffnotes",
+    }
 
 
 def favorites_(request):

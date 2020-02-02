@@ -94,6 +94,10 @@ routes_with_templates = (
                    renderer='weasyl:templates/user/shouts.jinja2'),
     Route_Template("/shouts/{name:[^/]*}", "profile_shouts", profile.shouts_,
                    renderer='weasyl:templates/user/shouts.jinja2'),
+    Route_Template("/staffnotes", "profile_staffnotes_unnamed", profile.staffnotes_,
+                   renderer='weasyl:templates/user/shouts.jinja2'),
+    Route_Template("/staffnotes/{name:[^/]*}", "profile_staffnotes", profile.staffnotes_,
+                   renderer='weasyl:templates/user/shouts.jinja2'),
 )
 
 routes = (
@@ -136,8 +140,6 @@ routes = (
     Route("/following/{name:[^/]*}", "profile_following", profile.following_),
     Route("/followed", "profile_followed_unnamed", profile.followed_),
     Route("/followed/{name:[^/]*}", "profile_followed", profile.followed_),
-    Route("/staffnotes", "profile_staffnotes_unnamed", profile.staffnotes_),
-    Route("/staffnotes/{name:[^/]*}", "profile_staffnotes", profile.staffnotes_),
 
     # Details of specific content
     Route("/view", "submission_detail_view_unnamed", detail.submission_),
