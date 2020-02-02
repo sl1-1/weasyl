@@ -126,6 +126,10 @@ routes_with_templates = (
                    renderer='weasyl:templates/detail/submission.jinja2'),
     Route_Template("/submission/tag-history/{submitid:[0-9]+}", "submission_tag_history",
                    detail.submission_tag_history_, renderer='weasyl:templates/detail/tag_history.jinja2'),
+    Route_Template("/character", "character_detail_unnamed", detail.character_,
+                   renderer='weasyl:templates/detail/character.jinja2'),
+    Route_Template("/character/{charid:[0-9]+}*remainder", "character_detail", detail.character_,
+                   renderer='weasyl:templates/detail/character.jinja2'),
 )
 
 routes = (
@@ -162,8 +166,6 @@ routes = (
           "submission_detail_media", detail.submission_media_),
 
     # Details of specific content
-    Route("/character", "character_detail_unnamed", detail.character_),
-    Route("/character/{charid:[0-9]+}*remainder", "character_detail", detail.character_),
     Route("/journal", "journal_detail_unnamedited", detail.journal_),
     Route("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_),
 

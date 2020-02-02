@@ -129,17 +129,16 @@ def character_(request):
 
     canonical_url = "/character/%d/%s" % (charid, slug_for(item["title"]))
 
-    page = define.common_page_start(request.userid, canonical_url=canonical_url, title=item["title"])
-    page.append(define.render('detail/character.html', [
+    return {
+        'canonical_url': canonical_url,
+        'title': item["title"],
         # Profile
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Character detail
-        item,
+        'query': item,
         # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'violations': [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
+    }
 
 
 def journal_(request):
