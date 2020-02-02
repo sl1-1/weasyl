@@ -66,6 +66,14 @@ routes_with_templates = (
     Route_Template("/user/{name}", "profile_user", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
     Route_Template("/profile", "profile_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
     Route_Template("/profile/{name}", "profile", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/~{name}/submission/{submitid:[0-9]+}", "submission_detail_profile;no_s;no_slug",
+                   detail.submission_, renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/~{name}/submission/{submitid:[0-9]+}/{slug:[^/.]*}", "submission_detail_profile;no_s",
+                   detail.submission_, renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/~{name}/submissions/{submitid:[0-9]+}", "submission_detail_profile;no_slug", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/~{name}/submissions/{submitid:[0-9]+}/{slug:[^/.]*}", "submission_detail_profile",
+                   detail.submission_, renderer='weasyl:templates/detail/submission.jinja2'),
 )
 
 routes = (
@@ -98,14 +106,6 @@ routes = (
 
     # # Profile views.
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),
-    Route("/~{name}/submission/{submitid:[0-9]+}",
-          "submission_detail_profile;no_s;no_slug", detail.submission_),
-    Route("/~{name}/submission/{submitid:[0-9]+}/{slug:[^/.]*}",
-          "submission_detail_profile;no_s", detail.submission_),
-    Route("/~{name}/submissions/{submitid:[0-9]+}",
-          "submission_detail_profile;no_slug", detail.submission_),
-    Route("/~{name}/submissions/{submitid:[0-9]+}/{slug:[^/.]*}",
-          "submission_detail_profile", detail.submission_),
     Route("/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}",
           "submission_detail_media", detail.submission_media_),
     Route("/submissions", "profile_submissions_unnamed", profile.submissions_),

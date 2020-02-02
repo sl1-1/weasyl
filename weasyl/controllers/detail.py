@@ -63,21 +63,18 @@ def submission_(request):
     if login != username:
         raise httpexceptions.HTTPMovedPermanently(location=canonical_path)
     extras["canonical_url"] = canonical_path
-    extras["title"] = item["title"]
 
-    page = define.common_page_start(request.userid, **extras)
-    page.append(define.render('detail/submission.html', [
+    return {
+        'title': item["title"],
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Submission detail
-        item,
+        'query': item,
         # Subtypes
-        macro.MACRO_SUBCAT_LIST,
+        'subtypes': dict(macro.MACRO_SUBCAT_LIST),
         # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'violations': [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
+    }
 
 
 def submission_media_(request):
