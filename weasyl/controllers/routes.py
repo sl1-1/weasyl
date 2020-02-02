@@ -82,6 +82,10 @@ routes_with_templates = (
                    renderer='weasyl:templates/user/journals.jinja2'),
     Route_Template("/journals/{name:[^/]*}", "profile_journals", profile.journals_,
                    renderer='weasyl:templates/user/journals.jinja2'),
+    Route_Template("/collections", "profile_collections_unnamed", profile.collections_,
+                   renderer='weasyl:templates/user/collections.jinja2'),
+    Route_Template("/collections/{name:[^/]*}", "profile_collections", profile.collections_,
+                   renderer='weasyl:templates/user/collections.jinja2'),
 )
 
 routes = (
@@ -116,8 +120,6 @@ routes = (
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),
     Route("/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}",
           "submission_detail_media", detail.submission_media_),
-    Route("/collections", "profile_collections_unnamed", profile.collections_),
-    Route("/collections/{name:[^/]*}", "profile_collections", profile.collections_),
     Route("/characters", "profile_characters_unnamed", profile.characters_),
     Route("/characters/{name:[^/]*}", "profile_characters", profile.characters_),
     Route("/shouts", "profile_shouts_unnamed", profile.shouts_),
