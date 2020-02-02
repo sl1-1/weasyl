@@ -492,11 +492,12 @@ def edit_character_get_(request):
     if request.userid != detail['userid'] and request.userid not in staff.MODS:
         return Response(define.errorpage(request.userid, errorcode.permission))
 
-    return Response(define.webpage(request.userid, "edit/character.html", [
+    return {
         # Submission detail
-        detail,
-        profile.get_user_ratings(detail['userid']),
-    ], title="Edit Character"))
+        'query': detail,
+        'ratings': profile.get_user_ratings(detail['userid']),
+        'title': "Edit Character"
+    }
 
 
 @login_required
