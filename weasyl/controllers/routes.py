@@ -23,7 +23,9 @@ from weasyl.controllers import (
 from weasyl import oauth2
 
 
+Route_Template = namedtuple('Route', ['pattern', 'name', 'view', 'renderer'])
 Route = namedtuple('Route', ['pattern', 'name', 'view'])
+
 """
 A route to be added to the Weasyl application.
 
@@ -31,6 +33,9 @@ A route to be added to the Weasyl application.
 dict mapping http methods to view callables.
 """
 
+routes_with_templates = (
+
+)
 
 routes = (
     # Front page views.
@@ -361,6 +366,17 @@ def setup_routes_and_views(config):
     Args:
         config: A pyramid Configuration for the wsgi application.
     """
+    for route in routes_with_templates:
+        config.add_route(name=route.name, pattern=route.pattern)
+        if isinstance(route.view, dict):
+            for method in route.view:
+                config.add_view(view=route.view[method],
+                                route_name=route.name,
+                                request_method=method,
+                                renderer=route.renderer)
+        else:
+            config.add_view(view=route.view, route_name=route.name, request_method="GET", renderer=route.renderer)
+
     for route in routes:
         config.add_route(name=route.name, pattern=route.pattern)
         if isinstance(route.view, dict):
