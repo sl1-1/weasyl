@@ -51,6 +51,11 @@ routes_with_templates = (
                    renderer='weasyl:templates/etc/unicode_failure.jinja2'),
     Route_Template("/signup", "signup", {'GET': user.signup_get_, 'POST': user.signup_post_},
                    renderer='weasyl:templates/etc/signup.jinja2'),
+
+    # Verification and password management views.
+    Route_Template("/forgotpassword", "forgot_password",
+                   {'GET': user.forgotpassword_get_, 'POST': user.forgetpassword_post_},
+                   renderer='weasyl:templates/etc/forgotpassword.jinja2'),
 )
 
 routes = (
@@ -62,8 +67,6 @@ routes = (
 
     # Verification and password management views.
     Route("/verify/account", "verify_account", user.verify_account_),
-    Route("/forgotpassword", "forgot_password",
-          {'GET': user.forgotpassword_get_, 'POST': user.forgetpassword_post_}),
     Route("/resetpassword", "reset_password",
           {'GET': user.resetpassword_get_, 'POST': user.resetpassword_post_}),
     Route("/force/resetpassword", "force_reset_password", {'POST': user.force_resetpassword_}),

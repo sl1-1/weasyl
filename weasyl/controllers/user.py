@@ -271,12 +271,13 @@ def verify_emailchange_get_(request):
 
 @guest_required
 def forgotpassword_get_(request):
-    return Response(define.webpage(request.userid, "etc/forgotpassword.html", title="Reset Forgotten Password"))
+    return {'title': "Reset Forgotten Password"}
 
 
 @guest_required
 @token_checked
 def forgetpassword_post_(request):
+    # TODO: Don't redirect back here after signing in for the first time. Errors due to being logged in
     form = request.web_input(email="")
 
     resetpassword.request(form)
@@ -297,7 +298,7 @@ def resetpassword_get_(request):
             request.userid,
             "This link does not appear to be valid. If you followed this link from your email, it may have expired."))
 
-    return Response(define.webpage(request.userid, "etc/resetpassword.html", [form.token], title="Reset Forgotten Password"))
+    return {'token': form.token, 'title': "Reset Forgotten Password"}
 
 
 @guest_required
