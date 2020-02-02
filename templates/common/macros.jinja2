@@ -1,0 +1,19 @@
+{% macro RATING(rating) -%}
+    {% if rating == R.MATURE.code %}
+        <span class="rating mature">The following submission is rated Mature:</span>
+    {% elif rating == R.EXPLICIT.code %}
+        <span class="rating explicit">The following submission is rated Explicit:</span>
+    {% endif %}
+{%- endmacro %}
+
+{% macro SELECTED(one, two) -%}
+    {% if one == two %}
+        selected="selected"
+    {% endif %}
+{%- endmacro %}
+
+{% macro CHECKED(one, two) -%}
+    {% if one in two %}
+        checked="checked"
+    {% endif %}
+{%- endmacro %}

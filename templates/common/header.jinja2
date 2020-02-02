@@ -1,0 +1,114 @@
+{% if not req.user %}
+    <div id="login-top">
+        <div id="lt-modal">
+            <iframe src="javascript:false;"></iframe>
+        </div>
+        <div id="login-box-container">
+        </div>
+    </div>
+{% endif %}
+
+<header>
+    <div id="header" class="clear">
+
+        <h1 id="logo"><a href="/"><img src="{{ '/static/images/logo.png'|CDNIFY }}" alt="Weasyl"/></a></h1>
+
+        {% if not req.user %}
+            <h3 id="header-guest">
+                Welcome!
+                <a id="hg-login" href="/signin" class="typeface-a color-a">Sign in</a>,
+                <a id="hg-register" href="/signup" class="typeface-a color-a">register</a>,
+                or learn more <a href="/help/about" class="typeface-a color-a">about Weasyl</a>.
+            </h3>
+        {% else %}
+            <div id="header-user" data-user-type="{{ req.user.user_type or ''}}">
+                <a class="avatar" href="/~{{ req.user.login_name }}">
+                    <img id="avatar" src="{{ req.user.avatar['display_url']}}" alt="{{ req.user.profile['username'] }}">
+                </a>
+                <h2>
+                    <i>Welcome,</i> <a id="username" class="username" href="/~{{ req.user.login_name }}">{{ req.user.profile['username'] }}</a>
+                </h2>
+                <div id="header-utility">
+                    <form class="sfw-toggle" action="/control/sfwtoggle" method="POST">
+                        <input type="hidden" name="token" value="{{ TOKEN() }}" />
+                        <input type="hidden" name="redirect" value="{{ PATH() }}">
+                        <button class="link-button {{ 'on' if sfw() else 'off' }}">
+                            sfw {{ 'on' if sfw() else 'off' }}
+                        </button>
+                    </form>
+                    <span>|</span>
+                    <a href="/notes">inbox</a> <span>|</span>
+                    <a href="/control">settings</a> <span>|</span>
+
+                    {% if req.user.is_director %}
+                        <a href="/modcontrol">mod</a> <span>|</span> <a href="/admincontrol">admin</a>
+                        <span>|</span> <a href="/directorcontrol">director</a> <span>|</span>
+                    {% elif req.user.is_admin %}
+                        <a href="/modcontrol">mod</a> <span>|</span> <a href="/admincontrol">admin</a>
+                        <span>|</span>
+                    {% elif req.user.is_mod %}
+                        <a href="/modcontrol">mod</a> <span>|</span>
+                    {% endif %}
+
+                    <a href="/signout?token={{TOKEN()[:8]}}">log&#160;out</a>
+                </div>
+            </div>
+
+            <ul id="header-messages">
+                {% if msg_submissions() %}
+                    <li>
+                        <a href="/messages/submissions" title="Art">
+                            <span class="icon icon-20 icon-art">Art:</span> {{ msg_submissions() }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if msg_comments() %}
+                    <li>
+                        <a href="/messages/notifications#comments" title="Comments">
+                            <span class="icon icon-20 icon-comments">Comments:</span> {{ msg_comments() }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if msg_notifications() %}
+                    <li>
+                        <a href="/messages/notifications#notifications" title="Notifications">
+                            <span class="icon icon-20 icon-notes">Notifications:</span> {{ msg_notifications() }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if msg_journals() %}
+                    <li>
+                        <a href="/messages/notifications#journals" title="Journals">
+                            <span class="icon icon-20 icon-journals">Journals:</span> {{ msg_journals() }}
+                        </a>
+                    </li>
+                {% endif %}
+                {% if msg_notes() %}
+                    <li>
+                        <a href="/notes" title="Private Messages">
+                            <span class="icon icon-20 icon-messages">Private Messages:</span> {{ msg_notes() }}
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+        {% endif %}
+
+        <a id="nav-toggle" href="#footer-nav"><span class="icon icon-20 icon-nav"></span> <i>Menu</i></a>
+
+        <nav>
+            <div id="header-nav">
+                <ul>
+                    <li><a href="/submit">Submit</a></li>
+                    <li><a href="/search">Browse</a></li>
+                    <li><a href="/marketplace">Marketplace</a></li>
+                    <li id="header-search-nav"><a href="/search">Search</a></li>
+                </ul>
+
+                <form id="header-search" action="/search" method="GET">
+                    <input name="q" placeholder="Search" title="Search Weasyl" type="search" tabindex="1"/>
+                </form>
+            </div>
+        </nav>
+
+    </div>
+</header>

@@ -34,12 +34,13 @@ dict mapping http methods to view callables.
 """
 
 routes_with_templates = (
+    # Front page views.
+    Route_Template("/{index:(index)?}", "index", general.index_, renderer='weasyl:templates/etc/index.jinja2'),  # 'index' is optional in the URL
 
 )
 
 routes = (
     # Front page views.
-    Route("/{index:(index)?}", "index", general.index_),  # 'index' is optional in the URL
     Route("/search", "search", general.search_),
     Route("/popular", "popular", general.popular_),
     Route("/streaming", "streaming", general.streaming_),
