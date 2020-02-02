@@ -137,7 +137,6 @@ def submissions_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's submissions" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     url_format = "/submissions/{username}?%s{folderquery}".format(
                  username=define.get_sysname(userprofile['username']),
@@ -146,23 +145,21 @@ def submissions_(request):
         submission.select_list, submission.select_count, 'submitid', url_format, request.userid, rating,
         60, otherid=otherid, folderid=folderid, backid=define.get_int(form.backid),
         nextid=define.get_int(form.nextid), profile_page_filter=not folderid)
-
-    page.append(define.render('user/submissions.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Recent submissions
-        result,
+        'result': result,
         # Folders
-        folder.select_list(otherid, "sidebar/all"),
+        'folders': folder.select_list(otherid, "sidebar/all"),
         # Current folder
-        folderid,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'currentfolder': folderid,
+    }
 
 
 def collections_(request):
