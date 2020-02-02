@@ -155,7 +155,9 @@ routes_with_templates = (
     # Site Updates
     Route_Template("/site-updates", "site_update_list", general.site_update_list_,
                    renderer='weasyl:templates/etc/site_update_list.jinja2'),
-
+    Route_Template("/site-updates/{update_id:[0-9]+}", "site_update",
+                   {'GET': general.site_update_, 'POST': admin.site_update_put_},
+                   renderer='weasyl:templates/etc/site_update.jinja2'),
 )
 
 routes = (
@@ -367,10 +369,6 @@ routes = (
         'POST': director.directorcontrol_globaltagrestrictions_post_,
     }),
 
-    Route("/site-updates/{update_id:[0-9]+}", "site_update", {
-        'GET': general.site_update_,
-        'POST': admin.site_update_put_,
-    }),
     Route("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_),
 
     Route("/policy/community", "policy_community", info.policy_community_),
