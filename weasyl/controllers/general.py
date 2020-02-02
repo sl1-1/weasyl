@@ -23,8 +23,6 @@ def search_(request):
 
     form = request.web_input(q="", find="", within="", rated=[], cat="", subcat="", backid="", nextid="")
 
-    page = define.common_page_start(request.userid, title="Browse and search")
-
     if form.q:
         find = form.find
 
@@ -62,19 +60,20 @@ def search_(request):
                 backid=meta["backid"],
                 nextid=meta["nextid"])
 
-        page.append(define.render("etc/search.html", [
+        return {
+            "options": {'search'},
             # Search method
-            {"method": "search"},
+            "method": {"method": "search"},
             # Search metadata
-            meta,
+            "meta": meta,
             # Search results
-            query,
-            next_count,
-            back_count,
+            "results": query,
+            "next_count": next_count,
+            "back_count": back_count,
             # Submission subcategories
-            macro.MACRO_SUBCAT_LIST,
-            search.COUNT_LIMIT,
-        ]))
+            "subcats": macro.MACRO_SUBCAT_LIST,
+            "count_limit": search.COUNT_LIMIT
+        }
     elif form.find:
         query = search.browse(request.userid, rating, 66, form)
 
@@ -83,31 +82,31 @@ def search_(request):
             "cat": int(form.cat) if form.cat else None,
         }
 
-        page.append(define.render("etc/search.html", [
+        return {
+            "options": {'search'},
             # Search method
-            {"method": "browse"},
+            "method": {"method": "browse"},
             # Search metadata
-            meta,
+            "meta": meta,
             # Search results
-            query,
-            0,
-            0,
-        ]))
+            "results": query,
+            "next_count": 0,
+            "back_count": 0
+        }
     else:
-        page.append(define.render("etc/search.html", [
+        return {
+            "options": {'search'},
             # Search method
-            {"method": "summary"},
+            "method": {"method": "summary"},
             # Search metadata
-            None,
+            "meta": None,
             # Search results
-            {
+            "results": {
                 "submit": search.browse(request.userid, rating, 22, form, find="submit"),
                 "char": search.browse(request.userid, rating, 22, form, find="char"),
                 "journal": search.browse(request.userid, rating, 22, form, find="journal"),
-            },
-        ]))
-
-    return Response(define.common_page_end(request.userid, page, options={'search'}))
+            }
+        }
 
 
 def streaming_(request):
