@@ -20,7 +20,7 @@ from weasyl.login import get_user_agent_id
 # Content submission functions
 @login_required
 def submit_(request):
-    return Response(define.webpage(request.userid, "submit/submit.html", title="Submit Artwork"))
+    return {'title': "Submit Artwork"}
 
 
 @login_required

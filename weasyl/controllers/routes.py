@@ -154,6 +154,7 @@ routes_with_templates = (
     Route_Template("/edit/journal", "edit_journal",
                    {'GET': content.edit_journal_get_, 'POST': content.edit_journal_post_},
                    renderer='weasyl:templates/edit/journal.jinja2'),
+    Route_Template("/submit", "submit", content.submit_, renderer='weasyl:templates/submit/submit.jinja2'),
 
     # Site Updates
     Route_Template("/site-updates", "site_update_list", general.site_update_list_,
@@ -196,8 +197,8 @@ routes = (
     Route("/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}",
           "submission_detail_media", detail.submission_media_),
 
-    # Submitting, reuploading, and removing content
-    Route("/submit", "submit", content.submit_),
+    # # Submitting, reuploading, and removing content
+    # Route("/submit", "submit", content.submit_),
     Route("/submit/visual", "submit_visual",
           {'GET': content.submit_visual_get_, 'POST': content.submit_visual_post_}),
     Route("/submit/literary", "submit_literary",
