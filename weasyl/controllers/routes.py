@@ -38,11 +38,11 @@ routes_with_templates = (
     Route_Template("/{index:(index)?}", "index", general.index_, renderer='weasyl:templates/etc/index.jinja2'),  # 'index' is optional in the URL
     Route_Template("/search", "search", general.search_, renderer='weasyl:templates/etc/search.jinja2'),
     Route_Template("/popular", "popular", general.popular_, renderer='weasyl:templates/etc/popular.jinja2'),
+    Route_Template("/streaming", "streaming", general.streaming_, renderer='weasyl:templates/etc/streaming.jinja2'),
 )
 
 routes = (
     # Front page views.
-    Route("/streaming", "streaming", general.streaming_),
     Route("/marketplace", "marketplace", marketplace.search_),
 
     # Signin and out views.
