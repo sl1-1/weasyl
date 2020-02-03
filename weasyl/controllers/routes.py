@@ -202,6 +202,44 @@ routes_with_templates = (
                    {'GET': two_factor_auth.tfa_generate_recovery_codes_get_,
                     'POST': two_factor_auth.tfa_generate_recovery_codes_post_},
                    renderer='weasyl:templates/control/2fa/generate_recovery_codes.jinja2'),
+
+    Route_Template("/policy/community", "policy_community", info.policy_community_,
+                   renderer='weasyl:templates/help/community.jinja2'),
+    Route_Template("/policy/copyright", "policy_copyright", info.policy_copyright_,
+                   renderer='weasyl:templates/help/copyright.jinja2'),
+    Route_Template("/policy/privacy", "policy_privacy", info.policy_privacy_,
+                   renderer='weasyl:templates/help/privacy.jinja2'),
+    Route_Template("/policy/scoc", "policy_scoc", info.policy_scoc_, renderer='weasyl:templates/help/scoc.jinja2'),
+    Route_Template("/policy/tos", "policy_tos", info.policy_tos_, renderer='weasyl:templates/help/tos.jinja2'),
+
+    Route_Template("/staff", "staff", info.staff_, renderer='weasyl:templates/help/staff.jinja2'),
+    Route_Template("/thanks", "thanks", info.thanks_, renderer='weasyl:templates/help/thanks.jinja2'),
+
+    # Help page routes
+    Route_Template("/help", "help", info.help_, renderer='weasyl:templates/help/help.jinja2'),
+    Route_Template("/help/about", "help_about", info.help_about_, renderer='weasyl:templates/help/about.jinja2'),
+    Route_Template("/help/collections", "help_collections", info.help_collections_,
+                   renderer='weasyl:templates/help/collections.jinja2'),
+    Route_Template("/help/faq", "help_faq", info.help_faq_, renderer='weasyl:templates/help/faq.jinja2'),
+    Route_Template("/help/folders", "help_folders", info.help_folders_,
+                   renderer='weasyl:templates/help/folder-options.jinja2'),
+    Route_Template("/help/google-drive-embed", "help_gdocs", info.help_gdocs_,
+                   renderer='weasyl:templates/help/gdocs.jinja2'),
+    Route_Template("/help/markdown", "help_markdown", info.help_markdown_,
+                   renderer='weasyl:templates/help/markdown.jinja2'),
+    Route_Template("/help/marketplace", "help_marketplace", info.help_marketplace_,
+                   renderer='weasyl:templates/help/marketplace.jinja2'),
+    Route_Template("/help/ratings", "help_ratings", info.help_ratings_,
+                   renderer='weasyl:templates/help/ratings.jinja2'),
+    Route_Template("/help/reports", "help_reports", info.help_reports_,
+                   renderer='weasyl:templates/help/reports.jinja2'),
+    Route_Template("/help/searching", "help_searching", info.help_searching_,
+                   renderer='weasyl:templates/help/searching.jinja2'),
+    Route_Template("/help/tagging", "help_tagging", info.help_tagging_,
+                   renderer='weasyl:templates/help/tagging.jinja2'),
+    Route_Template("/help/two_factor_authentication", "help_two_factor_authentication",
+                   info.help_two_factor_authentication_,
+                   renderer='weasyl:templates/help/two_factor_authentication.jinja2'),
 )
 
 routes = (
@@ -386,30 +424,6 @@ routes = (
     }),
 
     Route("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_),
-
-    Route("/policy/community", "policy_community", info.policy_community_),
-    Route("/policy/copyright", "policy_copyright", info.policy_copyright_),
-    Route("/policy/privacy", "policy_privacy", info.policy_privacy_),
-    Route("/policy/scoc", "policy_scoc", info.policy_scoc_),
-    Route("/policy/tos", "policy_tos", info.policy_tos_),
-
-    Route("/staff", "staff", info.staff_),
-    Route("/thanks", "thanks", info.thanks_),
-
-    # Help page routes
-    Route("/help", "help", info.help_),
-    Route("/help/about", "help_about", info.help_about_),
-    Route("/help/collections", "help_collections", info.help_collections_),
-    Route("/help/faq", "help_faq", info.help_faq_),
-    Route("/help/folders", "help_folders", info.help_folders_),
-    Route("/help/google-drive-embed", "help_gdocs", info.help_gdocs_),
-    Route("/help/markdown", "help_markdown", info.help_markdown_),
-    Route("/help/marketplace", "help_marketplace", info.help_marketplace_),
-    Route("/help/ratings", "help_ratings", info.help_ratings_),
-    Route("/help/reports", "help_reports", info.help_reports_),
-    Route("/help/searching", "help_searching", info.help_searching_),
-    Route("/help/tagging", "help_tagging", info.help_tagging_),
-    Route("/help/two_factor_authentication", "help_two_factor_authentication", info.help_two_factor_authentication_),
 
     # OAuth2 routes.
     Route("/api/oauth2/authorize", "oauth2_authorize",
