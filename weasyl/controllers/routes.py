@@ -177,6 +177,31 @@ routes_with_templates = (
     Route_Template("/site-updates/{update_id:[0-9]+}", "site_update",
                    {'GET': general.site_update_, 'POST': admin.site_update_put_},
                    renderer='weasyl:templates/etc/site_update.jinja2'),
+
+    # Two-Factor Authentication views.
+    Route_Template("/control/2fa/status", "control_2fa_status", {'GET': two_factor_auth.tfa_status_get_},
+                   renderer='weasyl:templates/control/2fa/status.jinja2'),
+    Route_Template("/control/2fa/init", "control_2fa_init",
+                   {'GET': two_factor_auth.tfa_init_get_, 'POST': two_factor_auth.tfa_init_post_},
+                   renderer='weasyl:templates/control/2fa/init.jinja2'),
+    Route_Template("/control/2fa/init_qrcode", "control_2fa_init_qrcode",
+                   {'GET': two_factor_auth.tfa_init_qrcode_get_, 'POST': two_factor_auth.tfa_init_qrcode_post_},
+                   renderer='weasyl:templates/control/2fa/init_qrcode.jinja2'),
+    Route_Template("/control/2fa/init_verify", "control_2fa_init_verify",
+                   {'GET': two_factor_auth.tfa_init_verify_get_, 'POST': two_factor_auth.tfa_init_verify_post_},
+                   renderer='weasyl:templates/control/2fa/init_verify.jinja2'),
+    Route_Template("/control/2fa/disable", "control_2fa_disable",
+                   {'GET': two_factor_auth.tfa_disable_get_, 'POST': two_factor_auth.tfa_disable_post_},
+                   renderer='weasyl:templates/control/2fa/disable.jinja2'),
+    Route_Template("/control/2fa/generate_recovery_codes_verify_password",
+                   "control_2fa_generate_recovery_codes_verify_password",
+                   {'GET': two_factor_auth.tfa_generate_recovery_codes_verify_password_get_,
+                    'POST': two_factor_auth.tfa_generate_recovery_codes_verify_password_post_},
+                   renderer='weasyl:templates/control/2fa/generate_recovery_codes_verify_password.jinja2'),
+    Route_Template("/control/2fa/generate_recovery_codes", "control_2fa_generate_recovery_codes",
+                   {'GET': two_factor_auth.tfa_generate_recovery_codes_get_,
+                    'POST': two_factor_auth.tfa_generate_recovery_codes_post_},
+                   renderer='weasyl:templates/control/2fa/generate_recovery_codes.jinja2'),
 )
 
 routes = (
@@ -191,21 +216,6 @@ routes = (
     Route("/force/resetpassword", "force_reset_password", {'POST': user.force_resetpassword_}),
     Route("/force/resetbirthday", "force_reset_birthday", {'POST': user.force_resetbirthday_}),
     Route("/verify/emailchange", "verify_emailchange", {'GET': user.verify_emailchange_get_}),
-
-    # Two-Factor Authentication views.
-    Route("/control/2fa/status", "control_2fa_status", {'GET': two_factor_auth.tfa_status_get_}),
-    Route("/control/2fa/init", "control_2fa_init",
-          {'GET': two_factor_auth.tfa_init_get_, 'POST': two_factor_auth.tfa_init_post_}),
-    Route("/control/2fa/init_qrcode", "control_2fa_init_qrcode",
-          {'GET': two_factor_auth.tfa_init_qrcode_get_, 'POST': two_factor_auth.tfa_init_qrcode_post_}),
-    Route("/control/2fa/init_verify", "control_2fa_init_verify",
-          {'GET': two_factor_auth.tfa_init_verify_get_, 'POST': two_factor_auth.tfa_init_verify_post_}),
-    Route("/control/2fa/disable", "control_2fa_disable",
-          {'GET': two_factor_auth.tfa_disable_get_, 'POST': two_factor_auth.tfa_disable_post_}),
-    Route("/control/2fa/generate_recovery_codes_verify_password", "control_2fa_generate_recovery_codes_verify_password",
-          {'GET': two_factor_auth.tfa_generate_recovery_codes_verify_password_get_, 'POST': two_factor_auth.tfa_generate_recovery_codes_verify_password_post_}),
-    Route("/control/2fa/generate_recovery_codes", "control_2fa_generate_recovery_codes",
-          {'GET': two_factor_auth.tfa_generate_recovery_codes_get_, 'POST': two_factor_auth.tfa_generate_recovery_codes_post_}),
 
     # # Profile views.
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),

@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import arrow
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.renderers import render_to_response
 
 from weasyl import define
 from weasyl import login
@@ -56,18 +57,21 @@ def _cleanup_session():
 
 @login_required
 def tfa_status_get_(request):
-    return Response(define.webpage(request.userid, "control/2fa/status.html", [
-        tfa.is_2fa_enabled(request.userid), tfa.get_number_of_recovery_codes(request.userid)
-    ], title="2FA Status"))
+    return {
+        'tfa_enabled': tfa.is_2fa_enabled(request.userid),
+        'tfa_recovery_codes_count': tfa.get_number_of_recovery_codes(request.userid),
+        'title': "2FA Status"
+    }
 
 
 @login_required
 @twofactorauth_disabled_required
 def tfa_init_get_(request):
-    return Response(define.webpage(request.userid, "control/2fa/init.html", [
-        define.get_display_name(request.userid),
-        None
-    ], title="Enable 2FA: Step 1"))
+    return {
+        'username': define.get_display_name(request.userid),
+        'error': None,
+        'title': "Enable 2FA: Step 1"
+    }
 
 
 @login_required
@@ -78,10 +82,11 @@ def tfa_init_post_(request):
                                                request.params['password'], request=None)
     # The user's password failed to authenticate
     if status == "invalid":
-        return Response(define.webpage(request.userid, "control/2fa/init.html", [
-            define.get_display_name(request.userid),
-            "password"
-        ], title="Enable 2FA: Step 1"))
+        return {
+            'username': define.get_display_name(request.userid),
+            'error': "password",
+            'title': "Enable 2FA: Step 1"
+        }
     # Unlikely that this block will get triggered, but just to be safe, check for it
     elif status == "unicode-failure":
         raise HTTPSeeOther(location='/signin/unicode-failure')
@@ -89,12 +94,14 @@ def tfa_init_post_(request):
     else:
         tfa_secret, tfa_qrcode = tfa.init(request.userid)
         _set_totp_code_on_session(tfa_secret)
-        return Response(define.webpage(request.userid, "control/2fa/init_qrcode.html", [
-            define.get_display_name(request.userid),
-            tfa_secret,
-            tfa_qrcode,
-            None
-        ], title="Enable 2FA: Step 2"))
+        return render_to_response('weasyl:templates/control/2fa/init_qrcode.jinja2', {
+            'username': define.get_display_name(request.userid),
+            'tfa_secret': tfa_secret,
+            'qrcode': tfa_qrcode,
+            'error': None,
+            'title': "Enable 2FA: Step 2"
+        }, request=request)
+
 
 
 @login_required
@@ -126,18 +133,20 @@ def tfa_init_qrcode_post_(request):
 
     # The 2FA TOTP code did not match with the generated 2FA secret
     if not tfa_secret:
-        return Response(define.webpage(request.userid, "control/2fa/init_qrcode.html", [
-            define.get_display_name(request.userid),
-            tfa_secret_sess,
-            tfa.generate_tfa_qrcode(request.userid, tfa_secret_sess),
-            "2fa"
-        ], title="Enable 2FA: Step 2"))
+        return {
+            'username': define.get_display_name(request.userid),
+            'tfa_secret': tfa_secret_sess,
+            'qrcode': tfa.generate_tfa_qrcode(request.userid, tfa_secret_sess),
+            'error': "2fa",
+            'title': "Enable 2FA: Step 2"
+        }
     else:
         _set_recovery_codes_on_session(','.join(recovery_codes))
-        return Response(define.webpage(request.userid, "control/2fa/init_verify.html", [
-            recovery_codes,
-            None
-        ], title="Enable 2FA: Final Step"))
+        return render_to_response('weasyl:templates/control/2fa/init_verify.jinja2', {
+            'tfa_recovery_codes': recovery_codes,
+            'error': None,
+            'title': "Enable 2FA: Final Step"
+        }, request=request)
 
 
 @login_required
@@ -181,25 +190,28 @@ def tfa_init_verify_post_(request):
             raise HTTPSeeOther(location="/control/2fa/status")
         # TOTP+2FA Secret did not validate
         else:
-            return Response(define.webpage(request.userid, "control/2fa/init_verify.html", [
-                tfarecoverycodes.split(','),
-                "2fa"
-            ], title="Enable 2FA: Final Step"))
+            return {
+                    'tfa_recovery_codes': tfarecoverycodes.split(','),
+                    'error': "2fa",
+                    'title': "Enable 2FA: Final Step"
+            }
     # The user didn't check the verification checkbox (despite HTML5's client-side check); regenerate codes & redisplay
     elif not verify_checkbox:
-        return Response(define.webpage(request.userid, "control/2fa/init_verify.html", [
-            tfarecoverycodes.split(','),
-            "verify"
-        ], title="Enable 2FA: Final Step"))
+        return {
+            'tfa_recovery_codes': tfarecoverycodes.split(','),
+            'error': "verify",
+            'title': "Enable 2FA: Final Step"
+        }
 
 
 @login_required
 @twofactorauth_enabled_required
 def tfa_disable_get_(request):
-    return Response(define.webpage(request.userid, "control/2fa/disable.html", [
-        define.get_display_name(request.userid),
-        None
-    ], title="Disable 2FA"))
+    return {
+        'username': define.get_display_name(request.userid),
+        'error': None,
+        'title': 'Disable 2FA',
+    }
 
 
 @login_required
@@ -214,27 +226,24 @@ def tfa_disable_post_(request):
         if tfa.deactivate(request.userid, tfaresponse):
             raise HTTPSeeOther(location="/control/2fa/status")
         else:
-            return Response(define.webpage(request.userid, "control/2fa/disable.html", [
-                define.get_display_name(request.userid),
-                "2fa"
-            ], title="Disable 2FA"))
+            return {
+                'username': define.get_display_name(request.userid),
+                'error': "2fa",
+                'title': 'Disable 2FA',
+            }
     # The user didn't check the verification checkbox (despite HTML5's client-side check)
     elif not verify_checkbox:
-        return Response(define.webpage(request.userid, "control/2fa/disable.html", [
-            define.get_display_name(request.userid),
-            "verify"
-        ], title="Disable 2FA"))
+        return {
+            'username': define.get_display_name(request.userid),
+            'error': "verify",
+            'title': 'Disable 2FA',
+        }
 
 
 @login_required
 @twofactorauth_enabled_required
 def tfa_generate_recovery_codes_verify_password_get_(request):
-    return Response(define.webpage(
-        request.userid,
-        "control/2fa/generate_recovery_codes_verify_password.html",
-        [None],
-        title="Generate Recovery Codes: Verify Password"
-    ))
+    return {'error': None, 'title': "Generate Recovery Codes: Verify Password"}
 
 
 @token_checked
@@ -245,12 +254,7 @@ def tfa_generate_recovery_codes_verify_password_post_(request):
                                                request.params['password'], request=None)
     # The user's password failed to authenticate
     if status == "invalid":
-        return Response(define.webpage(
-            request.userid,
-            "control/2fa/generate_recovery_codes_verify_password.html",
-            ["password"],
-            title="Generate Recovery Codes: Verify Password"
-        ))
+        return {'error': "password", 'title': "Generate Recovery Codes: Verify Password"}
     # The user has authenticated, so continue with generating the new recovery codes.
     else:
         # Edge case prevention: Stop the user from having two Weasyl sessions open and trying
@@ -271,10 +275,11 @@ def tfa_generate_recovery_codes_verify_password_post_(request):
             # Either this is a fresh request to generate codes, or the timelimit was exceeded.
             recovery_codes = tfa.generate_recovery_codes()
             _set_recovery_codes_on_session(','.join(recovery_codes))
-        return Response(define.webpage(request.userid, "control/2fa/generate_recovery_codes.html", [
-            recovery_codes,
-            None
-        ], title="Generate Recovery Codes: Save New Recovery Codes"))
+        return render_to_response('weasyl:templates/control/2fa/generate_recovery_codes.jinja2',
+                                  {'tfa_recovery_codes': recovery_codes,
+                                   'error': None,
+                                   'title': "Generate Recovery Codes: Save New Recovery Codes"
+                                   }, request=request)
 
 
 @login_required
@@ -317,12 +322,14 @@ def tfa_generate_recovery_codes_post_(request):
                 # Recovery code string was corrupted or otherwise altered.
                 raise WeasylError("Unexpected")
         else:
-            return Response(define.webpage(request.userid, "control/2fa/generate_recovery_codes.html", [
-                tfarecoverycodes.split(','),
-                "2fa"
-            ], title="Generate Recovery Codes: Save New Recovery Codes"))
+            return {
+                'tfa_recovery_codes': tfarecoverycodes.split(','),
+                'error': "2fa",
+                'title': "Generate Recovery Codes: Save New Recovery Codes"
+            }
     elif not verify_checkbox:
-        return Response(define.webpage(request.userid, "control/2fa/generate_recovery_codes.html", [
-            tfarecoverycodes.split(','),
-            "verify"
-        ], title="Generate Recovery Codes: Save New Recovery Codes"))
+        return {
+            'tfa_recovery_codes': tfarecoverycodes.split(','),
+            'error': "verify",
+            'title': "Generate Recovery Codes: Save New Recovery Codes"
+        }
