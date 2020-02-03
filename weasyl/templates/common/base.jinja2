@@ -37,7 +37,7 @@
         {% endif %}
         {% if 'ogp' in extended_options %}
             {% for k, v in extended_options['ogp'].iteritems() %}
-                <meta property="og:{{ k }}}" content="{{ v }}"/>
+                <meta property="og:{{ k }}" content="{{ v }}"/>
             {% endfor %}
         {% endif %}
 

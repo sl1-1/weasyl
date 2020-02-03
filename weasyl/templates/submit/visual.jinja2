@@ -13,7 +13,7 @@
                 <label for="submitfile">Submission</label>
                 {% if form.imageURL %}
                     <div style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap">
-                        Downloading from <strong title="{{ form.imageURL }}}">{{ form.imageURL }}</strong>
+                        Downloading from <strong title="{{ form.imageURL }}">{{ form.imageURL }}</strong>
                     </div>
                     <input type="hidden" name="imageURL" value="{{ form.imageURL }}"/>
                 {% else %}
