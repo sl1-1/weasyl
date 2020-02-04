@@ -244,6 +244,9 @@ routes_with_templates = (
     # Management and settings routes.
     Route_Template("/{alias:control|settings}", "control", settings.control_,
                    renderer='weasyl:templates/control/control.jinja2'),
+    Route_Template("/control/editprofile", "control_editprofile",
+                   {'GET': settings.control_editprofile_get_, 'POST': settings.control_editprofile_put_},
+                   renderer='weasyl:templates/control/edit_profile.jinja2'),
 )
 
 routes = (
@@ -294,8 +297,7 @@ routes = (
           {'GET': settings.manage_alias_get_, 'POST': settings.manage_alias_post_}),
     Route("/control/uploadavatar", "control_uploadavatar",
           {'POST': settings.control_uploadavatar_}),
-    Route("/control/editprofile", "control_editprofile",
-          {'GET': settings.control_editprofile_get_, 'POST': settings.control_editprofile_put_}),
+
 
     Route("/control/editcommissionsettings", "control_editcommissionsettings",
           settings.control_editcommissionsettings_),

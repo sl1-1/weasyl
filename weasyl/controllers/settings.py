@@ -37,12 +37,12 @@ def control_uploadavatar_(request):
 @login_required
 def control_editprofile_get_(request):
     userinfo = profile.select_userinfo(request.userid)
-    return Response(define.webpage(request.userid, "control/edit_profile.html", [
-        # Profile
-        profile.select_profile(request.userid, commish=False),
+    return {
+        'profile': profile.select_profile(request.userid, commish=False),
         # User information
-        userinfo,
-    ], title="Edit Profile"))
+        'userinfo': userinfo,
+        'title': "Edit Profile"
+    }
 
 
 @login_required
@@ -61,7 +61,7 @@ def control_editprofile_put_(request):
         form.sorted_user_links = [(name, [value]) for name, value in zip(form.site_names, form.site_values)]
         form.settings = form.set_commish + form.set_trade + form.set_request
         form.config = form.profile_display
-        return Response(define.webpage(request.userid, "control/edit_profile.html", [form, form], title="Edit Profile"))
+        return {'profile': form, 'userinfo': form, 'title': "Edit Profile"}
 
     p = orm.Profile()
     p.full_name = form.full_name
