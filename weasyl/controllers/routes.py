@@ -240,6 +240,10 @@ routes_with_templates = (
     Route_Template("/help/two_factor_authentication", "help_two_factor_authentication",
                    info.help_two_factor_authentication_,
                    renderer='weasyl:templates/help/two_factor_authentication.jinja2'),
+
+    # Management and settings routes.
+    Route_Template("/{alias:control|settings}", "control", settings.control_,
+                   renderer='weasyl:templates/control/control.jinja2'),
 )
 
 routes = (
@@ -288,7 +292,6 @@ routes = (
           {'GET': settings.manage_banner_get_, 'POST': settings.manage_banner_post_}),
     Route("/manage/alias", "control_alias",
           {'GET': settings.manage_alias_get_, 'POST': settings.manage_alias_post_}),
-    Route("/{alias:control|settings}", "control", settings.control_),
     Route("/control/uploadavatar", "control_uploadavatar",
           {'POST': settings.control_uploadavatar_}),
     Route("/control/editprofile", "control_editprofile",

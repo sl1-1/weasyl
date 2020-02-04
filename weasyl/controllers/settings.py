@@ -19,10 +19,7 @@ from weasyl import (
 # Control panel functions
 @login_required
 def control_(request):
-    return Response(define.webpage(request.userid, "control/control.html", [
-        # Premium
-        define.get_premium(request.userid),
-    ], title="Settings"))
+    return {'premium': define.get_premium(request.userid), 'title': "Settings"}
 
 
 @login_required
