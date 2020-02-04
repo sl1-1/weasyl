@@ -16,7 +16,7 @@
                     {% endfor %}
                     <li class="clear">
                         <a class="more" href="/{{ more_submissions }}/{{ profile['username']| LOGIN }}">
-                            <span>{{ profile['username'] }}'s {{more_submissions.title()}}</span>
+                            <span>{{ profile['username'] }}'s {{ more_submissions.title() }}</span>
                         </a>
                     </li>
                 </ul>
@@ -111,7 +111,9 @@
         {% if journal %}
             <div id="user-journal" class="clear on-side">
                 <h3>Latest Journal</h3>
-                <h4><a class="color-c" href="/journal/{{ journal['journalid'] }}/{{ journal['title'] | SLUG }}">{{ journal['title'] }}</a></h4>
+                <h4>
+                    <a class="color-c" href="/journal/{{ journal['journalid'] }}/{{ journal['title'] | SLUG }}">{{ journal['title'] }}</a>
+                </h4>
                 <h5><i>on</i> {{ journal['unixtime'] | DATE }} <i>at</i> {{ journal['unixtime'] | TIME }}</h5>
 
                 <div class="formatted-content">
@@ -129,41 +131,7 @@
             <div id="user-commissions" class="clear on-side">
                 <h3>Commissions</h3>
 
-                {% for i in commishinfo['class'] %}
-                    <h4 class="color-c">{{ i['title'] }}</h4>
-                    <dl class="leaders">
-                        {% for j in commishinfo['price'] %}
-                            {% if(j['classid'] == i['classid'] and 'a' not in j['settings']) %}
-                                <dt>{{ j['title'] }}</dt>
-                                <dd>
-                                    {% if j['amount_max'] %}
-                                        <i>from </i>
-                                    {% endif %}
-                                    {{ SYMBOL(j['settings']) }}
-                                    {{"%.2f"|format(j['amount_min'] / 100.0)}}
-                                </dd>
-                                {% if(j['amount_max']) %}
-                                    <dd><i>to </i>{{ SYMBOL(j['settings']) }} {{ "%.2f"|format(j['amount_max']/ 100.0)}}</dd>
-                                {% endif %}
-                            {% endif %}
-                        {% endfor %}
-                        {% for j in commishinfo['price'] %}
-                            {% if(j['classid'] == i['classid'] and 'a' in j['settings']) %}
-                                <dt><i>add &#160;</i>{{ j['title'] }}</dt>
-                                <dd>
-                                    {% if j['amount_max'] %}
-                                        <i>from </i>
-                                    {% endif %}
-                                    {{ SYMBOL(j['settings']) }}
-                                    {{"%.2f"|format(j['amount_min'] / 100.0)}}
-                                </dd>
-                                {% if(j['amount_max']) %}
-                                    <dd><i>to </i>{{ SYMBOL(j['settings']) }} {{ "%.2f"|format(j['amount_max']/ 100.0)}}</dd>
-                                {% endif %}
-                            {% endif %}
-                            </dl>
-                        {% endfor %}
-                {% endfor %}
+                {{ commission_price_display(commishinfo['class']) }}
 
                 {% if(commishinfo['content']) %}
                     <div class="formatted-content">{{ commishinfo['content'] | MARKDOWN }}</div>
