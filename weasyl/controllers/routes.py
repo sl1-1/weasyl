@@ -247,6 +247,9 @@ routes_with_templates = (
     Route_Template("/control/editprofile", "control_editprofile",
                    {'GET': settings.control_editprofile_get_, 'POST': settings.control_editprofile_put_},
                    renderer='weasyl:templates/control/edit_profile.jinja2'),
+    Route_Template("/control/editcommissionsettings", "control_editcommissionsettings",
+                   settings.control_editcommissionsettings_,
+                   renderer='weasyl:templates/control/edit_commissionsettings.jinja2'),
 )
 
 routes = (
@@ -299,8 +302,7 @@ routes = (
           {'POST': settings.control_uploadavatar_}),
 
 
-    Route("/control/editcommissionsettings", "control_editcommissionsettings",
-          settings.control_editcommissionsettings_),
+
     Route("/control/editcommishinfo", "control_editcommishinfo",
           {'POST': settings.control_editcommishinfo_}),
     Route("/control/createcommishclass", "control_createcommishclass",

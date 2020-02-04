@@ -17,3 +17,9 @@
         checked="checked"
     {% endif %}
 {%- endmacro %}
+
+{% macro NOT_CHECKED(one, two) -%}
+    {% if one not in two %}
+        checked="checked"
+    {% endif %}
+{%- endmacro %}
