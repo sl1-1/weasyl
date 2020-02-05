@@ -460,10 +460,7 @@ def control_tagrestrictions_post_(request):
 
 @login_required
 def manage_folders_(request):
-    return Response(define.webpage(request.userid, "manage/folders.html", [
-        # Folders dropdown
-        folder.select_list(request.userid, "drop/all"),
-    ], title="Submission Folders"))
+    return {'folders': folder.select_list(request.userid, "drop/all"), 'title': "Submission Folders"}
 
 
 @login_required

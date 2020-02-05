@@ -259,6 +259,8 @@ routes_with_templates = (
     Route_Template("/control/editfolder/{folderid:[0-9]+}", "control_editfolder",
                    {'GET': settings.control_editfolder_get_, 'POST': settings.control_editfolder_post_},
                    renderer='weasyl:templates/manage/folder_options.jinja2'),
+    Route_Template("/manage/folders", "manage_folders", settings.manage_folders_,
+                   renderer='weasyl:templates/manage/folders.jinja2'),
 )
 
 routes = (
@@ -290,7 +292,6 @@ routes = (
     Route("/remove/comment", "remove_comment", {'POST': content.remove_comment_}),
 
     # Management and settings routes.
-    Route("/manage/folders", "manage_folders", settings.manage_folders_),
     Route("/manage/following", "control_following",
           {'GET': settings.manage_following_get_, 'POST': settings.manage_following_post_}),
     Route("/manage/friends", "control_friends", settings.manage_friends_),
