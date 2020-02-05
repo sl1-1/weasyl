@@ -267,6 +267,9 @@ routes_with_templates = (
     Route_Template("/control/apikeys", "control_apikeys",
           {'GET': settings.control_apikeys_get_, 'POST': settings.control_apikeys_post_},
                    renderer='weasyl:templates/control/edit_apikeys.jinja2'),
+    Route_Template("/control/tagrestrictions", "control_tagrestrictions",
+                   {'GET': settings.control_tagrestrictions_get_, 'POST': settings.control_tagrestrictions_post_},
+                   renderer='weasyl:templates/control/edit_tagrestrictions.jinja2'),
 )
 
 routes = (
@@ -335,10 +338,6 @@ routes = (
           {'POST': settings.control_removecommishprice_}),
 
 
-    Route("/control/tagrestrictions", "control_tagrestrictions", {
-        'GET': settings.control_tagrestrictions_get_,
-        'POST': settings.control_tagrestrictions_post_
-    }),
 
     Route("/control/createfolder", "control_createfolder", {'POST': settings.control_createfolder_}),
     Route("/control/renamefolder", "control_renamefolder", {'POST': settings.control_renamefolder_}),

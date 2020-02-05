@@ -444,9 +444,10 @@ def control_apikeys_post_(request):
 
 @login_required
 def control_tagrestrictions_get_(request):
-    return Response(define.webpage(request.userid, "control/edit_tagrestrictions.html", (
-        searchtag.query_user_restricted_tags(request.userid),
-    ), title="Edit Community Tagging Restrictions"))
+    return {
+        'tags': searchtag.query_user_restricted_tags(request.userid),
+        'title': "Edit Community Tagging Restrictions"
+    }
 
 
 @login_required
@@ -454,9 +455,10 @@ def control_tagrestrictions_get_(request):
 def control_tagrestrictions_post_(request):
     tags = searchtag.parse_restricted_tags(request.params["tags"])
     searchtag.edit_user_tag_restrictions(request.userid, tags)
-    return Response(define.webpage(request.userid, "control/edit_tagrestrictions.html", (
-        searchtag.query_user_restricted_tags(request.userid),
-    ), title="Edit Community Tagging Restrictions"))
+    return {
+        'tags': searchtag.query_user_restricted_tags(request.userid),
+        'title': "Edit Community Tagging Restrictions"
+    }
 
 
 @login_required
