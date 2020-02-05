@@ -379,11 +379,11 @@ def control_streaming_get_(request):
     else:
         target = request.userid
 
-    return Response(define.webpage(request.userid, "control/edit_streaming.html", [
-        # Profile
-        profile.select_profile(target, commish=False),
-        form.target,
-    ], title="Edit Streaming Settings"))
+    return {
+        'profile': profile.select_profile(target, commish=False),
+        'target': form.target,
+        'title': "Edit Streaming Settings"
+    }
 
 
 @login_required

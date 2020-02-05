@@ -261,6 +261,9 @@ routes_with_templates = (
                    renderer='weasyl:templates/manage/folder_options.jinja2'),
     Route_Template("/manage/folders", "manage_folders", settings.manage_folders_,
                    renderer='weasyl:templates/manage/folders.jinja2'),
+    Route_Template("/control/streaming", "control_streaming",
+                   {'GET': settings.control_streaming_get_, 'POST': settings.control_streaming_post_},
+                   renderer='weasyl:templates/control/edit_streaming.jinja2'),
 )
 
 routes = (
@@ -341,8 +344,6 @@ routes = (
     Route("/control/movefolder", "control_movefolder", {'POST': settings.control_movefolder_}),
     Route("/control/ignoreuser", "control_ignoreuser", {'POST': settings.control_ignoreuser_}),
     Route("/control/unignoreuser", "control_unignoreuser", {'POST': settings.control_unignoreuser_}),
-    Route("/control/streaming", "control_streaming",
-          {'GET': settings.control_streaming_get_, 'POST': settings.control_streaming_post_}),
     Route("/control/apikeys", "control_apikeys",
           {'GET': settings.control_apikeys_get_, 'POST': settings.control_apikeys_post_}),
     Route("/control/sfwtoggle", "control_sfw_toggle", {'POST': settings.sfw_toggle_}),
