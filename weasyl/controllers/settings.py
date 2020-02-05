@@ -236,19 +236,17 @@ def control_editpreferences_get_(request):
     age = profile.get_user_age(request.userid)
     allowed_ratings = ratings.get_ratings_for_age(age)
     jsonb_settings = define.get_profile_settings(request.userid)
-    return Response(define.webpage(request.userid, "control/edit_preferences.html", [
-        # Config
-        config,
-        jsonb_settings,
-        # Rating
-        current_rating,
-        current_sfw_rating,
-        age,
-        allowed_ratings,
-        request.weasyl_session.timezone.timezone,
-        define.timezones(),
-    ], title="Site Preferences"))
-
+    return {
+        'config': config,
+        'jsonb_settings': jsonb_settings,
+        'current_rating': current_rating,
+        'current_sfw_rating': current_sfw_rating,
+        'age': age,
+        'allowed_ratings': allowed_ratings,
+        'timezone': request.weasyl_session.timezone.timezone,
+        'timezones': define.timezones(),
+        'title': "Site Preferences"
+    }
 
 @login_required
 @token_checked

@@ -253,6 +253,9 @@ routes_with_templates = (
     Route_Template("/control/editemailpassword", "control_editemailpassword",
                    {'GET': settings.control_editemailpassword_get_, 'POST': settings.control_editemailpassword_post_},
                    renderer='weasyl:templates/control/edit_emailpassword.jinja2'),
+    Route_Template("/control/editpreferences", "control_editpreferences",
+          {'GET': settings.control_editpreferences_get_, 'POST': settings.control_editpreferences_post_},
+                   renderer='weasyl:templates/control/edit_preferences.jinja2'),
 )
 
 routes = (
@@ -321,10 +324,7 @@ routes = (
     Route("/control/removecommishprice", "control_removecommishprice",
           {'POST': settings.control_removecommishprice_}),
 
-    Route("/control/editpreferences", "control_editpreferences", {
-        'GET': settings.control_editpreferences_get_,
-        'POST': settings.control_editpreferences_post_
-    }),
+
     Route("/control/tagrestrictions", "control_tagrestrictions", {
         'GET': settings.control_tagrestrictions_get_,
         'POST': settings.control_tagrestrictions_post_
