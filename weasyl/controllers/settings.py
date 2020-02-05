@@ -197,12 +197,7 @@ def control_removecommishprice_(request):
 @login_required
 @disallow_api
 def control_editemailpassword_get_(request):
-    return Response(define.webpage(
-        request.userid,
-        "control/edit_emailpassword.html",
-        [profile.select_manage(request.userid)["email"]],
-        title="Edit Password and Email Address"
-    ))
+    return {'email': profile.select_manage(request.userid), 'title': "Edit Password and Email Address"}
 
 
 @login_required
