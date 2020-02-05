@@ -270,6 +270,9 @@ routes_with_templates = (
     Route_Template("/control/tagrestrictions", "control_tagrestrictions",
                    {'GET': settings.control_tagrestrictions_get_, 'POST': settings.control_tagrestrictions_post_},
                    renderer='weasyl:templates/control/edit_tagrestrictions.jinja2'),
+    Route_Template("/manage/following", "control_following",
+                   {'GET': settings.manage_following_get_, 'POST': settings.manage_following_post_},
+                   renderer='weasyl:templates/manage/following_list.jinja2'),
 )
 
 routes = (
@@ -301,8 +304,6 @@ routes = (
     Route("/remove/comment", "remove_comment", {'POST': content.remove_comment_}),
 
     # Management and settings routes.
-    Route("/manage/following", "control_following",
-          {'GET': settings.manage_following_get_, 'POST': settings.manage_following_post_}),
     Route("/manage/friends", "control_friends", settings.manage_friends_),
     Route("/manage/ignore", "manage_ignore", settings.manage_ignore_),
     Route("/manage/collections", "control_collections",

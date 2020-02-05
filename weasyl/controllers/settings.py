@@ -4,6 +4,7 @@ import os
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.response import Response
+from pyramid.renderers import render_to_response
 
 import libweasyl.ratings as ratings
 from libweasyl import staff
@@ -474,17 +475,13 @@ def manage_following_get_(request):
     form.nextid = define.get_int(form.nextid)
 
     if form.userid:
-        return Response(define.webpage(request.userid, "manage/following_user.html", [
-            # Profile
-            profile.select_profile(form.userid, avatar=True),
-            # Follow settings
-            followuser.select_settings(request.userid, form.userid),
-        ], title="Followed User"))
+        return render_to_response('weasyl:templates/manage/following_user.jinja2',
+                                  {'profile': profile.select_profile(form.userid, avatar=True),
+                                   'settings': followuser.select_settings(request.userid, form.userid),
+                                   'title': "Followed User"}, request=request)
     else:
-        return Response(define.webpage(request.userid, "manage/following_list.html", [
-            # Following
-            followuser.manage_following(request.userid, 44, backid=form.backid, nextid=form.nextid),
-        ], title="Users You Follow"))
+        return {'query': followuser.manage_following(request.userid, 44, backid=form.backid, nextid=form.nextid),
+                'title': "Users You Follow"}
 
 
 @login_required
