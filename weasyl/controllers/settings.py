@@ -419,10 +419,11 @@ def control_streaming_post_(request):
 @login_required
 @disallow_api
 def control_apikeys_get_(request):
-    return Response(define.webpage(request.userid, "control/edit_apikeys.html", [
-        api.get_api_keys(request.userid),
-        oauth2.get_consumers_for_user(request.userid),
-    ], title="API Keys"))
+    return {
+        'api_keys': api.get_api_keys(request.userid),
+        'consumers':oauth2.get_consumers_for_user(request.userid),
+        'title': "API Keys"
+    }
 
 
 @login_required
