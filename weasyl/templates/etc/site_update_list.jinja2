@@ -1,0 +1,38 @@
+{% extends 'common/base.jinja2' %}
+{% block content %}
+<div class="content">
+    <div class="constrained text-post-list">
+        {% set last_date = None %}
+        {% for update in updates %}
+            {% set created = LOCAL_ARROW(update.unixtime) %}
+            {% set date = created.date() %}
+            {% set owner = update.get_display_owner() %}
+            {% if date != last_date %}
+                {% set last_date = date %}
+                <div class="text-post-group-header">
+                    <time datetime="{{ date.isoformat() }}" title="{{ created.format() }}">{{created.format("MMMM Do, YYYY")}}</time>
+                </div>
+            {% endif %}
+            <article class="text-post-item">
+                <img class="text-post-image text-post-image-small" src="{{ owner.avatar['display_url'] }}" title="{{ owner.profile.username }}" alt="{{ owner.profile.username }}?s avatar" />
+
+                <div class="text-post-text">
+                    <h4 class="text-post-title">
+                        <a href="{{ path_for(update) }}">{{ update.title }}</a>
+                        {% if req.user.is_admin %}
+                            <span class="text-post-actions">
+                                <a href="{{ path_for(update, operation='edit') }}">Edit</a>
+                            </span>
+                        {% endif %}
+                    </h4>
+
+                    <p class="text-post-excerpt">{{ update.content | MARKDOWN_EXCERPT}}</p>
+                </div>
+            </article>
+{% endfor %}
+        {% if not updates %}
+            <p>No site updates to show.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

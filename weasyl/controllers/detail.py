@@ -63,21 +63,18 @@ def submission_(request):
     if login != username:
         raise httpexceptions.HTTPMovedPermanently(location=canonical_path)
     extras["canonical_url"] = canonical_path
-    extras["title"] = item["title"]
 
-    page = define.common_page_start(request.userid, **extras)
-    page.append(define.render('detail/submission.html', [
+    return {
+        'title': item["title"],
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Submission detail
-        item,
+        'query': item,
         # Subtypes
-        macro.MACRO_SUBCAT_LIST,
+        'subtypes': dict(macro.MACRO_SUBCAT_LIST),
         # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'violations': [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
+    }
 
 
 def submission_media_(request):
@@ -104,13 +101,11 @@ def submission_media_(request):
 def submission_tag_history_(request):
     submitid = int(request.matchdict['submitid'])
 
-    page_title = "Tag updates"
-    page = define.common_page_start(request.userid, title=page_title)
-    page.append(define.render('detail/tag_history.html', [
-        submission.select_view_api(request.userid, submitid),
-        searchtag.tag_history(submitid),
-    ]))
-    return Response(define.common_page_end(request.userid, page))
+    return {
+        'title': "Tag updates",
+        'detail': submission.select_view_api(request.userid, submitid),
+        'history': searchtag.tag_history(submitid),
+    }
 
 
 def character_(request):
@@ -134,17 +129,16 @@ def character_(request):
 
     canonical_url = "/character/%d/%s" % (charid, slug_for(item["title"]))
 
-    page = define.common_page_start(request.userid, canonical_url=canonical_url, title=item["title"])
-    page.append(define.render('detail/character.html', [
+    return {
+        'canonical_url': canonical_url,
+        'title': item["title"],
         # Profile
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Character detail
-        item,
+        'query': item,
         # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'violations': [i for i in macro.MACRO_REPORT_VIOLATION if 2000 <= i[0] < 3000],
+    }
 
 
 def journal_(request):
@@ -168,14 +162,13 @@ def journal_(request):
 
     canonical_url = "/journal/%d/%s" % (journalid, slug_for(item["title"]))
 
-    page = define.common_page_start(request.userid, canonical_url=canonical_url, title=item["title"])
-    page.append(define.render('detail/journal.html', [
+    return {
+        'canonical_url': canonical_url,
+        'title': item["title"],
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Journal detail
-        item,
+        'query': item,
         # Violations
-        [i for i in macro.MACRO_REPORT_VIOLATION if 3000 <= i[0] < 4000],
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'violations': [i for i in macro.MACRO_REPORT_VIOLATION if 3000 <= i[0] < 4000],
+    }

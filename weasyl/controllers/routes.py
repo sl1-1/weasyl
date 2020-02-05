@@ -23,7 +23,9 @@ from weasyl.controllers import (
 from weasyl import oauth2
 
 
+Route_Template = namedtuple('Route', ['pattern', 'name', 'view', 'renderer'])
 Route = namedtuple('Route', ['pattern', 'name', 'view'])
+
 """
 A route to be added to the Weasyl application.
 
@@ -31,137 +33,271 @@ A route to be added to the Weasyl application.
 dict mapping http methods to view callables.
 """
 
+routes_with_templates = (
+    # Front page views.
+    Route_Template("/{index:(index)?}", "index", general.index_, renderer='weasyl:templates/etc/index.jinja2'),  # 'index' is optional in the URL
+    Route_Template("/search", "search", general.search_, renderer='weasyl:templates/etc/search.jinja2'),
+    Route_Template("/popular", "popular", general.popular_, renderer='weasyl:templates/etc/popular.jinja2'),
+    Route_Template("/streaming", "streaming", general.streaming_, renderer='weasyl:templates/etc/streaming.jinja2'),
+
+    # Signin and out views.
+    Route_Template("/signin", "signin", {'GET': user.signin_get_, 'POST': user.signin_post_},
+                   renderer='weasyl:templates/etc/signin.jinja2'),
+    Route_Template("/signin/2fa-auth", "signin_2fa_auth",
+                   {'GET': user.signin_2fa_auth_get_, 'POST': user.signin_2fa_auth_post_},
+                   renderer='weasyl:templates/etc/signin_2fa_auth.jinja2'),
+    Route_Template("/signin/unicode-failure", "signin-unicode-failure",
+                   {'GET': user.signin_unicode_failure_get_, 'POST': user.signin_unicode_failure_post_},
+                   renderer='weasyl:templates/etc/unicode_failure.jinja2'),
+    Route_Template("/signup", "signup", {'GET': user.signup_get_, 'POST': user.signup_post_},
+                   renderer='weasyl:templates/etc/signup.jinja2'),
+
+    # Verification and password management views.
+    Route_Template("/forgotpassword", "forgot_password",
+                   {'GET': user.forgotpassword_get_, 'POST': user.forgetpassword_post_},
+                   renderer='weasyl:templates/etc/forgotpassword.jinja2'),
+    Route_Template("/resetpassword", "reset_password",
+                   {'GET': user.resetpassword_get_, 'POST': user.resetpassword_post_},
+                   renderer='weasyl:templates/etc/resetpassword.jinja2'),
+    # Profile views.
+    Route_Template("/~", "profile_tilde_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/~{name}", "profile_tilde", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/user", "profile_user_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/user/{name}", "profile_user", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/profile", "profile_unnamed", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/profile/{name}", "profile", profile.profile_, renderer='weasyl:templates/user/profile.jinja2'),
+    Route_Template("/~{name}/submission/{submitid:[0-9]+}", "submission_detail_profile;no_s;no_slug",
+                   detail.submission_, renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/~{name}/submission/{submitid:[0-9]+}/{slug:[^/.]*}", "submission_detail_profile;no_s",
+                   detail.submission_, renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/~{name}/submissions/{submitid:[0-9]+}", "submission_detail_profile;no_slug", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/~{name}/submissions/{submitid:[0-9]+}/{slug:[^/.]*}", "submission_detail_profile",
+                   detail.submission_, renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/submissions", "profile_submissions_unnamed", profile.submissions_,
+                   renderer='weasyl:templates/user/submissions.jinja2'),
+    Route_Template("/submissions/{name:[^/]*}", "profile_submissions", profile.submissions_,
+                   renderer='weasyl:templates/user/submissions.jinja2'),
+    Route_Template("/journals", "profile_journals_unnamed", profile.journals_,
+                   renderer='weasyl:templates/user/journals.jinja2'),
+    Route_Template("/journals/{name:[^/]*}", "profile_journals", profile.journals_,
+                   renderer='weasyl:templates/user/journals.jinja2'),
+    Route_Template("/collections", "profile_collections_unnamed", profile.collections_,
+                   renderer='weasyl:templates/user/collections.jinja2'),
+    Route_Template("/collections/{name:[^/]*}", "profile_collections", profile.collections_,
+                   renderer='weasyl:templates/user/collections.jinja2'),
+    Route_Template("/characters", "profile_characters_unnamed", profile.characters_,
+                   renderer='weasyl:templates/user/characters.jinja2'),
+    Route_Template("/characters/{name:[^/]*}", "profile_characters", profile.characters_,
+                   renderer='weasyl:templates/user/characters.jinja2'),
+    Route_Template("/shouts", "profile_shouts_unnamed", profile.shouts_,
+                   renderer='weasyl:templates/user/shouts.jinja2'),
+    Route_Template("/shouts/{name:[^/]*}", "profile_shouts", profile.shouts_,
+                   renderer='weasyl:templates/user/shouts.jinja2'),
+    Route_Template("/staffnotes", "profile_staffnotes_unnamed", profile.staffnotes_,
+                   renderer='weasyl:templates/user/shouts.jinja2'),
+    Route_Template("/staffnotes/{name:[^/]*}", "profile_staffnotes", profile.staffnotes_,
+                   renderer='weasyl:templates/user/shouts.jinja2'),
+    Route_Template("/favorites", "profile_favorites_unnamed", profile.favorites_,
+                   renderer='weasyl:templates/user/favorites.jinja2'),
+    Route_Template("/favorites/{name:[^/]*}", "profile_favorites", profile.favorites_,
+                   renderer='weasyl:templates/user/favorites.jinja2'),
+    Route_Template("/friends", "profile_friends_unnamed", profile.friends_,
+                   renderer='weasyl:templates/user/friends.jinja2'),
+    Route_Template("/friends/{name:[^/]*}", "profile_friends", profile.friends_,
+                   renderer='weasyl:templates/user/friends.jinja2'),
+    Route_Template("/following", "profile_following_unnamed", profile.following_,
+                   renderer='weasyl:templates/user/friends.jinja2'),
+    Route_Template("/following/{name:[^/]*}", "profile_following", profile.following_,
+                   renderer='weasyl:templates/user/friends.jinja2'),
+    Route_Template("/followed", "profile_followed_unnamed", profile.followed_,
+                   renderer='weasyl:templates/user/friends.jinja2'),
+    Route_Template("/followed/{name:[^/]*}", "profile_followed", profile.followed_,
+                   renderer='weasyl:templates/user/friends.jinja2'),
+
+    # Details of specific content
+    Route_Template("/view", "submission_detail_view_unnamed", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/view/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail_view", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/submission", "submission_detail_unnamed", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/submission/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail", detail.submission_,
+                   renderer='weasyl:templates/detail/submission.jinja2'),
+    Route_Template("/submission/tag-history/{submitid:[0-9]+}", "submission_tag_history",
+                   detail.submission_tag_history_, renderer='weasyl:templates/detail/tag_history.jinja2'),
+    Route_Template("/character", "character_detail_unnamed", detail.character_,
+                   renderer='weasyl:templates/detail/character.jinja2'),
+    Route_Template("/character/{charid:[0-9]+}*remainder", "character_detail", detail.character_,
+                   renderer='weasyl:templates/detail/character.jinja2'),
+    Route_Template("/journal", "journal_detail_unnamedited", detail.journal_,
+                   renderer='weasyl:templates/detail/journal.jinja2'),
+    Route_Template("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_,
+                   renderer='weasyl:templates/detail/journal.jinja2'),
+
+    # Submitting, reuploading, and removing content
+    Route_Template("/reupload/submission", "reupload_submission",
+                   {'GET': content.reupload_submission_get_, 'POST': content.reupload_submission_post_},
+                   renderer='weasyl:templates/submit/reupload_submission.jinja2'),
+    Route_Template("/reupload/character", "reupload_character",
+                   {'GET': content.reupload_character_get_, 'POST': content.reupload_character_post_},
+                   renderer='weasyl:templates/submit/reupload_submission.jinja2'),
+    Route_Template("/reupload/cover", "reupload_cover",
+                   {'GET': content.reupload_cover_get_, 'POST': content.reupload_cover_post_},
+                   renderer='weasyl:templates/submit/reupload_cover.jinja2'),
+    Route_Template("/edit/submission", "edit_submission",
+                   {'GET': content.edit_submission_get_, 'POST': content.edit_submission_post_},
+                   renderer='weasyl:templates/edit/submission.jinja2'),
+    Route_Template("/edit/character", "edit_character",
+                   {'GET': content.edit_character_get_, 'POST': content.edit_character_post_},
+                   renderer='weasyl:templates/edit/character.jinja2'),
+    Route_Template("/edit/journal", "edit_journal",
+                   {'GET': content.edit_journal_get_, 'POST': content.edit_journal_post_},
+                   renderer='weasyl:templates/edit/journal.jinja2'),
+    Route_Template("/submit", "submit", content.submit_, renderer='weasyl:templates/submit/submit.jinja2'),
+    Route_Template("/submit/visual", "submit_visual",
+                   {'GET': content.submit_visual_get_, 'POST': content.submit_visual_post_},
+                   renderer='weasyl:templates/submit/visual.jinja2'),
+    Route_Template("/submit/literary", "submit_literary",
+                   {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_},
+                   renderer='weasyl:templates/submit/literary.jinja2'),
+    Route_Template("/submit/multimedia", "submit_multimedia",
+                   {'GET': content.submit_multimedia_get_, 'POST': content.submit_multimedia_post_},
+                   renderer='weasyl:templates/submit/multimedia.jinja2'),
+    Route_Template("/submit/character", "submit_character",
+                   {'GET': content.submit_character_get_, 'POST': content.submit_character_post_},
+                   renderer='weasyl:templates/submit/character.jinja2'),
+    Route_Template("/submit/journal", "submit_journal",
+                   {'GET': content.submit_journal_get_, 'POST': content.submit_journal_post_},
+                   renderer='weasyl:templates/submit/journal.jinja2'),
+
+    # Site Updates
+    Route_Template("/site-updates", "site_update_list", general.site_update_list_,
+                   renderer='weasyl:templates/etc/site_update_list.jinja2'),
+    Route_Template("/site-updates/{update_id:[0-9]+}", "site_update",
+                   {'GET': general.site_update_, 'POST': admin.site_update_put_},
+                   renderer='weasyl:templates/etc/site_update.jinja2'),
+
+    # Two-Factor Authentication views.
+    Route_Template("/control/2fa/status", "control_2fa_status", {'GET': two_factor_auth.tfa_status_get_},
+                   renderer='weasyl:templates/control/2fa/status.jinja2'),
+    Route_Template("/control/2fa/init", "control_2fa_init",
+                   {'GET': two_factor_auth.tfa_init_get_, 'POST': two_factor_auth.tfa_init_post_},
+                   renderer='weasyl:templates/control/2fa/init.jinja2'),
+    Route_Template("/control/2fa/init_qrcode", "control_2fa_init_qrcode",
+                   {'GET': two_factor_auth.tfa_init_qrcode_get_, 'POST': two_factor_auth.tfa_init_qrcode_post_},
+                   renderer='weasyl:templates/control/2fa/init_qrcode.jinja2'),
+    Route_Template("/control/2fa/init_verify", "control_2fa_init_verify",
+                   {'GET': two_factor_auth.tfa_init_verify_get_, 'POST': two_factor_auth.tfa_init_verify_post_},
+                   renderer='weasyl:templates/control/2fa/init_verify.jinja2'),
+    Route_Template("/control/2fa/disable", "control_2fa_disable",
+                   {'GET': two_factor_auth.tfa_disable_get_, 'POST': two_factor_auth.tfa_disable_post_},
+                   renderer='weasyl:templates/control/2fa/disable.jinja2'),
+    Route_Template("/control/2fa/generate_recovery_codes_verify_password",
+                   "control_2fa_generate_recovery_codes_verify_password",
+                   {'GET': two_factor_auth.tfa_generate_recovery_codes_verify_password_get_,
+                    'POST': two_factor_auth.tfa_generate_recovery_codes_verify_password_post_},
+                   renderer='weasyl:templates/control/2fa/generate_recovery_codes_verify_password.jinja2'),
+    Route_Template("/control/2fa/generate_recovery_codes", "control_2fa_generate_recovery_codes",
+                   {'GET': two_factor_auth.tfa_generate_recovery_codes_get_,
+                    'POST': two_factor_auth.tfa_generate_recovery_codes_post_},
+                   renderer='weasyl:templates/control/2fa/generate_recovery_codes.jinja2'),
+
+    Route_Template("/policy/community", "policy_community", info.policy_community_,
+                   renderer='weasyl:templates/help/community.jinja2'),
+    Route_Template("/policy/copyright", "policy_copyright", info.policy_copyright_,
+                   renderer='weasyl:templates/help/copyright.jinja2'),
+    Route_Template("/policy/privacy", "policy_privacy", info.policy_privacy_,
+                   renderer='weasyl:templates/help/privacy.jinja2'),
+    Route_Template("/policy/scoc", "policy_scoc", info.policy_scoc_, renderer='weasyl:templates/help/scoc.jinja2'),
+    Route_Template("/policy/tos", "policy_tos", info.policy_tos_, renderer='weasyl:templates/help/tos.jinja2'),
+
+    Route_Template("/staff", "staff", info.staff_, renderer='weasyl:templates/help/staff.jinja2'),
+    Route_Template("/thanks", "thanks", info.thanks_, renderer='weasyl:templates/help/thanks.jinja2'),
+
+    # Help page routes
+    Route_Template("/help", "help", info.help_, renderer='weasyl:templates/help/help.jinja2'),
+    Route_Template("/help/about", "help_about", info.help_about_, renderer='weasyl:templates/help/about.jinja2'),
+    Route_Template("/help/collections", "help_collections", info.help_collections_,
+                   renderer='weasyl:templates/help/collections.jinja2'),
+    Route_Template("/help/faq", "help_faq", info.help_faq_, renderer='weasyl:templates/help/faq.jinja2'),
+    Route_Template("/help/folders", "help_folders", info.help_folders_,
+                   renderer='weasyl:templates/help/folder-options.jinja2'),
+    Route_Template("/help/google-drive-embed", "help_gdocs", info.help_gdocs_,
+                   renderer='weasyl:templates/help/gdocs.jinja2'),
+    Route_Template("/help/markdown", "help_markdown", info.help_markdown_,
+                   renderer='weasyl:templates/help/markdown.jinja2'),
+    Route_Template("/help/marketplace", "help_marketplace", info.help_marketplace_,
+                   renderer='weasyl:templates/help/marketplace.jinja2'),
+    Route_Template("/help/ratings", "help_ratings", info.help_ratings_,
+                   renderer='weasyl:templates/help/ratings.jinja2'),
+    Route_Template("/help/reports", "help_reports", info.help_reports_,
+                   renderer='weasyl:templates/help/reports.jinja2'),
+    Route_Template("/help/searching", "help_searching", info.help_searching_,
+                   renderer='weasyl:templates/help/searching.jinja2'),
+    Route_Template("/help/tagging", "help_tagging", info.help_tagging_,
+                   renderer='weasyl:templates/help/tagging.jinja2'),
+    Route_Template("/help/two_factor_authentication", "help_two_factor_authentication",
+                   info.help_two_factor_authentication_,
+                   renderer='weasyl:templates/help/two_factor_authentication.jinja2'),
+
+    # Management and settings routes.
+    Route_Template("/{alias:control|settings}", "control", settings.control_,
+                   renderer='weasyl:templates/control/control.jinja2'),
+    Route_Template("/control/editprofile", "control_editprofile",
+                   {'GET': settings.control_editprofile_get_, 'POST': settings.control_editprofile_put_},
+                   renderer='weasyl:templates/control/edit_profile.jinja2'),
+    Route_Template("/control/editcommissionsettings", "control_editcommissionsettings",
+                   settings.control_editcommissionsettings_,
+                   renderer='weasyl:templates/control/edit_commissionsettings.jinja2'),
+    Route_Template("/control/editemailpassword", "control_editemailpassword",
+                   {'GET': settings.control_editemailpassword_get_, 'POST': settings.control_editemailpassword_post_},
+                   renderer='weasyl:templates/control/edit_emailpassword.jinja2'),
+    Route_Template("/control/editpreferences", "control_editpreferences",
+          {'GET': settings.control_editpreferences_get_, 'POST': settings.control_editpreferences_post_},
+                   renderer='weasyl:templates/control/edit_preferences.jinja2'),
+    Route_Template("/control/editfolder/{folderid:[0-9]+}", "control_editfolder",
+                   {'GET': settings.control_editfolder_get_, 'POST': settings.control_editfolder_post_},
+                   renderer='weasyl:templates/manage/folder_options.jinja2'),
+    Route_Template("/manage/folders", "manage_folders", settings.manage_folders_,
+                   renderer='weasyl:templates/manage/folders.jinja2'),
+    Route_Template("/control/streaming", "control_streaming",
+                   {'GET': settings.control_streaming_get_, 'POST': settings.control_streaming_post_},
+                   renderer='weasyl:templates/control/edit_streaming.jinja2'),
+    Route_Template("/control/apikeys", "control_apikeys",
+          {'GET': settings.control_apikeys_get_, 'POST': settings.control_apikeys_post_},
+                   renderer='weasyl:templates/control/edit_apikeys.jinja2'),
+)
 
 routes = (
     # Front page views.
-    Route("/{index:(index)?}", "index", general.index_),  # 'index' is optional in the URL
-    Route("/search", "search", general.search_),
-    Route("/popular", "popular", general.popular_),
-    Route("/streaming", "streaming", general.streaming_),
     Route("/marketplace", "marketplace", marketplace.search_),
 
     # Signin and out views.
-    Route("/signin", "signin", {'GET': user.signin_get_, 'POST': user.signin_post_}),
-    Route("/signin/2fa-auth", "signin_2fa_auth", {'GET': user.signin_2fa_auth_get_, 'POST': user.signin_2fa_auth_post_}),
-    Route("/signin/unicode-failure", "signin-unicode-failure", {
-        'GET': user.signin_unicode_failure_get_, 'POST': user.signin_unicode_failure_post_
-    }),
     Route("/signout", "signout", user.signout_),
-    Route("/signup", "signup", {'GET': user.signup_get_, 'POST': user.signup_post_}),
 
     # Verification and password management views.
     Route("/verify/account", "verify_account", user.verify_account_),
-    Route("/forgotpassword", "forgot_password",
-          {'GET': user.forgotpassword_get_, 'POST': user.forgetpassword_post_}),
-    Route("/resetpassword", "reset_password",
-          {'GET': user.resetpassword_get_, 'POST': user.resetpassword_post_}),
     Route("/force/resetpassword", "force_reset_password", {'POST': user.force_resetpassword_}),
     Route("/force/resetbirthday", "force_reset_birthday", {'POST': user.force_resetbirthday_}),
     Route("/verify/emailchange", "verify_emailchange", {'GET': user.verify_emailchange_get_}),
 
-    # Two-Factor Authentication views.
-    Route("/control/2fa/status", "control_2fa_status", {'GET': two_factor_auth.tfa_status_get_}),
-    Route("/control/2fa/init", "control_2fa_init",
-          {'GET': two_factor_auth.tfa_init_get_, 'POST': two_factor_auth.tfa_init_post_}),
-    Route("/control/2fa/init_qrcode", "control_2fa_init_qrcode",
-          {'GET': two_factor_auth.tfa_init_qrcode_get_, 'POST': two_factor_auth.tfa_init_qrcode_post_}),
-    Route("/control/2fa/init_verify", "control_2fa_init_verify",
-          {'GET': two_factor_auth.tfa_init_verify_get_, 'POST': two_factor_auth.tfa_init_verify_post_}),
-    Route("/control/2fa/disable", "control_2fa_disable",
-          {'GET': two_factor_auth.tfa_disable_get_, 'POST': two_factor_auth.tfa_disable_post_}),
-    Route("/control/2fa/generate_recovery_codes_verify_password", "control_2fa_generate_recovery_codes_verify_password",
-          {'GET': two_factor_auth.tfa_generate_recovery_codes_verify_password_get_, 'POST': two_factor_auth.tfa_generate_recovery_codes_verify_password_post_}),
-    Route("/control/2fa/generate_recovery_codes", "control_2fa_generate_recovery_codes",
-          {'GET': two_factor_auth.tfa_generate_recovery_codes_get_, 'POST': two_factor_auth.tfa_generate_recovery_codes_post_}),
-
-    # Profile views.
-    Route("/~", "profile_tilde_unnamed", profile.profile_),
-    Route("/~{name}", "profile_tilde", profile.profile_),
-    Route("/user", "profile_user_unnamed", profile.profile_),
-    Route("/user/{name}", "profile_user", profile.profile_),
-    Route("/profile", "profile_unnamed", profile.profile_),
-    Route("/profile/{name}", "profile", profile.profile_),
+    # # Profile views.
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),
-    Route("/~{name}/submission/{submitid:[0-9]+}",
-          "submission_detail_profile;no_s;no_slug", detail.submission_),
-    Route("/~{name}/submission/{submitid:[0-9]+}/{slug:[^/.]*}",
-          "submission_detail_profile;no_s", detail.submission_),
-    Route("/~{name}/submissions/{submitid:[0-9]+}",
-          "submission_detail_profile;no_slug", detail.submission_),
-    Route("/~{name}/submissions/{submitid:[0-9]+}/{slug:[^/.]*}",
-          "submission_detail_profile", detail.submission_),
     Route("/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}",
           "submission_detail_media", detail.submission_media_),
-    Route("/submissions", "profile_submissions_unnamed", profile.submissions_),
-    Route("/submissions/{name:[^/]*}", "profile_submissions", profile.submissions_),
-    Route("/journals", "profile_journals_unnamed", profile.journals_),
-    Route("/journals/{name:[^/]*}", "profile_journals", profile.journals_),
-    Route("/collections", "profile_collections_unnamed", profile.collections_),
-    Route("/collections/{name:[^/]*}", "profile_collections", profile.collections_),
-    Route("/characters", "profile_characters_unnamed", profile.characters_),
-    Route("/characters/{name:[^/]*}", "profile_characters", profile.characters_),
-    Route("/shouts", "profile_shouts_unnamed", profile.shouts_),
-    Route("/shouts/{name:[^/]*}", "profile_shouts", profile.shouts_),
-    Route("/favorites", "profile_favorites_unnamed", profile.favorites_),
-    Route("/favorites/{name:[^/]*}", "profile_favorites", profile.favorites_),
-    Route("/friends", "profile_friends_unnamed", profile.friends_),
-    Route("/friends/{name:[^/]*}", "profile_friends", profile.friends_),
-    Route("/following", "profile_following_unnamed", profile.following_),
-    Route("/following/{name:[^/]*}", "profile_following", profile.following_),
-    Route("/followed", "profile_followed_unnamed", profile.followed_),
-    Route("/followed/{name:[^/]*}", "profile_followed", profile.followed_),
-    Route("/staffnotes", "profile_staffnotes_unnamed", profile.staffnotes_),
-    Route("/staffnotes/{name:[^/]*}", "profile_staffnotes", profile.staffnotes_),
 
-    # Details of specific content
-    Route("/view", "submission_detail_view_unnamed", detail.submission_),
-    Route("/view/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail_view",
-          detail.submission_),
-    Route("/submission", "submission_detail_unnamed", detail.submission_),
-    Route("/submission/{submitid:[0-9]+}{ignore_name:(/.*)?}", "submission_detail",
-          detail.submission_),
-    Route("/submission/tag-history/{submitid:[0-9]+}", "submission_tag_history",
-          detail.submission_tag_history_),
-    Route("/character", "character_detail_unnamed", detail.character_),
-    Route("/character/{charid:[0-9]+}*remainder", "character_detail", detail.character_),
-    Route("/journal", "journal_detail_unnamedited", detail.journal_),
-    Route("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_),
-
-    # Submitting, reuploading, and removing content
-    Route("/submit", "submit", content.submit_),
-    Route("/submit/visual", "submit_visual",
-          {'GET': content.submit_visual_get_, 'POST': content.submit_visual_post_}),
-    Route("/submit/literary", "submit_literary",
-          {'GET': content.submit_literary_get_, 'POST': content.submit_literary_post_}),
-    Route("/submit/multimedia", "submit_multimedia",
-          {'GET': content.submit_multimedia_get_, 'POST': content.submit_multimedia_post_}),
-    Route("/submit/character", "submit_character",
-          {'GET': content.submit_character_get_, 'POST': content.submit_character_post_}),
-    Route("/submit/journal", "submit_journal",
-          {'GET': content.submit_journal_get_, 'POST': content.submit_journal_post_}),
+    # # Submitting, reuploading, and removing content
     Route("/submit/shout", "submit_shout", {'POST': content.submit_shout_}),
     Route("/submit/comment", "submit_comment", {'POST': content.submit_comment_}),
     Route("/submit/report", "submit_report", {'POST': content.submit_report_}),
     Route("/submit/tags", "submit_tags", {'POST': content.submit_tags_}),
-    Route("/reupload/submission", "reupload_submission",
-          {'GET': content.reupload_submission_get_, 'POST': content.reupload_submission_post_}),
-    Route("/reupload/character", "reupload_character",
-          {'GET': content.reupload_character_get_, 'POST': content.reupload_character_post_}),
-    Route("/reupload/cover", "reupload_cover",
-          {'GET': content.reupload_cover_get_, 'POST': content.reupload_cover_post_}),
-    Route("/edit/submission", "edit_submission",
-          {'GET': content.edit_submission_get_, 'POST': content.edit_submission_post_}),
-    Route("/edit/character", "edit_character",
-          {'GET': content.edit_character_get_, 'POST': content.edit_character_post_}),
-    Route("/edit/journal", "edit_journal",
-          {'GET': content.edit_journal_get_, 'POST': content.edit_journal_post_}),
     Route("/remove/submission", "remove_submission", {'POST': content.remove_submission_}),
     Route("/remove/character", "remove_character", {'POST': content.remove_character_}),
     Route("/remove/journal", "remove_journal", {'POST': content.remove_journal_}),
     Route("/remove/comment", "remove_comment", {'POST': content.remove_comment_}),
 
     # Management and settings routes.
-    Route("/manage/folders", "manage_folders", settings.manage_folders_),
     Route("/manage/following", "control_following",
           {'GET': settings.manage_following_get_, 'POST': settings.manage_following_post_}),
     Route("/manage/friends", "control_friends", settings.manage_friends_),
@@ -178,14 +314,11 @@ routes = (
           {'GET': settings.manage_banner_get_, 'POST': settings.manage_banner_post_}),
     Route("/manage/alias", "control_alias",
           {'GET': settings.manage_alias_get_, 'POST': settings.manage_alias_post_}),
-    Route("/{alias:control|settings}", "control", settings.control_),
     Route("/control/uploadavatar", "control_uploadavatar",
           {'POST': settings.control_uploadavatar_}),
-    Route("/control/editprofile", "control_editprofile",
-          {'GET': settings.control_editprofile_get_, 'POST': settings.control_editprofile_put_}),
 
-    Route("/control/editcommissionsettings", "control_editcommissionsettings",
-          settings.control_editcommissionsettings_),
+
+
     Route("/control/editcommishinfo", "control_editcommishinfo",
           {'POST': settings.control_editcommishinfo_}),
     Route("/control/createcommishclass", "control_createcommishclass",
@@ -201,14 +334,7 @@ routes = (
     Route("/control/removecommishprice", "control_removecommishprice",
           {'POST': settings.control_removecommishprice_}),
 
-    Route("/control/editemailpassword", "control_editemailpassword", {
-        'GET': settings.control_editemailpassword_get_,
-        'POST': settings.control_editemailpassword_post_
-    }),
-    Route("/control/editpreferences", "control_editpreferences", {
-        'GET': settings.control_editpreferences_get_,
-        'POST': settings.control_editpreferences_post_
-    }),
+
     Route("/control/tagrestrictions", "control_tagrestrictions", {
         'GET': settings.control_tagrestrictions_get_,
         'POST': settings.control_tagrestrictions_post_
@@ -217,15 +343,11 @@ routes = (
     Route("/control/createfolder", "control_createfolder", {'POST': settings.control_createfolder_}),
     Route("/control/renamefolder", "control_renamefolder", {'POST': settings.control_renamefolder_}),
     Route("/control/removefolder", "control_removefolder", {'POST': settings.control_removefolder_}),
-    Route("/control/editfolder/{folderid:[0-9]+}", "control_editfolder",
-          {'GET': settings.control_editfolder_get_, 'POST': settings.control_editfolder_post_}),
+
     Route("/control/movefolder", "control_movefolder", {'POST': settings.control_movefolder_}),
     Route("/control/ignoreuser", "control_ignoreuser", {'POST': settings.control_ignoreuser_}),
     Route("/control/unignoreuser", "control_unignoreuser", {'POST': settings.control_unignoreuser_}),
-    Route("/control/streaming", "control_streaming",
-          {'GET': settings.control_streaming_get_, 'POST': settings.control_streaming_post_}),
-    Route("/control/apikeys", "control_apikeys",
-          {'GET': settings.control_apikeys_get_, 'POST': settings.control_apikeys_post_}),
+
     Route("/control/sfwtoggle", "control_sfw_toggle", {'POST': settings.sfw_toggle_}),
     Route("/control/collections", "collection_options",
           {'GET': weasyl_collections.collection_options_get_, 'POST': weasyl_collections.collection_options_post_}),
@@ -313,36 +435,7 @@ routes = (
         'POST': director.directorcontrol_globaltagrestrictions_post_,
     }),
 
-    Route("/site-updates/", "site_update_list", general.site_update_list_),
-    Route("/site-updates/{update_id:[0-9]+}", "site_update", {
-        'GET': general.site_update_,
-        'POST': admin.site_update_put_,
-    }),
     Route("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_),
-
-    Route("/policy/community", "policy_community", info.policy_community_),
-    Route("/policy/copyright", "policy_copyright", info.policy_copyright_),
-    Route("/policy/privacy", "policy_privacy", info.policy_privacy_),
-    Route("/policy/scoc", "policy_scoc", info.policy_scoc_),
-    Route("/policy/tos", "policy_tos", info.policy_tos_),
-
-    Route("/staff", "staff", info.staff_),
-    Route("/thanks", "thanks", info.thanks_),
-
-    # Help page routes
-    Route("/help", "help", info.help_),
-    Route("/help/about", "help_about", info.help_about_),
-    Route("/help/collections", "help_collections", info.help_collections_),
-    Route("/help/faq", "help_faq", info.help_faq_),
-    Route("/help/folders", "help_folders", info.help_folders_),
-    Route("/help/google-drive-embed", "help_gdocs", info.help_gdocs_),
-    Route("/help/markdown", "help_markdown", info.help_markdown_),
-    Route("/help/marketplace", "help_marketplace", info.help_marketplace_),
-    Route("/help/ratings", "help_ratings", info.help_ratings_),
-    Route("/help/reports", "help_reports", info.help_reports_),
-    Route("/help/searching", "help_searching", info.help_searching_),
-    Route("/help/tagging", "help_tagging", info.help_tagging_),
-    Route("/help/two_factor_authentication", "help_two_factor_authentication", info.help_two_factor_authentication_),
 
     # OAuth2 routes.
     Route("/api/oauth2/authorize", "oauth2_authorize",
@@ -361,6 +454,17 @@ def setup_routes_and_views(config):
     Args:
         config: A pyramid Configuration for the wsgi application.
     """
+    for route in routes_with_templates:
+        config.add_route(name=route.name, pattern=route.pattern)
+        if isinstance(route.view, dict):
+            for method in route.view:
+                config.add_view(view=route.view[method],
+                                route_name=route.name,
+                                request_method=method,
+                                renderer=route.renderer)
+        else:
+            config.add_view(view=route.view, route_name=route.name, request_method="GET", renderer=route.renderer)
+
     for route in routes:
         config.add_route(name=route.name, pattern=route.pattern)
         if isinstance(route.view, dict):

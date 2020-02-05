@@ -2536,6 +2536,22 @@ blockquote + blockquote {
     color: #666;
 }
 
+#user-id ul {
+    list-style-type:none;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+}
+
+#user-id li {
+    float: left;
+}
+
+#user-id li + li::before {
+    content: " / ";
+    color: #666;
+}
+
 #user-availability > div {
     width: 50%;
     float: left;

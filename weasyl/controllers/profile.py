@@ -53,7 +53,6 @@ def profile_(request):
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     extras['title'] = u"%s's profile" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
 
-    page = define.common_page_start(request.userid, **extras)
     define.common_view_content(request.userid, otherid, "profile")
 
     if 'O' in userprofile['config']:
@@ -77,37 +76,35 @@ def profile_(request):
         favorites = None
 
     statistics, show_statistics = profile.select_statistics(otherid)
-
-    page.append(define.render('user/profile.html', [
+    return {
         # Profile information
-        userprofile,
+        "profile": userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
-        macro.SOCIAL_SITES,
+        "userinfo": profile.select_userinfo(otherid, config=userprofile['config']),
+        'social_sites': macro.SOCIAL_SITES,
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Recent submissions
-        submissions, more_submissions,
-        favorites,
-        featured,
+        'submissions': submissions,
+        'more_submissions': more_submissions,
+        'favorites': favorites,
+        'featured': featured,
         # Folders preview
-        folder.select_preview(request.userid, otherid, rating, 3),
+        'folders': folder.select_preview(request.userid, otherid, rating, 3),
         # Latest journal
-        journal.select_latest(request.userid, rating, otherid=otherid),
+        'journal': journal.select_latest(request.userid, rating, otherid=otherid),
         # Recent shouts
-        shout.select(request.userid, ownerid=otherid, limit=8),
+        'shouts': shout.select(request.userid, ownerid=otherid, limit=8),
         # Statistics information
-        statistics,
-        show_statistics,
+        'statistics': statistics,
+        'show_statistics': show_statistics,
         # Commission information
-        commishinfo.select_list(otherid),
+        'commishinfo': commishinfo.select_list(otherid),
         # Friends
-        lambda: frienduser.has_friends(otherid),
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'has_friends': lambda: frienduser.has_friends(otherid),
+    }
 
 
 def profile_media_(request):
@@ -140,7 +137,6 @@ def submissions_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's submissions" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     url_format = "/submissions/{username}?%s{folderquery}".format(
                  username=define.get_sysname(userprofile['username']),
@@ -149,23 +145,21 @@ def submissions_(request):
         submission.select_list, submission.select_count, 'submitid', url_format, request.userid, rating,
         60, otherid=otherid, folderid=folderid, backid=define.get_int(form.backid),
         nextid=define.get_int(form.nextid), profile_page_filter=not folderid)
-
-    page.append(define.render('user/submissions.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Recent submissions
-        result,
+        'result': result,
         # Folders
-        folder.select_list(otherid, "sidebar/all"),
+        'folders': folder.select_list(otherid, "sidebar/all"),
         # Current folder
-        folderid,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'currentfolder': folderid,
+    }
 
 
 def collections_(request):
@@ -185,25 +179,23 @@ def collections_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's collections" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     url_format = "/collections?userid={userid}&%s".format(userid=userprofile['userid'])
     result = pagination.PaginatedResult(
         collection.select_list, collection.select_count, 'submitid', url_format, request.userid, rating, 66,
         otherid=otherid, backid=define.get_int(form.backid), nextid=define.get_int(form.nextid))
 
-    page.append(define.render('user/collections.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Collections
-        result,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'result': result,
+    }
 
 
 def journals_(request):
@@ -222,23 +214,21 @@ def journals_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's journals" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
-    page.append(define.render('user/journals.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Journals list
         # TODO(weykent): use select_user_list
-        journal.select_list(request.userid, rating, 250, otherid=otherid),
+        'journals': journal.select_list(request.userid, rating, 250, otherid=otherid),
         # Latest journal
-        journal.select_latest(request.userid, rating, otherid=otherid),
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'latest': journal.select_latest(request.userid, rating, otherid=otherid),
+    }
 
 
 def characters_(request):
@@ -257,7 +247,6 @@ def characters_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's characters" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     url_format = "/characters?userid={userid}&%s".format(userid=userprofile['userid'])
     result = pagination.PaginatedResult(
@@ -266,18 +255,17 @@ def characters_(request):
         otherid=otherid, backid=define.get_int(form.backid),
         nextid=define.get_int(form.nextid))
 
-    page.append(define.render('user/characters.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Characters list
-        result,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'result': result,
+    }
 
 
 def shouts_(request):
@@ -295,25 +283,22 @@ def shouts_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's shouts" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
-    page.append(define.render('user/shouts.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Comments
-        shout.select(request.userid, ownerid=otherid),
+        'shouts': shout.select(request.userid, ownerid=otherid),
         # Feature
-        "shouts",
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
-
+        'feature': "shouts",
+    }
 
 @moderator_only
 def staffnotes_(request):
@@ -325,29 +310,27 @@ def staffnotes_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's staff notes" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     userinfo = profile.select_userinfo(otherid, config=userprofile['config'])
     reportstats = profile.select_report_stats(otherid)
     userinfo['reportstats'] = reportstats
     userinfo['reporttotal'] = sum(reportstats.values())
 
-    page.append(define.render('user/shouts.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        userinfo,
+        'userinfo': userinfo,
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Myself
-        profile.select_myself(request.userid),
+        'myself': profile.select_myself(request.userid),
         # Comments
-        shout.select(request.userid, ownerid=otherid, staffnotes=True),
+        'shouts': shout.select(request.userid, ownerid=otherid, staffnotes=True),
         # Feature
-        "staffnotes",
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'feature': "staffnotes",
+    }
 
 
 def favorites_(request):
@@ -371,7 +354,6 @@ def favorites_(request):
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's favorites" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
-    page = define.common_page_start(request.userid, title=page_title)
 
     if form.feature:
         nextid = define.get_int(form.nextid)
@@ -402,20 +384,19 @@ def favorites_(request):
             "journal": favorite.select_journal(request.userid, rating, 22, otherid=otherid),
         }
 
-    page.append(define.render('user/favorites.html', [
+    return {
+        'title': page_title,
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Feature
-        form.feature,
+        'feature': form.feature,
         # Favorites
-        faves,
-    ]))
-
-    return Response(define.common_page_end(request.userid, page))
+        'result': faves,
+    }
 
 
 def friends_(request):
@@ -432,17 +413,18 @@ def friends_(request):
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
-    return Response(define.webpage(request.userid, "user/friends.html", [
+    return {
+        'feature': 'friends',
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Friends
-        frienduser.select_friends(request.userid, otherid, limit=44,
-                                  backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
-    ]))
+        'query': frienduser.select_friends(request.userid, otherid, limit=44,
+                                           backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
+    }
 
 
 def following_(request):
@@ -459,17 +441,18 @@ def following_(request):
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
-    return Response(define.webpage(request.userid, "user/following.html", [
+    return {
+        'feature': 'following',
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Following
-        followuser.select_following(request.userid, otherid, limit=44,
-                                    backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
-    ]))
+        'query': followuser.select_following(request.userid, otherid, limit=44,
+                                             backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
+    }
 
 
 def followed_(request):
@@ -486,14 +469,15 @@ def followed_(request):
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
-    return Response(define.webpage(request.userid, "user/followed.html", [
+    return {
+        'feature': 'followed',
         # Profile information
-        userprofile,
+        'profile': userprofile,
         # User information
-        profile.select_userinfo(otherid, config=userprofile['config']),
+        'userinfo': profile.select_userinfo(otherid, config=userprofile['config']),
         # Relationship
-        profile.select_relation(request.userid, otherid),
+        'relationship': profile.select_relation(request.userid, otherid),
         # Followed
-        followuser.select_followed(request.userid, otherid, limit=44,
+        'query': followuser.select_followed(request.userid, otherid, limit=44,
                                    backid=define.get_int(form.backid), nextid=define.get_int(form.nextid)),
-    ]))
+    }

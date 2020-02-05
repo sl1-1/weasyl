@@ -19,10 +19,7 @@ from weasyl import (
 # Control panel functions
 @login_required
 def control_(request):
-    return Response(define.webpage(request.userid, "control/control.html", [
-        # Premium
-        define.get_premium(request.userid),
-    ], title="Settings"))
+    return {'premium': define.get_premium(request.userid), 'title': "Settings"}
 
 
 @login_required
@@ -40,12 +37,12 @@ def control_uploadavatar_(request):
 @login_required
 def control_editprofile_get_(request):
     userinfo = profile.select_userinfo(request.userid)
-    return Response(define.webpage(request.userid, "control/edit_profile.html", [
-        # Profile
-        profile.select_profile(request.userid, commish=False),
+    return {
+        'profile': profile.select_profile(request.userid, commish=False),
         # User information
-        userinfo,
-    ], title="Edit Profile"))
+        'userinfo': userinfo,
+        'title': "Edit Profile"
+    }
 
 
 @login_required
@@ -64,7 +61,7 @@ def control_editprofile_put_(request):
         form.sorted_user_links = [(name, [value]) for name, value in zip(form.site_names, form.site_values)]
         form.settings = form.set_commish + form.set_trade + form.set_request
         form.config = form.profile_display
-        return Response(define.webpage(request.userid, "control/edit_profile.html", [form, form], title="Edit Profile"))
+        return {'profile': form, 'userinfo': form, 'title': "Edit Profile"}
 
     p = orm.Profile()
     p.full_name = form.full_name
@@ -84,13 +81,13 @@ def control_editprofile_put_(request):
 
 @login_required
 def control_editcommissionsettings_(request):
-    return Response(define.webpage(request.userid, "control/edit_commissionsettings.html", [
-        # Commission prices
-        commishinfo.select_list(request.userid),
-        commishinfo.CURRENCY_CHARMAP,
-        commishinfo.PRESET_COMMISSION_CLASSES,
-        profile.select_profile(request.userid)
-    ], title="Edit Commission Settings"))
+    return {
+        'query': commishinfo.select_list(request.userid),
+        'currencies': commishinfo.CURRENCY_CHARMAP,
+        'presets': commishinfo.PRESET_COMMISSION_CLASSES,
+        'profile': profile.select_profile(request.userid),
+        'title': "Edit Commission Settings"
+    }
 
 
 @login_required
@@ -200,12 +197,7 @@ def control_removecommishprice_(request):
 @login_required
 @disallow_api
 def control_editemailpassword_get_(request):
-    return Response(define.webpage(
-        request.userid,
-        "control/edit_emailpassword.html",
-        [profile.select_manage(request.userid)["email"]],
-        title="Edit Password and Email Address"
-    ))
+    return {'email': profile.select_manage(request.userid), 'title': "Edit Password and Email Address"}
 
 
 @login_required
@@ -244,19 +236,17 @@ def control_editpreferences_get_(request):
     age = profile.get_user_age(request.userid)
     allowed_ratings = ratings.get_ratings_for_age(age)
     jsonb_settings = define.get_profile_settings(request.userid)
-    return Response(define.webpage(request.userid, "control/edit_preferences.html", [
-        # Config
-        config,
-        jsonb_settings,
-        # Rating
-        current_rating,
-        current_sfw_rating,
-        age,
-        allowed_ratings,
-        request.weasyl_session.timezone.timezone,
-        define.timezones(),
-    ], title="Site Preferences"))
-
+    return {
+        'config': config,
+        'jsonb_settings': jsonb_settings,
+        'current_rating': current_rating,
+        'current_sfw_rating': current_sfw_rating,
+        'age': age,
+        'allowed_ratings': allowed_ratings,
+        'timezone': request.weasyl_session.timezone.timezone,
+        'timezones': define.timezones(),
+        'title': "Site Preferences"
+    }
 
 @login_required
 @token_checked
@@ -335,9 +325,7 @@ def control_editfolder_get_(request):
     if not folder.check(request.userid, folderid):
         return Response(define.errorpage(request.userid, errorcode.permission))
 
-    return Response(define.webpage(request.userid, "manage/folder_options.html", [
-        folder.select_info(folderid),
-    ], title="Edit Folder Options"))
+    return {'info': folder.select_info(folderid), 'title': "Edit Folder Options"}
 
 
 @login_required
@@ -391,11 +379,11 @@ def control_streaming_get_(request):
     else:
         target = request.userid
 
-    return Response(define.webpage(request.userid, "control/edit_streaming.html", [
-        # Profile
-        profile.select_profile(target, commish=False),
-        form.target,
-    ], title="Edit Streaming Settings"))
+    return {
+        'profile': profile.select_profile(target, commish=False),
+        'target': form.target,
+        'title': "Edit Streaming Settings"
+    }
 
 
 @login_required
@@ -431,10 +419,11 @@ def control_streaming_post_(request):
 @login_required
 @disallow_api
 def control_apikeys_get_(request):
-    return Response(define.webpage(request.userid, "control/edit_apikeys.html", [
-        api.get_api_keys(request.userid),
-        oauth2.get_consumers_for_user(request.userid),
-    ], title="API Keys"))
+    return {
+        'api_keys': api.get_api_keys(request.userid),
+        'consumers':oauth2.get_consumers_for_user(request.userid),
+        'title': "API Keys"
+    }
 
 
 @login_required
@@ -472,10 +461,7 @@ def control_tagrestrictions_post_(request):
 
 @login_required
 def manage_folders_(request):
-    return Response(define.webpage(request.userid, "manage/folders.html", [
-        # Folders dropdown
-        folder.select_list(request.userid, "drop/all"),
-    ], title="Submission Folders"))
+    return {'folders': folder.select_list(request.userid, "drop/all"), 'title': "Submission Folders"}
 
 
 @login_required

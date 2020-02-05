@@ -24,10 +24,11 @@ from weasyl.error import WeasylError
 
 @guest_required
 def signin_get_(request):
-    return Response(define.webpage(request.userid, "etc/signin.html", [
-        False,
-        request.environ.get('HTTP_REFERER', ''),
-    ], title="Sign In"))
+    return {
+        'error': False,
+        'referer': request.environ.get('HTTP_REFERER', ''),
+        'title': "Sign In"
+    }
 
 
 @guest_required
@@ -67,14 +68,16 @@ def signin_post_(request):
         # The number of times the user has attempted to authenticate via 2FA
         sess.additional_data['2fa_pwd_auth_attempts'] = 0
         sess.save = True
-        return Response(define.webpage(
-            request.userid,
-            "etc/signin_2fa_auth.html",
-            [define.get_display_name(logid), form.referer, remaining_recovery_codes, None],
-            title="Sign In - 2FA"
-        ))
+        return {
+            'username': define.get_display_name(logid),
+            'referer': form.referer,
+            'remaining_recovery_codes': remaining_recovery_codes,
+            'error': None,
+            'title': "Sign In - 2FA"
+        }
+
     elif logerror == "invalid":
-        return Response(define.webpage(request.userid, "etc/signin.html", [True, form.referer]))
+        return {'error': True, 'referer': form.referer}
     elif logerror == "banned":
         reason = moderation.get_ban_reason(logid)
         return Response(define.errorpage(
@@ -129,11 +132,13 @@ def signin_2fa_auth_get_(request):
             [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
     else:
         ref = request.params["referer"] if "referer" in request.params else "/"
-        return Response(define.webpage(
-            request.userid,
-            "etc/signin_2fa_auth.html",
-            [define.get_display_name(tfa_userid), ref, two_factor_auth.get_number_of_recovery_codes(tfa_userid),
-             None], title="Sign In - 2FA"))
+        return {
+            'username': define.get_display_name(tfa_userid),
+            'referer': ref,
+            'remaining_recovery_codes': two_factor_auth.get_number_of_recovery_codes(tfa_userid),
+            'error': None,
+            'title': "Sign In - 2FA"
+        }
 
 
 @guest_required
@@ -184,16 +189,18 @@ def signin_2fa_auth_post_(request):
         sess.additional_data['2fa_pwd_auth_attempts'] += 1
         sess.save = True
         # 2FA failed; redirect to 2FA input page & inform user that authentication failed.
-        return Response(define.webpage(
-            request.userid,
-            "etc/signin_2fa_auth.html",
-            [define.get_display_name(tfa_userid), request.params["referer"], two_factor_auth.get_number_of_recovery_codes(tfa_userid),
-             "2fa"], title="Sign In - 2FA"))
+        return {
+            'username': define.get_display_name(tfa_userid),
+            'referer': request.params["referer"],
+            'remaining_recovery_codes': two_factor_auth.get_number_of_recovery_codes(tfa_userid),
+            'error': "2fa",
+            'title': "Sign In - 2FA"
+        }
 
 
 @login_required
 def signin_unicode_failure_get_(request):
-    return Response(define.webpage(request.userid, 'etc/unicode_failure.html'))
+    return {'title': 'Fix Your Password'}
 
 
 @login_required
@@ -216,19 +223,7 @@ def signout_(request):
 
 @guest_required
 def signup_get_(request):
-    form = request.web_input(email="")
-
-    return Response(define.webpage(request.userid, "etc/signup.html", [
-        # Signup data
-        {
-            "email": form.email,
-            "username": None,
-            "day": None,
-            "month": None,
-            "year": None,
-            "error": None,
-        },
-    ], title="Create a Weasyl Account"))
+    return {'title': "Create a Weasyl Account"}
 
 
 @guest_required
@@ -255,6 +250,7 @@ def signup_post_(request):
 
 @guest_required
 def verify_account_(request):
+    # TODO: Don't redirect back here after signing in for the first time. Errors due to being logged in
     login.verify(token=request.web_input(token="").token, ip_address=request.client_addr)
     return Response(define.errorpage(
         request.userid,
@@ -276,12 +272,13 @@ def verify_emailchange_get_(request):
 
 @guest_required
 def forgotpassword_get_(request):
-    return Response(define.webpage(request.userid, "etc/forgotpassword.html", title="Reset Forgotten Password"))
+    return {'title': "Reset Forgotten Password"}
 
 
 @guest_required
 @token_checked
 def forgetpassword_post_(request):
+    # TODO: Don't redirect back here after signing in for the first time. Errors due to being logged in
     form = request.web_input(email="")
 
     resetpassword.request(form)
@@ -302,7 +299,7 @@ def resetpassword_get_(request):
             request.userid,
             "This link does not appear to be valid. If you followed this link from your email, it may have expired."))
 
-    return Response(define.webpage(request.userid, "etc/resetpassword.html", [form.token], title="Reset Forgotten Password"))
+    return {'token': form.token, 'title': "Reset Forgotten Password"}
 
 
 @guest_required

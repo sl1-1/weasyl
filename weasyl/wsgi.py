@@ -11,9 +11,10 @@ import weasyl.macro as m
 from weasyl.media import format_media_link
 import weasyl.middleware as mw
 from weasyl import staff_config
+from weasyl import jinja2_helpers
 
 
-# Get a configurator and register some tweens to handle cleanup, etc.
+# # Get a configurator and register some tweens to handle cleanup, etc.
 config = Configurator()
 config.add_tween("weasyl.middleware.status_check_tween_factory")
 config.add_tween("weasyl.middleware.sql_debug_tween_factory")
@@ -24,6 +25,16 @@ config.add_tween("weasyl.middleware.database_session_cleanup_tween_factory")
 config.add_tween("weasyl.middleware.http2_server_push_tween_factory")
 config.add_tween("pyramid.tweens.excview_tween_factory")  # Required to catch exceptions thrown in tweens.
 
+
+def setup_jinja2_env():
+    env = config.get_jinja2_environment()
+    env.filters.update(jinja2_helpers.filters)
+    env.globals.update(jinja2_helpers.jinja2_globals)
+
+
+config.include('pyramid_jinja2')
+config.add_jinja2_search_path('weasyl:templates/', name='.jinja2')
+config.action(None, setup_jinja2_env, order=999)
 
 # Set up some exception handling and all our views.
 def weasyl_404(request):
@@ -41,6 +52,7 @@ setup_routes_and_views(config)
 # Setup properties and methods for request objects.
 config.add_request_method(mw.pg_connection_request_property, name='pg_connection', reify=True)
 config.add_request_method(mw.userid_request_property, name='userid', reify=True)
+config.add_request_method(mw.user_request_property, name='user', reify=True)
 config.add_request_method(mw.log_exc_request_method, name='log_exc')
 config.add_request_method(mw.web_input_request_method, name='web_input')
 config.add_request_method(mw.set_cookie_on_response)
