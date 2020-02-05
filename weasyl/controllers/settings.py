@@ -325,9 +325,7 @@ def control_editfolder_get_(request):
     if not folder.check(request.userid, folderid):
         return Response(define.errorpage(request.userid, errorcode.permission))
 
-    return Response(define.webpage(request.userid, "manage/folder_options.html", [
-        folder.select_info(folderid),
-    ], title="Edit Folder Options"))
+    return {'info': folder.select_info(folderid), 'title': "Edit Folder Options"}
 
 
 @login_required

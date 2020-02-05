@@ -256,6 +256,9 @@ routes_with_templates = (
     Route_Template("/control/editpreferences", "control_editpreferences",
           {'GET': settings.control_editpreferences_get_, 'POST': settings.control_editpreferences_post_},
                    renderer='weasyl:templates/control/edit_preferences.jinja2'),
+    Route_Template("/control/editfolder/{folderid:[0-9]+}", "control_editfolder",
+                   {'GET': settings.control_editfolder_get_, 'POST': settings.control_editfolder_post_},
+                   renderer='weasyl:templates/manage/folder_options.jinja2'),
 )
 
 routes = (
@@ -333,8 +336,7 @@ routes = (
     Route("/control/createfolder", "control_createfolder", {'POST': settings.control_createfolder_}),
     Route("/control/renamefolder", "control_renamefolder", {'POST': settings.control_renamefolder_}),
     Route("/control/removefolder", "control_removefolder", {'POST': settings.control_removefolder_}),
-    Route("/control/editfolder/{folderid:[0-9]+}", "control_editfolder",
-          {'GET': settings.control_editfolder_get_, 'POST': settings.control_editfolder_post_}),
+
     Route("/control/movefolder", "control_movefolder", {'POST': settings.control_movefolder_}),
     Route("/control/ignoreuser", "control_ignoreuser", {'POST': settings.control_ignoreuser_}),
     Route("/control/unignoreuser", "control_unignoreuser", {'POST': settings.control_unignoreuser_}),
