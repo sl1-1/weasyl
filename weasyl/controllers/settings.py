@@ -527,17 +527,14 @@ def manage_collections_get_(request):
     rating = define.get_rating(request.userid)
 
     if form.feature == "pending":
-        return Response(define.webpage(request.userid, "manage/collections_pending.html", [
-            # Pending Collections
-            collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid, nextid=nextid,
-                                   pending=True),
-            request.userid
-        ], title="Pending Collections"))
+        return render_to_response("weasyl:templates/manage/collections_pending.jinja2", {
+            'query': collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid,
+                                            nextid=nextid, pending=True),
+            'userid': request.userid, 'title': "Pending Collections"}, request=request)
 
-    return Response(define.webpage(request.userid, "manage/collections_accepted.html", [
-        # Accepted Collections
-        collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid, nextid=nextid),
-    ], title="Accepted Collections"))
+    return {
+        'query': collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid,
+                                        nextid=nextid), 'title': "Accepted Collections"}
 
 
 @login_required
