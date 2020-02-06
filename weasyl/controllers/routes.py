@@ -275,6 +275,8 @@ routes_with_templates = (
                    renderer='weasyl:templates/manage/following_list.jinja2'),
     Route_Template("/manage/friends", "control_friends", settings.manage_friends_,
                    renderer='weasyl:templates/manage/friends_accepted.jinja2'),
+    Route_Template("/manage/ignore", "manage_ignore", settings.manage_ignore_,
+                   renderer='weasyl:templates/manage/ignore.jinja2'),
 )
 
 routes = (
@@ -307,7 +309,6 @@ routes = (
 
     # Management and settings routes.
 
-    Route("/manage/ignore", "manage_ignore", settings.manage_ignore_),
     Route("/manage/collections", "control_collections",
           {'GET': settings.manage_collections_get_, 'POST': settings.manage_collections_post_}),
     Route("/manage/thumbnail", "manage_thumbnail_",

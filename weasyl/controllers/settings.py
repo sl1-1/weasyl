@@ -515,9 +515,7 @@ def manage_friends_(request):
 
 @login_required
 def manage_ignore_(request):
-    return Response(define.webpage(request.userid, "manage/ignore.html", [
-        ignoreuser.select(request.userid),
-    ], title="Ignored Users"))
+    return {'query': ignoreuser.select(request.userid), 'title': "Ignored Users"}
 
 
 @login_required
