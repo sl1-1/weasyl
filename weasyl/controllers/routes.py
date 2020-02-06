@@ -273,6 +273,8 @@ routes_with_templates = (
     Route_Template("/manage/following", "control_following",
                    {'GET': settings.manage_following_get_, 'POST': settings.manage_following_post_},
                    renderer='weasyl:templates/manage/following_list.jinja2'),
+    Route_Template("/manage/friends", "control_friends", settings.manage_friends_,
+                   renderer='weasyl:templates/manage/friends_accepted.jinja2'),
 )
 
 routes = (
@@ -304,7 +306,7 @@ routes = (
     Route("/remove/comment", "remove_comment", {'POST': content.remove_comment_}),
 
     # Management and settings routes.
-    Route("/manage/friends", "control_friends", settings.manage_friends_),
+
     Route("/manage/ignore", "manage_ignore", settings.manage_ignore_),
     Route("/manage/collections", "control_collections",
           {'GET': settings.manage_collections_get_, 'POST': settings.manage_collections_post_}),

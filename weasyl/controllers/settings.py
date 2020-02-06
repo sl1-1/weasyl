@@ -505,13 +505,12 @@ def manage_friends_(request):
     feature = request.params.get("feature")
 
     if feature == "pending":
-        return Response(define.webpage(request.userid, "manage/friends_pending.html", [
-            frienduser.select_requests(request.userid),
-        ], title="Pending Friend Requests"))
+        return render_to_response("weasyl:templates/manage/friends_pending.jinja2",
+                                  {'query': frienduser.select_requests(request.userid),
+                                   'title': "Pending Friend Requests"},
+                                  request=request)
     else:
-        return Response(define.webpage(request.userid, "manage/friends_accepted.html", [
-            frienduser.select_accepted(request.userid),
-        ], title="Friends"))
+        return {'query': frienduser.select_accepted(request.userid), 'title': "Friends"}
 
 
 @login_required
