@@ -24,7 +24,7 @@
         <link type="image/png" rel="icon" href="{{ '/static/images/favicon.png'| CDNIFY }}"/>
         <link rel="mask-icon" color="#850002" href="{{ '/static/images/favicon.svg'|CDNIFY }}"/>
 
-        {% if "imageselect" in options %}
+        {% if options and "imageselect" in options %}
             <link type="text/css" rel="stylesheet" href="{{ '/static/scripts/imageselect/imageselect.css'|CDNIFY }}"/>
         {% endif %}
 
@@ -69,7 +69,7 @@
 
 {% if options and "imageselect" in options %}
   <script src="{{ '/static/scripts/imageselect/imageselect.js'|CDNIFY}}"></script>
-  $:{RENDER("common/image_select.html", ["square_select" in options])}
+  {{ RENDER("common/image_select.html", ["square_select" in options]) }}
 {% endif %}
 {% if options and 'search' in options %}
   <script src="{{ '/static/search.js'|CDNIFY}}"></script>
