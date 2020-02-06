@@ -622,12 +622,11 @@ def manage_thumbnail_post_(request):
 
 @login_required
 def manage_tagfilters_get_(request):
-    return Response(define.webpage(request.userid, "manage/tagfilters.html", [
-        # Blocked tags
-        blocktag.select(request.userid),
-        # filterable ratings
-        profile.get_user_ratings(request.userid),
-    ], title="Tag Filters"))
+    return {
+        'blocktag': blocktag.select(request.userid),
+        'filter_ratings': profile.get_user_ratings(request.userid),
+        'title': "Tag Filters"
+    }
 
 
 @login_required
