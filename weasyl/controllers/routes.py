@@ -280,6 +280,9 @@ routes_with_templates = (
     Route_Template("/manage/collections", "control_collections",
                    {'GET': settings.manage_collections_get_, 'POST': settings.manage_collections_post_},
                    renderer='weasyl:templates/manage/collections_accepted.jinja2'),
+    Route_Template("/manage/thumbnail", "manage_thumbnail_",
+                   {'GET': settings.manage_thumbnail_get_, 'POST': settings.manage_thumbnail_post_},
+                   renderer='weasyl:templates/manage/thumbnail.jinja2'),
 )
 
 routes = (
@@ -313,8 +316,6 @@ routes = (
     # Management and settings routes.
 
 
-    Route("/manage/thumbnail", "manage_thumbnail_",
-          {'GET': settings.manage_thumbnail_get_, 'POST': settings.manage_thumbnail_post_}),
     Route("/manage/tagfilters", "control_tagfilters",
           {'GET': settings.manage_tagfilters_get_, 'POST': settings.manage_tagfilters_post_}),
     Route("/manage/avatar", "control_avatar",

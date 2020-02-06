@@ -582,16 +582,14 @@ def manage_thumbnail_get_(request):
         except WeasylError:
             source = None
 
-    return Response(define.webpage(request.userid, "manage/thumbnail.html", [
-        # Feature
-        "submit" if submitid else "char",
-        # Targetid
-        define.get_targetid(submitid, charid),
-        # Thumbnail
-        source,
-        # Exists
-        bool(source),
-    ], options=['imageselect'], title="Select Thumbnail"))
+    return {
+        'feature': "submit" if submitid else "char",
+        'targetid': define.get_targetid(submitid, charid),
+        'thumbnail': source,
+        'exists': bool(source),
+        'title': "Select Thumbnail",
+        'options': ['imageselect']
+    }
 
 
 @login_required
