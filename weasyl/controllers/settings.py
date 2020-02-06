@@ -651,18 +651,12 @@ def manage_avatar_get_(request):
     else:
         avatar_source_url = avatar_source['display_url']
 
-    return Response(define.webpage(
-        request.userid,
-        "manage/avatar.html",
-        [
-            # Avatar selection
-            avatar_source_url,
-            # Avatar selection exists
-            avatar_source_url is not None,
-        ],
-        options=["imageselect", "square_select"],
-        title="Edit Avatar"
-    ))
+    return {
+        'avatar': avatar_source_url,
+        'exists': avatar_source_url is not None,
+        'options': ["imageselect", "square_select"],
+        'title': "Edit Avatar"
+    }
 
 
 @login_required
