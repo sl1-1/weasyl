@@ -292,6 +292,9 @@ routes_with_templates = (
     Route_Template("/manage/banner", "control_banner",
                    {'GET': settings.manage_banner_get_, 'POST': settings.manage_banner_post_},
                    renderer='weasyl:templates/manage/banner.jinja2'),
+    Route_Template("/manage/alias", "control_alias",
+                   {'GET': settings.manage_alias_get_, 'POST': settings.manage_alias_post_},
+                   renderer='weasyl:templates/manage/alias.jinja2'),
 )
 
 routes = (
@@ -324,8 +327,7 @@ routes = (
 
     # Management and settings routes.
 
-    Route("/manage/alias", "control_alias",
-          {'GET': settings.manage_alias_get_, 'POST': settings.manage_alias_post_}),
+
     Route("/control/uploadavatar", "control_uploadavatar",
           {'POST': settings.control_uploadavatar_}),
 

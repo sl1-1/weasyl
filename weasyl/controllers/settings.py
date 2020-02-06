@@ -684,10 +684,7 @@ def manage_banner_post_(request):
 
 @login_required
 def manage_alias_get_(request):
-    return Response(define.webpage(request.userid, "manage/alias.html", [
-        # Alias
-        useralias.select(request.userid),
-    ], title="Edit Username Alias"))
+    return {'query': useralias.select(request.userid), 'title': "Edit Username Alias"}
 
 
 @login_required
