@@ -127,7 +127,7 @@
 
                     <!-- thumbnail -->
                     <a href="/submission/{{ item['submitid'] }}/{{ item['title']|SLUG }}">
-                        $ thumb = THUMB(item)
+                        {% set thumb = THUMB(item) %}
                         <img class="thumbnail_list_thumbnail" src="{{ thumb['display_url'] }}" alt=""/>
                     </a>
 
