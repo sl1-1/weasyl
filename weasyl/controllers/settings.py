@@ -670,7 +670,7 @@ def manage_avatar_post_(request):
 
 @login_required
 def manage_banner_get_(request):
-    return Response(define.webpage(request.userid, "manage/banner.html", title="Edit Banner"))
+    return {'title': "Edit Banner"}
 
 
 @login_required
