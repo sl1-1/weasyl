@@ -50,7 +50,7 @@
                 </div>
             {% endif %}
             <div id="detail-embed" class="pad-left pad-right">
-                {{ query['embed'] }}
+                {{ query['embed']|safe }}
             </div>
 
         {% elif submission['file_type'] in ["jpg", "png", "gif"] and cover %}
