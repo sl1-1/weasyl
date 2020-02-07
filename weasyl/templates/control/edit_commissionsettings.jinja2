@@ -2,6 +2,8 @@
 {% from 'common/stage_title.jinja2' import stage %}
 {% from 'common/commission_info.jinja2' import commission_price_display %}
 {% from 'common/macros.jinja2' import SELECTED, CHECKED, NOT_CHECKED %}
+{% from 'common/detail_tag_form.jinja2' import detail_tag_form %}
+
 
 
 {% block content %}
@@ -71,7 +73,7 @@
                         </div>
 
                         <h3 class="edit">Edit Tags</h3>
-                        {{ RENDER("common/detail_tag_form.html", [query['userid'], "preferred_tags_user", query['tags']]) }}
+                        {{ detail_tag_form(query['userid'], "preferred_tags_user", query['tags']) }}
 
                     </div>
                     <div class="di-tags">
@@ -91,7 +93,7 @@
                         </div>
 
                         <h3 class="edit">Edit Tags</h3>
-                        {{ RENDER("common/detail_tag_form.html", [query['userid'], "optout_tags_user", query['opt_out']]) }}
+                        {{ detail_tag_form(query['userid'], "optout_tags_user", query['opt_out']) }}
                     </div>
                     <div id="user-commissions" class="clear on-side">
                         <h3>Preview</h3>
