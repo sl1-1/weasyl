@@ -12,17 +12,11 @@ import define, macro
 
 
 # "STR": str,
-#                 "LOCAL_ARROW": local_arrow,
 #                 "PRICE": text_price_amount,
-#                 "TITLE": titlebar,
-#                 "RENDER": render,
 #                 "MARKDOWN_EXCERPT": text.markdown_excerpt,
 #                 "SUMMARIZE": summarize,
-#                 "SHA": CURRENT_SHA,
-#                 "NOW": get_time,
-#                 "M": macro,
+
 #                 "INLINE_JSON": html.inline_json,
-#                 "arrow": arrow,
 #                 "constants": libweasyl.constants,
 #                 "getattr": getattr,
 #                 "json": json,
@@ -142,6 +136,8 @@ jinja2_globals = {
     'path_for': path_for,
     "SYMBOL": define.text_price_symbol,
     'M': macro,
+    'SHA': define.CURRENT_SHA,
+    "NOW": define.get_time,
 }
 
 filters = {

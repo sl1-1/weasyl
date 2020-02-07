@@ -299,6 +299,10 @@ routes_with_templates = (
                    {'GET': weasyl_collections.collection_options_get_,
                     'POST': weasyl_collections.collection_options_post_},
                    renderer='weasyl:templates/manage/collection_options.jinja2'),
+
+    # Message routes.
+    Route_Template("/messages/notifications", "messages_notifications", messages.messages_notifications_,
+                   renderer='weasyl:templates/message/notifications.jinja2'),
 )
 
 routes = (
@@ -418,7 +422,6 @@ routes = (
 
     # Message routes.
     Route("/messages/remove", "messages_remove", {'POST': messages.messages_remove_}),
-    Route("/messages/notifications", "messages_notifications", messages.messages_notifications_),
     Route("/messages/submissions", "messages_submissions", messages.messages_submissions_),
 
     # Admin control routes.
