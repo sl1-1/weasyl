@@ -28,12 +28,12 @@
             <h3>{{ profile['username'] }}'s Shouts</h3>
         {% endif %}
         {% if(shouts) %}
-            {{ comment_macros.comment_thread("shouts_comments", shouts, "userid", None, profile['userid']) }}
+            {{ comment_macros.comment_thread(req.user, "shouts_comments", shouts, "userid", None, profile['userid']) }}
         {% else %}
             There are no {{ 'staff notes' if feature == "staffnotes" else 'comments' }} to display.
         {% endif %}
         {% if(myself) %}
-            {{ comment_macros.comment_form(profile['userid'], feature) }}
+            {{ comment_macros.comment_form(req.user, profile['userid'], feature) }}
         {% endif %}
     </div>
 {% endblock %}
