@@ -63,11 +63,11 @@
         {% if featured and featured['sub_media'].get('cover') %}
             <div id="user-featured">
                 {% if featured['contype'] in (10, 15) %}
-                    <h3>{{ blurb }}: <a class="color-c"
-                                        href="/submission/{{ featured['submitid'] }}/{{ featured['title'] | SLUG }}">{{ featured['title'] }}</a>
+                    {% set featured_link = req.route_path('submission_detail_profile', name=featured['username']|LOGIN, submitid=featured['submitid'], slug=featured['title'] | SLUG) %}
+                    <h3>{{ blurb }}: <a class="color-c" href="{{ featured_link }}">{{ featured['title'] }}</a>
                     </h3>
                     <div id="uf-image">
-                        <a href="/submission/{{ featured['submitid'] }}/{{ featured['title'] | SLUG }}">
+                        <a href="{{ featured_link }}">
                             <img src="{{ featured['sub_media']['cover'][0]['display_url'] }}"
                                  alt="{{ blurb }} image: {{ featured['title'] }}"/>
                         </a>

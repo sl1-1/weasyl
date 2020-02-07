@@ -132,7 +132,8 @@
                     {% for i in older %}
                         {% set thumb = THUMB(i) %}
                         {% set id = 'id="folder-nav-prev"'|safe if loop.index == older|length else '' %}
-                        <a class="nav-link older" {{ id }} href="/submission/{{ i['submitid'] }}/{{ i['title'] | SLUG }}">
+                        <a class="nav-link older" {{ id }}
+                           href="{{req.route_path('submission_detail_profile', name=i['username']|LOGIN, submitid=i['submitid'], slug=i['title']|SLUG)}}">
                             <span class="text">&#171; Older</span>
                             {% if i['rating'] == R.MATURE.code %}
                                 <span class="rating mature">The following submission is rated Mature:</span>
@@ -149,7 +150,7 @@
                         {% set thumb = THUMB(i) %}
                         {% set id = 'id="folder-nav-next"'|safe if loop.index0 == 0 else '' %}
                         <a class="nav-link newer" {{ id }}
-                           href="/submission/{{ i['submitid'] }}/{{ i['title'] | SLUG }}">
+                           href="{{req.route_path('submission_detail_profile', name=i['username']|LOGIN, submitid=i['submitid'], slug=i['title']|SLUG)}}">
                             {% if i['rating'] == R.MATURE.code %}
                                 <span class="rating mature">The following submission is rated Mature:</span>
                             {% elif i['rating'] == R.EXPLICIT.code %}
