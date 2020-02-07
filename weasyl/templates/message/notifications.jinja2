@@ -7,11 +7,11 @@
 
 {% macro SUBMISSION_LINK(id, title) -%}
     <a href="/submission/{{ id }}/{{ title | SLUG }}">{{ title }}</a>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro CHARACTER_LINK(id, title) -%}
     <a href="/character/{{ id }}/{{ title | SLUG }}">{{ title }}</a>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro JOURNAL_LINK(id, title) -%}
     <a href="/journal/{{ id }}/{{ title | SLUG }}">{{ title }}</a>
@@ -19,11 +19,11 @@
 
 {% macro SUBMISSION_COMMENT_LINK(id, title, cid, msg) -%}
     <a href="/submission/{{ id }}/{{ title | SLUG }}#cid{{ cid }}">{{ msg }}</a>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro CHARACTER_COMMENT_LINK(id, title, cid, msg) -%}
     <a href="/character/{{ id }}/{{ title | SLUG }}#cid{{ cid }}">{{ msg }}</a>
-{% endmacro %}
+{%- endmacro %}
 
 {% macro JOURNAL_COMMENT_LINK(id, title, cid, msg) -%}
     <a href="/journal/{{ id }}/{{ title | SLUG }}#cid{{ cid }}">{{ msg }}</a>
@@ -75,7 +75,7 @@
     {% elif item['type'] == 4016 %}
         {{ USER_LINK(item['username']) }} left a {{ STAFF_NOTE_LINK(item['ownername'], item['commentid'], 'reply' ) }} to {{ STAFF_NOTE_LINK(item['ownername'], item['replyid'], 'your comment' ) }} on {{ USER_LINK(item['ownername']) }}'s staff notes.
     {% elif item['type'] == 4020 %}
-        {{ USER_LINK(item['username']) }} left a '
+        {{ USER_LINK(item['username']) }} left a
         <a href="/submission/{{ item['submitid'] }}/{{ item['title'] | SLUG }}#cid{{ item['commentid'] }}">comment</a> on your submission {{ SUBMISSION_LINK(item['submitid'], item['title']) }}.
     {% elif item['type'] == 4025 %}
         {{ USER_LINK(item['username']) }} left a {{ SUBMISSION_COMMENT_LINK(item['submitid'], item['title'], item['commentid'], 'reply') }} to {{ SUBMISSION_COMMENT_LINK(item['submitid'], item['title'], item['replyid'], 'your comment') }} on the submission {{ SUBMISSION_LINK(item['submitid'], item['title']) }}.
