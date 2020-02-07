@@ -1,6 +1,7 @@
 {% extends 'common/base.jinja2' %}
 {% import 'user/user_tools.jinja2' as user_macro %}
 {% import 'common/thumbnail_grid_item.jinja2' as thumbnail %}
+{% from 'common/page_navigation.jinja2' import page_navigation %}
 {% block content %}
     <div id="collections_stage" class="stage">
         {{ user_macro.USERTOOLS(profile, userinfo, relationship) }}
@@ -21,7 +22,7 @@
                     {% endif %}
                 {% endfor %}
             </ul>
-            {{ RENDER("common/page_navigation.html", [result]) }}
+            {{ page_navigation(result) }}
         {% else %}:
                  There are no collections to display.
         {% endif %}

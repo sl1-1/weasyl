@@ -2,6 +2,7 @@
 {% import 'user/user_tools.jinja2' as user_macro %}
 {% import 'common/comments.jinja2' as comment_macros %}
 {% import 'common/thumbnail_grid_item.jinja2' as thumbnail %}
+{% from 'common/page_navigation.jinja2' import page_navigation %}
 {% block content %}
     <div id="submissions-stage" class="stage clear">
         {{ user_macro.USERTOOLS(profile, userinfo, relationship) }}
@@ -63,7 +64,7 @@
                         {% endfor %}
                     </ul>
                     <div style="padding-top: 1.4em;" class="pad-left pad-right">
-                        {{ RENDER("common/page_navigation.html", [result]) }}
+                        {{ page_navigation(result) }}
                     </div>
                 </div>
             {% else %}
