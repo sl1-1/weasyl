@@ -303,6 +303,8 @@ routes_with_templates = (
     # Message routes.
     Route_Template("/messages/notifications", "messages_notifications", messages.messages_notifications_,
                    renderer='weasyl:templates/message/notifications.jinja2'),
+    Route_Template("/messages/submissions", "messages_submissions", messages.messages_submissions_,
+                   renderer='weasyl:templates/message/submissions_thumbnails.jinja2'),
 )
 
 routes = (
@@ -422,7 +424,7 @@ routes = (
 
     # Message routes.
     Route("/messages/remove", "messages_remove", {'POST': messages.messages_remove_}),
-    Route("/messages/submissions", "messages_submissions", messages.messages_submissions_),
+
 
     # Admin control routes.
     Route("/admincontrol", "admincontrol", admin.admincontrol_),

@@ -98,6 +98,7 @@ def messages_notifications_(request):
         tag_section(message.select_notifications(request.userid), 'notifications') +
         tag_section(message.select_journals(request.userid), 'journals')
     )
+    define._page_header_info.refresh(request.userid)
     return {'query': sort_notifications(notifications), 'title': 'Notifications'}
 
 
@@ -106,10 +107,9 @@ def messages_submissions_(request):
     form = request.web_input(feature="", backtime=None, nexttime=None)
 
     define._page_header_info.refresh(request.userid)
-    return Response(define.webpage(request.userid, "message/submissions_thumbnails.html", [
-        # Feature
-        form.feature,
-        # Submissions
-        message.select_submissions(request.userid, 66, include_tags=False,
-                                   backtime=define.get_int(form.backtime), nexttime=define.get_int(form.nexttime)),
-    ]))
+    return {
+        'feature': form.feature,
+        'query': message.select_submissions(request.userid, 66, include_tags=False,
+                                            backtime=define.get_int(form.backtime),
+                                            nexttime=define.get_int(form.nexttime))
+    }
