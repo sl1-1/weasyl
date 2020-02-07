@@ -2,6 +2,7 @@
 {% import 'common/comments.jinja2' as comment_macros %}
 {% import 'user/user_tools.jinja2' as user_macro %}
 {% from 'common/detail_tag_form.jinja2' import detail_tag_form %}
+{% from 'common/detail_report_form.jinja2' import detail_report_form %}
 
 
 {% block content %}
@@ -80,7 +81,7 @@
     <div id="detail-content" class="content clear">
 
         <div id="detail-description">
-            {{ RENDER("common/detail_report_form.html", [query['charid'], "char", violations]) }}
+            {{ detail_report_form(query['charid'], "char", violations) }}
             <div class="formatted-content">
                 <dl id="char-stats" class="clear">
                     <dt>Name:</dt>
