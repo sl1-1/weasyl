@@ -295,6 +295,10 @@ routes_with_templates = (
     Route_Template("/manage/alias", "control_alias",
                    {'GET': settings.manage_alias_get_, 'POST': settings.manage_alias_post_},
                    renderer='weasyl:templates/manage/alias.jinja2'),
+    Route_Template("/control/collections", "collection_options",
+                   {'GET': weasyl_collections.collection_options_get_,
+                    'POST': weasyl_collections.collection_options_post_},
+                   renderer='weasyl:templates/manage/collection_options.jinja2'),
 )
 
 routes = (
@@ -359,8 +363,7 @@ routes = (
     Route("/control/unignoreuser", "control_unignoreuser", {'POST': settings.control_unignoreuser_}),
 
     Route("/control/sfwtoggle", "control_sfw_toggle", {'POST': settings.sfw_toggle_}),
-    Route("/control/collections", "collection_options",
-          {'GET': weasyl_collections.collection_options_get_, 'POST': weasyl_collections.collection_options_post_}),
+
 
     Route("/frienduser", "frienduser", {'POST': interaction.frienduser_}),
     Route("/unfrienduser", "unfrienduser", {'POST': interaction.unfrienduser_}),
