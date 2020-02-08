@@ -95,16 +95,15 @@
                     </ul>
                 </div>
 
-            </div></nav>
+            </div>
+        </nav>
 
         <img id="footer-wesley" src="{{ '/static/images/wesley1.png'| CDNIFY }}" alt=""/>
 
         <p id="footer-info">
-            $if active_users_string:
-            ${active_users_string}.
+            <a href="https://github.com/Weasyl/weasyl/commit/{{ SHA }}">{{ SHA }}</a>
+            &middot; Copyright &copy; 2012-{{ arrow.now().year }} Weasyl LLC
             <br>
-            <a href="https://github.com/Weasyl/weasyl/commit/${SHA}">${SHA}</a> &middot; Copyright &copy;
-            2012?${arrow.now().year} Weasyl LLC<br>
             <a href="https://github.com/Weasyl/weasyl">Weasyl is an open source project</a>
         </p>
 

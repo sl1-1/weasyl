@@ -138,6 +138,7 @@ jinja2_globals = {
     'M': macro,
     'SHA': define.CURRENT_SHA,
     "NOW": define.get_time,
+    "resource_path": define.get_resource_path,
 }
 
 filters = {

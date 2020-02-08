@@ -7,7 +7,7 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
         <meta name="google-site-verification" content="2BHBQHl4B1zhVRT4jj6IZ1fIn0YMXGkv8kEpuoMf81k"/>
         {% if title %}
-            <title>{{ title }} ? Weasyl</title>
+            <title>{{ title }} — Weasyl</title>
         {% else %}
             <title>Weasyl</title>
         {% endif %}
@@ -18,8 +18,8 @@
             document.documentElement.classList.add("js");
         </script>
 
-        <link rel="stylesheet" href="/static/fonts/museo500.css"/>
-        <link rel="stylesheet" href="/css/site-b29538e127.css"/>
+        <link rel="stylesheet" href="{{ '/static/fonts/museo500.css' | CDNIFY }}"/>
+        <link rel="stylesheet" href="{{ resource_path('css/site.css') }}"/>
 
         <link type="image/png" rel="icon" href="{{ '/static/images/favicon.png'| CDNIFY }}"/>
         <link rel="mask-icon" color="#850002" href="{{ '/static/images/favicon.svg'|CDNIFY }}"/>
@@ -48,9 +48,9 @@
 </head>
 <body>
 <div id="page-container">
-{% include 'common/header.jinja2' %}
-{% block content %}{% endblock %}
-{% include 'common/footer.jinja2' %}
+    {% include 'common/header.jinja2' %}
+    {% block content %}{% endblock %}
+    {% include 'common/footer.jinja2' %}
 </div>
 
 <script src="/static/jquery-2.2.4.min.js"></script>
@@ -58,21 +58,21 @@
 <script src="/static/marked.js"></script>
 <script src="/static/scripts.js?"></script>
 
-<script src="{{ '/static/scripts/yall.min.js'|CDNIFY}}"></script>
+<script src="{{ '/static/scripts/yall.min.js'|CDNIFY }}"></script>
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    yall({
-      threshold: 100
+    document.addEventListener("DOMContentLoaded", function () {
+        yall({
+            threshold: 100
+        });
     });
-  });
 </script>
 
 {% if options and "imageselect" in options %}
-  <script src="{{ '/static/scripts/imageselect/imageselect.js'|CDNIFY}}"></script>
-  {{ RENDER("common/image_select.html", ["square_select" in options]) }}
+    <script src="{{ '/static/scripts/imageselect/imageselect.js'|CDNIFY }}"></script>
+    {{ RENDER("common/image_select.html", ["square_select" in options]) }}
 {% endif %}
 {% if options and 'search' in options %}
-  <script src="{{ '/static/search.js'|CDNIFY}}"></script>
+    <script src="{{ '/static/search.js'|CDNIFY }}"></script>
 {% endif %}
 </body>
 </html>
