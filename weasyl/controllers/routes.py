@@ -305,6 +305,11 @@ routes_with_templates = (
                    renderer='weasyl:templates/message/notifications.jinja2'),
     Route_Template("/messages/submissions", "messages_submissions", messages.messages_submissions_,
                    renderer='weasyl:templates/message/submissions_thumbnails.jinja2'),
+
+    # Moderation routes.
+    Route_Template("/modcontrol/contentbyuser", "modcontrol_contentbyuser", moderation.modcontrol_contentbyuser_,
+                   renderer='weasyl:templates/modcontrol/contentbyuser.jinja2'),
+
 )
 
 routes = (
@@ -395,7 +400,6 @@ routes = (
     Route("/modcontrol/reports", "modcontrol_reports", moderation.modcontrol_reports_),
     Route("/modcontrol/copynotetostaffnotes", "modcontrol_copynotetostaffnotes", {'POST': moderation.modcontrol_copynotetostaffnotes_post_}),
     Route("/modcontrol/closereport", "modcontrol_closereport", {'POST': moderation.modcontrol_closereport_}),
-    Route("/modcontrol/contentbyuser", "modcontrol_contentbyuser", moderation.modcontrol_contentbyuser_),
     Route("/modcontrol/massaction", "modcontrol_massaction", {'POST': moderation.modcontrol_massaction_}),
     Route("/modcontrol/hide", "modcontrol_hide", {'POST': moderation.modcontrol_hide_}),
     Route("/modcontrol/unhide", "modcontrol_unhide", {'POST': moderation.modcontrol_unhide_}),

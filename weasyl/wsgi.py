@@ -30,6 +30,7 @@ def setup_jinja2_env():
     env = config.get_jinja2_environment()
     env.filters.update(jinja2_helpers.filters)
     env.globals.update(jinja2_helpers.jinja2_globals)
+    env.add_extension('jinja2.ext.do')
 
 
 config.include('pyramid_jinja2')

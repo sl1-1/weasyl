@@ -80,10 +80,11 @@ def modcontrol_contentbyuser_(request):
     characters = moderation.charactersbyuser(request.userid, form) if 'c' in form.features else []
     journals = moderation.journalsbyuser(request.userid, form) if 'j' in form.features else []
 
-    return Response(define.webpage(request.userid, "modcontrol/contentbyuser.html", [
-        form.name,
-        sorted(submissions + characters + journals, key=lambda item: item['unixtime'], reverse=True),
-    ], title=form.name + "'s Content"))
+    return {
+        'name': form.name,
+        'query': sorted(submissions + characters + journals, key=lambda item: item['unixtime'], reverse=True),
+        'title': form.name + "'s Content"
+    }
 
 
 @moderator_only
