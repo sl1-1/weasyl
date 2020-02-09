@@ -8,7 +8,6 @@ import pytz
 from pyramid.decorator import reify
 from sqlalchemy import orm
 
-from libweasyl.common import minimize_media
 from libweasyl.models.helpers import clauses_for
 from libweasyl.models.meta import Base
 from libweasyl.models import tables
@@ -87,67 +86,6 @@ class Login(Base):
             return "mod"
         if self.is_dev:
             return "dev"
-
-    def is_friends_with(self, other):
-        """
-        Returns True if this user is in a friendship with the other user, or
-        False otherwise.
-        """
-        return bool(
-            Friendship.query
-            .filter(sa.or_(
-                (Friendship.userid == self.userid) & (Friendship.otherid == other),
-                (Friendship.otherid == self.userid) & (Friendship.userid == other)))
-            .count())
-
-    def is_ignoring(self, other):
-        """
-        Returns True if this user is ignoring the other user, or False
-        otherwise.
-        """
-        return bool(
-            Ignorama.query
-            .filter(
-                (Ignorama.userid == self.userid) & (Ignorama.otherid == other))
-            .count())
-
-    def is_ignored_by(self, other):
-        """
-        Returns True if the other user is ignoring this user, or False
-        otherwise.
-        """
-        return bool(
-            Ignorama.query
-            .filter(
-                (Ignorama.userid == other) & (Ignorama.otherid == self.userid))
-            .count())
-
-    def is_permitted_rating(self, rating):
-        """
-        Returns True if this user's is old enough to view content with the
-        given rating. Otherwise, returns False.
-        """
-        return self.info.age >= rating.minimum_age
-
-    def can_view_rating(self, rating):
-        """
-        Return True if this user is permitted to and has opted to view content
-        with the given rating. Otherwise, returns False.
-        """
-        if not self.is_permitted_rating(rating):
-            return False
-        return self.profile.maximum_content_rating >= rating
-
-    def __json__(self, request):
-        """
-        Returns a dictionary representing this user for export to JSON.
-        """
-        return {
-            'login': self.login_name,
-            'username': self.profile.username,
-            'full_name': self.profile.full_name,
-            'media': minimize_media(request, self.media),
-        }
 
 
 class AuthBCrypt(Base):

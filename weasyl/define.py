@@ -12,11 +12,9 @@ import logging
 import numbers
 import datetime
 import urlparse
-import functools
 import pkgutil
-import subprocess
 
-import anyjson as json
+import json
 import arrow
 from pyramid.threadlocal import get_current_request
 import pytz
@@ -27,6 +25,7 @@ from sqlalchemy.exc import OperationalError
 from web.template import Template
 
 import libweasyl.constants
+from libweasyl.cache import region
 from libweasyl.legacy import UNIXTIME_OFFSET as _UNIXTIME_OFFSET, get_sysname
 from libweasyl.models.tables import metadata as meta
 from libweasyl import html, text, ratings, security, staff
@@ -34,9 +33,9 @@ from libweasyl import html, text, ratings, security, staff
 from weasyl import config
 from weasyl import errorcode
 from weasyl import macro
-from weasyl.cache import region
 from weasyl.config import config_obj, config_read_setting, config_read_bool
 from weasyl.error import WeasylError
+from weasyl.macro import MACRO_SUPPORT_ADDRESS
 
 
 _shush_pyflakes = [sqlalchemy.orm]
@@ -57,18 +56,7 @@ _load_resources()
 
 
 def record_timing(func):
-    key = 'timing.{0.__module__}.{0.__name__}'.format(func)
-
-    @functools.wraps(func)
-    def wrapper(*a, **kw):
-        start = time.time()
-        try:
-            return func(*a, **kw)
-        finally:
-            delta = time.time() - start
-            metric('timing', key, delta)
-
-    return wrapper
+    return func
 
 
 _sqlalchemy_url = config_obj.get('sqlalchemy', 'url')
@@ -151,7 +139,8 @@ def serializable_retry(action, limit=16):
                     raise
 
 
-CURRENT_SHA = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
+with open(os.path.join(macro.MACRO_APP_ROOT, "version.txt")) as f:
+    CURRENT_SHA = f.read().strip()
 
 
 # Caching all templates. Parsing templates is slow; we don't need to do it all
@@ -330,21 +319,29 @@ def _get_csrf_input():
 
 
 @region.cache_on_arguments()
-@record_timing
-def _get_config(userid):
-    return engine.scalar("SELECT config FROM profile WHERE userid = %(user)s", user=userid)
+def _get_all_config(userid):
+    row = engine.execute(
+        "SELECT login.settings, login.voucher IS NOT NULL, profile.config"
+        " FROM login INNER JOIN profile USING (userid)"
+        " WHERE userid = %(user)s",
+        user=userid,
+    ).first()
+
+    return list(row)
 
 
 def get_config(userid):
     if not userid:
         return ""
-    return _get_config(userid)
+    return _get_all_config(userid)[2]
 
 
-@region.cache_on_arguments()
-@record_timing
 def get_login_settings(userid):
-    return engine.scalar("SELECT settings FROM login WHERE userid = %(user)s", user=userid)
+    return _get_all_config(userid)[0]
+
+
+def is_vouched_for(userid):
+    return _get_all_config(userid)[1]
 
 
 @region.cache_on_arguments()
@@ -375,9 +372,9 @@ def get_rating(userid):
     if not userid:
         return ratings.GENERAL.code
 
-    profile_settings = get_profile_settings(userid)
-
     if is_sfw_mode():
+        profile_settings = get_profile_settings(userid)
+
         # if no explicit max SFW rating picked assume general as a safe default
         return profile_settings.max_sfw_rating
 
@@ -823,7 +820,7 @@ def common_status_page(userid, status):
                 userid,
                 "Your account has been permanently banned and you are no longer allowed "
                 "to sign in.\n\n%s\n\nIf you believe this ban is in error, please "
-                "contact support@weasyl.com for assistance." % (reason,))
+                "contact %s for assistance." % (reason, MACRO_SUPPORT_ADDRESS))
 
         elif status == 'suspended':
             suspension = moderation.get_suspension(userid)
@@ -832,7 +829,7 @@ def common_status_page(userid, status):
                 "Your account has been temporarily suspended and you are not allowed to "
                 "be logged in at this time.\n\n%s\n\nThis suspension will be lifted on "
                 "%s.\n\nIf you believe this suspension is in error, please contact "
-                "support@weasyl.com for assistance." % (suspension.reason, convert_date(suspension.release)))
+                "%s for assistance." % (suspension.reason, convert_date(suspension.release), MACRO_SUPPORT_ADDRESS))
 
 
 _content_types = {
@@ -1035,13 +1032,17 @@ def query_string(query):
     return urllib.urlencode(pairs)
 
 
+_REQUESTS_PROXY = config_read_setting('requests_wrapper', section='proxy')
+_REQUESTS_PROXIES = {} if _REQUESTS_PROXY is None else dict.fromkeys(['http', 'https'], _REQUESTS_PROXY)
+
+
 def _requests_wrapper(func_name):
     func = getattr(requests, func_name)
 
     def wrapper(*a, **kw):
         request = get_current_request()
         try:
-            return func(*a, **kw)
+            return func(*a, proxies=_REQUESTS_PROXIES, **kw)
         except Exception as e:
             request.log_exc(level=logging.DEBUG)
             w = WeasylError('httpError')
@@ -1054,12 +1055,9 @@ def _requests_wrapper(func_name):
 http_get = _requests_wrapper('get')
 http_post = _requests_wrapper('post')
 
-# This will be set by twisted.
-statsFactory = None
-
 
 def metric(*a, **kw):
-    statsFactory.metric(*a, **kw)
+    pass
 
 
 def iso8601(unixtime):

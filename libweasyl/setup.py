@@ -19,13 +19,12 @@ setup(
     ],
     package_data={
         'libweasyl': [
-            'alembic/*.py', 'alembic/versions/*.py',
+            'alembic/*.py', 'alembic/script.py.mako', 'alembic/versions/*.py',
             'test/data/*',
         ],
     },
     install_requires=[
-        'alembic==1.3.3',
-        'anyjson==0.3.3',
+        'alembic==1.4.0',
         'arrow==0.15.2',
         'bcrypt==3.1.7',
         'dogpile.cache==0.9.0',
@@ -33,7 +32,7 @@ setup(
         'misaka==1.0.3+weasyl.6',    # https://github.com/Weasyl/misaka
         'oauthlib==2.1.0',
         'Pillow==6.2.2',
-        'psycopg2cffi==2.7.7',
+        'psycopg2cffi==2.8.1',
         'pyramid~=1.10.4',
         'pytz==2019.3',
         'sanpera==0.1.1+weasyl.6',   # https://github.com/Weasyl/sanpera

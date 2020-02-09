@@ -20,7 +20,11 @@ from weasyl import (
 # Control panel functions
 @login_required
 def control_(request):
-    return {'premium': define.get_premium(request.userid), 'title': "Settings"}
+    return {
+        'premium': define.get_premium(request.userid),
+        'vouched': define.is_vouched_for(request.userid),
+        'title': "Settings"
+    }
 
 
 @login_required
@@ -446,7 +450,7 @@ def control_apikeys_post_(request):
 @login_required
 def control_tagrestrictions_get_(request):
     return {
-        'tags': searchtag.query_user_restricted_tags(request.userid),
+        'tags': sorted(searchtag.query_user_restricted_tags(request.userid)),
         'title': "Edit Community Tagging Restrictions"
     }
 
@@ -456,10 +460,8 @@ def control_tagrestrictions_get_(request):
 def control_tagrestrictions_post_(request):
     tags = searchtag.parse_restricted_tags(request.params["tags"])
     searchtag.edit_user_tag_restrictions(request.userid, tags)
-    return {
-        'tags': searchtag.query_user_restricted_tags(request.userid),
-        'title': "Edit Community Tagging Restrictions"
-    }
+
+    raise HTTPSeeOther(location=request.route_path('control_tagrestrictions'))
 
 
 @login_required

@@ -324,6 +324,7 @@ routes = (
     Route("/force/resetpassword", "force_reset_password", {'POST': user.force_resetpassword_}),
     Route("/force/resetbirthday", "force_reset_birthday", {'POST': user.force_resetbirthday_}),
     Route("/verify/emailchange", "verify_emailchange", {'GET': user.verify_emailchange_get_}),
+    Route("/vouch", "vouch", {'POST': user.vouch_}),
 
     # # Profile views.
     Route("/~{name}/{link_type}", "profile_media", profile.profile_media_),
@@ -458,6 +459,8 @@ routes = (
     }),
 
     Route("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_),
+
+    Route("/help/verification", "help_verification", info.help_verification_),
 
     # OAuth2 routes.
     Route("/api/oauth2/authorize", "oauth2_authorize",
