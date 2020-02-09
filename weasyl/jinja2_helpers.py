@@ -7,6 +7,7 @@ from libweasyl.models.users import Login
 import arrow
 
 from pyramid.threadlocal import get_current_request
+from pyramid_jinja2.filters import resource_url_filter, route_url_filter
 
 import define, macro
 
@@ -148,7 +149,9 @@ filters = {
     'CDNIFY': CDNIFY,
     'MARKDOWN': MARKDOWN,
     'MARKDOWN_EXCERPT': MARKDOWN_EXCERPT,
-    'SLUG': SLUG
+    'SLUG': SLUG,
+    'route_url': route_url_filter,
+    'resource_url': resource_url_filter,
 }
 
 
