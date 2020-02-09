@@ -120,3 +120,28 @@
     {% endfor %}
     </div>
 {%- endmacro %}
+
+{% macro comments_flat(container, query, additional=None) -%}
+    <div id="${container}" class="comments">
+        {% for i in query %}
+            <div class="comment">
+                <a href="/~{{ i['username']| LOGIN }}" class="avatar">
+                    {% set avatar = i['user_media']['avatar'][0] %}
+                    <img src="{{ avatar['display_url'] }}" alt=""/>
+                </a>
+                <div class="comment-content">
+                    <p class="byline">
+                        <a href="/~{{ i['username'] | LOGIN }}" class="username">{{ i['username'] }}</a>
+                        <i>on</i> <b>{{ i['unixtime'] | DATE }}</b> <i>at</i> {{ i['unixtime'] }}
+                    </p>
+                    <div class="formatted-content">
+                        {{ i['content'] | MARKDOWN }}
+                        {% if additional %}
+                            <p><strong>(&nbsp;{{ i[additional] }}&nbsp;)</strong></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{%- endmacro %}

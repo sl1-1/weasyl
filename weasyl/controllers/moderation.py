@@ -15,13 +15,12 @@ from weasyl.error import WeasylError
 # Moderator control panel functions
 @moderator_only
 def modcontrol_(request):
-    return Response(define.webpage(request.userid, "modcontrol/modcontrol.html", title="Moderator Control Panel"))
+    return {'title': "Moderator Control Panel"}
 
 
 @moderator_only
 def modcontrol_suspenduser_get_(request):
-    return Response(define.webpage(request.userid, "modcontrol/suspenduser.html",
-                                   (moderation.BAN_TEMPLATES,), title="User Suspensions"))
+    return {'templates': moderation.BAN_TEMPLATES, 'title': "User Suspensions"}
 
 
 @moderator_only
@@ -40,23 +39,23 @@ def modcontrol_report_(request):
     r = report.select_view(request.userid, form)
     blacklisted_tags = moderation.gallery_blacklisted_tags(request.userid, r.target.userid)
 
-    return Response(define.webpage(request.userid, "modcontrol/report.html", [
-        request.userid,
-        r,
-        blacklisted_tags,
-    ], title="View Reported " + r.target_type.title()))
+    return {
+        'my_userid': request.userid,
+        'report': r,
+        'blacklisted_tags': blacklisted_tags,
+        'title': "View Reported " + r.target_type.title()
+    }
 
 
 @moderator_only
 def modcontrol_reports_(request):
     form = request.web_input(status="open", violation="", submitter="")
-    return Response(define.webpage(request.userid, "modcontrol/reports.html", [
-        # Method
-        {"status": form.status, "violation": int(form.violation or -1), "submitter": form.submitter},
-        # Reports
-        report.select_list(request.userid, form),
-        macro.MACRO_REPORT_VIOLATION,
-    ], title="Reported Content"))
+    return {
+        'method': {"status": form.status, "violation": int(form.violation or -1), "submitter": form.submitter},
+        'query': report.select_list(request.userid, form),
+        'violations': macro.MACRO_REPORT_VIOLATION,
+        'title': "Reported Content"
+    }
 
 
 @moderator_only
@@ -149,10 +148,7 @@ def modcontrol_unhide_(request):
 @moderator_only
 def modcontrol_manageuser_(request):
     form = request.web_input(name="")
-
-    return Response(define.webpage(request.userid, "modcontrol/manageuser.html", [
-        moderation.manageuser(request.userid, form),
-    ], title="User Management"))
+    return {'query': moderation.manageuser(request.userid, form), 'title': "User Management"}
 
 
 @moderator_only
@@ -239,12 +235,9 @@ def modcontrol_spamqueue_journal_get_(request):
         WHERE jo.is_spam
             AND jo.settings !~ 'h'
     """).fetchall()
-    return Response(define.webpage(
-        request.userid,
-        "modcontrol/spamqueue/journal.html",
-        [query],
-        title="Journal Spam Queue"
-    ))
+    return {'query': query,
+            'title': "Journal Spam Queue"
+            }
 
 
 @moderator_only
@@ -301,12 +294,9 @@ def modcontrol_spamqueue_submission_get_(request):
         WHERE su.is_spam
             AND su.settings !~ 'h'
     """).fetchall()
-    return Response(define.webpage(
-        request.userid,
-        "modcontrol/spamqueue/submission.html",
-        [query],
-        title="Submission Spam Queue"
-    ))
+    return {'query': query,
+            'title': "Submission Spam Queue"
+            }
 
 
 @moderator_only

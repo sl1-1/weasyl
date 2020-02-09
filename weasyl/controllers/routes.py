@@ -307,8 +307,25 @@ routes_with_templates = (
                    renderer='weasyl:templates/message/submissions_thumbnails.jinja2'),
 
     # Moderation routes.
+    Route_Template("/modcontrol", "modcontrol", moderation.modcontrol_,
+                   renderer='weasyl:templates/modcontrol/modcontrol.jinja2'),
     Route_Template("/modcontrol/contentbyuser", "modcontrol_contentbyuser", moderation.modcontrol_contentbyuser_,
                    renderer='weasyl:templates/modcontrol/contentbyuser.jinja2'),
+    Route_Template("/modcontrol/manageuser", "modcontrol_manageuser", moderation.modcontrol_manageuser_,
+                   renderer='weasyl:templates/modcontrol/manageuser.jinja2'),
+    Route_Template("/modcontrol/report", "modcontrol_report", moderation.modcontrol_report_,
+                   renderer='weasyl:templates/modcontrol/report.jinja2'),
+    Route_Template("/modcontrol/reports", "modcontrol_reports", moderation.modcontrol_reports_,
+                   renderer='weasyl:templates/modcontrol/reports.jinja2'),
+    Route_Template("/modcontrol/suspenduser", "modcontrol_suspenduser",
+                   {'GET': moderation.modcontrol_suspenduser_get_,
+                    'POST': moderation.modcontrol_suspenduser_post_},
+                   renderer='weasyl:templates/modcontrol/suspenduser.jinja2'),
+    Route_Template("/modcontrol/spamqueue/journal", "modcontrol_spamqueue_journal",
+                   {"GET": moderation.modcontrol_spamqueue_journal_get_,
+                    "POST": moderation.modcontrol_spamqueue_journal_post_, },
+                   renderer='weasyl:templates/modcontrol/spamqueue/journal.jinja2'),
+
 
 )
 
@@ -392,28 +409,16 @@ routes = (
     Route("/favorite", "favorite", {'POST': interaction.favorite_}),
 
     # Moderation routes.
-    Route("/modcontrol", "modcontrol", moderation.modcontrol_),
-    Route("/modcontrol/suspenduser", "modcontrol_suspenduser", {
-        'GET': moderation.modcontrol_suspenduser_get_,
-        'POST': moderation.modcontrol_suspenduser_post_,
-    }),
-    Route("/modcontrol/report", "modcontrol_report", moderation.modcontrol_report_),
-    Route("/modcontrol/reports", "modcontrol_reports", moderation.modcontrol_reports_),
     Route("/modcontrol/copynotetostaffnotes", "modcontrol_copynotetostaffnotes", {'POST': moderation.modcontrol_copynotetostaffnotes_post_}),
     Route("/modcontrol/closereport", "modcontrol_closereport", {'POST': moderation.modcontrol_closereport_}),
     Route("/modcontrol/massaction", "modcontrol_massaction", {'POST': moderation.modcontrol_massaction_}),
     Route("/modcontrol/hide", "modcontrol_hide", {'POST': moderation.modcontrol_hide_}),
     Route("/modcontrol/unhide", "modcontrol_unhide", {'POST': moderation.modcontrol_unhide_}),
-    Route("/modcontrol/manageuser", "modcontrol_manageuser", moderation.modcontrol_manageuser_),
     Route("/modcontrol/removeavatar", "modcontrol_removeavatar", {'POST': moderation.modcontrol_removeavatar_}),
     Route("/modcontrol/removebanner", "modcontrol_removebanner", {'POST': moderation.modcontrol_removebanner_}),
     Route("/modcontrol/editprofiletext", "modcontrol_editprofiletext", {'POST': moderation.modcontrol_editprofiletext_}),
     Route("/modcontrol/editcatchphrase", "modcontrol_editcatchphrase", {'POST': moderation.modcontrol_editcatchphrase_}),
     Route("/modcontrol/edituserconfig", "modcontrol_edituserconfig", {'POST': moderation.modcontrol_edituserconfig_}),
-    Route("/modcontrol/spamqueue/journal", "modcontrol_spamqueue_journal", {
-        "GET": moderation.modcontrol_spamqueue_journal_get_,
-        "POST": moderation.modcontrol_spamqueue_journal_post_,
-    }),
     Route("/modcontrol/spamqueue/submission", "modcontrol_spamqueue_submission", {
         "GET": moderation.modcontrol_spamqueue_submission_get_,
         "POST": moderation.modcontrol_spamqueue_submission_post_,
