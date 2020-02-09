@@ -16,9 +16,9 @@
         {% if not req.user %}
             <h3 id="header-guest">
                 Welcome!
-                <a id="hg-login" href="/signin" class="typeface-a color-a">Sign in</a>,
-                <a id="hg-register" href="/signup" class="typeface-a color-a">register</a>,
-                or learn more <a href="/help/about" class="typeface-a color-a">about Weasyl</a>.
+                <a id="hg-login" href="{{ 'signin'| route_url }}" class="typeface-a color-a">Sign in</a>,
+                <a id="hg-register" href="{{ 'signup' | route_url }}" class="typeface-a color-a">register</a>,
+                or learn more <a href="{{ 'help_about' | route_url }}" class="typeface-a color-a">about Weasyl</a>.
             </h3>
         {% else %}
             <div id="header-user" data-user-type="{{ req.user.user_type or ''}}">
@@ -29,63 +29,70 @@
                     <i>Welcome,</i> <a id="username" class="username" href="/~{{ req.user.login_name }}">{{ req.user.profile['username'] }}</a>
                 </h2>
                 <div id="header-utility">
-                    <form class="sfw-toggle" action="/control/sfwtoggle" method="POST">
+                    <form class="sfw-toggle" action="{{ 'control_sfw_toggle' | route_url }}" method="POST">
                         <input type="hidden" name="token" value="{{ TOKEN() }}" />
                         <input type="hidden" name="redirect" value="{{ PATH() }}">
-                        <button class="link-button {{ 'on' if sfw() else 'off' }}">
+                        <button class="link-button {{ 'sfw' if sfw() else 'nsfw' }}">
                             sfw {{ 'on' if sfw() else 'off' }}
                         </button>
                     </form>
                     <span>|</span>
-                    <a href="/notes">inbox</a> <span>|</span>
-                    <a href="/control">settings</a> <span>|</span>
+                    <a href="{{ '/notes' | route_url }}">inbox</a> <span>|</span>
+                    <a href="{{ 'control' | route_url(alias='control') }}">settings</a> <span>|</span>
 
                     {% if req.user.is_director %}
-                        <a href="/modcontrol">mod</a> <span>|</span> <a href="/admincontrol">admin</a>
-                        <span>|</span> <a href="/directorcontrol">director</a> <span>|</span>
+                        <a href="{{ 'modcontrol' | route_url }}">mod</a>
+                        <span>|</span>
+                        <a href="{{ 'admincontrol' | route_url }}">admin</a>
+                        <span>|</span>
+                        <a href="{{ 'directorcontrol' |route_url }}">director</a>
+                        <span>|</span>
                     {% elif req.user.is_admin %}
-                        <a href="/modcontrol">mod</a> <span>|</span> <a href="/admincontrol">admin</a>
+                        <a href="{{ 'modcontrol' | route_url }}">mod</a>
+                        <span>|</span>
+                        <a href="{{ 'admincontrol' | route_url }}">admin</a>
                         <span>|</span>
                     {% elif req.user.is_mod %}
-                        <a href="/modcontrol">mod</a> <span>|</span>
+                        <a href="{{ 'modcontrol' | route_url }}">mod</a>
+                        <span>|</span>
                     {% endif %}
 
-                    <a href="/signout?token={{TOKEN()[:8]}}">log&#160;out</a>
+                    <a href="{{ 'signout' | route_url }}?token={{TOKEN()[:8]}}">log&#160;out</a>
                 </div>
             </div>
 
             <ul id="header-messages">
                 {% if msg_submissions() %}
                     <li>
-                        <a href="/messages/submissions" title="Art">
+                        <a href="{{'messages_submissions'|route_url}}" title="Art">
                             <span class="icon icon-20 icon-art">Art:</span> {{ msg_submissions() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_comments() %}
                     <li>
-                        <a href="/messages/notifications#comments" title="Comments">
+                        <a href="{{ 'messages_notifications' | route_url }}#comments" title="Comments">
                             <span class="icon icon-20 icon-comments">Comments:</span> {{ msg_comments() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_notifications() %}
                     <li>
-                        <a href="/messages/notifications#notifications" title="Notifications">
+                        <a href="{{ 'messages_notifications' | route_url }}#notifications" title="Notifications">
                             <span class="icon icon-20 icon-notes">Notifications:</span> {{ msg_notifications() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_journals() %}
                     <li>
-                        <a href="/messages/notifications#journals" title="Journals">
+                        <a href="{{ 'messages_notifications' | route_url }}#journals" title="Journals">
                             <span class="icon icon-20 icon-journals">Journals:</span> {{ msg_journals() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_notes() %}
                     <li>
-                        <a href="/notes" title="Private Messages">
+                        <a href="{{ '/notes' | route_url }}" title="Private Messages">
                             <span class="icon icon-20 icon-messages">Private Messages:</span> {{ msg_notes() }}
                         </a>
                     </li>
@@ -98,13 +105,13 @@
         <nav>
             <div id="header-nav">
                 <ul>
-                    <li><a href="/submit">Submit</a></li>
-                    <li><a href="/search">Browse</a></li>
-                    <li><a href="/marketplace">Marketplace</a></li>
-                    <li id="header-search-nav"><a href="/search">Search</a></li>
+                    <li><a href="{{ 'submit' | route_url }}">Submit</a></li>
+                    <li><a href="{{ 'search' | route_url }}">Browse</a></li>
+                    <li><a href="{{ 'marketplace' | route_url }}">Marketplace</a></li>
+                    <li id="header-search-nav"><a href="{{ 'search' | route_url }}">Search</a></li>
                 </ul>
 
-                <form id="header-search" action="/search" method="GET">
+                <form id="header-search" action="{{ 'search' | route_url }}" method="GET">
                     <input name="q" placeholder="Search" title="Search Weasyl" type="search" tabindex="1"/>
                 </form>
             </div>
