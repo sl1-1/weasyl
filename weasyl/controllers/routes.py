@@ -240,6 +240,8 @@ routes_with_templates = (
     Route_Template("/help/two_factor_authentication", "help_two_factor_authentication",
                    info.help_two_factor_authentication_,
                    renderer='weasyl:templates/help/two_factor_authentication.jinja2'),
+    Route_Template("/help/verification", "help_verification", info.help_verification_,
+                   renderer='weasyl:templates/help/verification.jinja2'),
 
     # Management and settings routes.
     Route_Template("/{alias:control|settings}", "control", settings.control_,
@@ -325,7 +327,30 @@ routes_with_templates = (
                    {"GET": moderation.modcontrol_spamqueue_journal_get_,
                     "POST": moderation.modcontrol_spamqueue_journal_post_, },
                    renderer='weasyl:templates/modcontrol/spamqueue/journal.jinja2'),
+    Route_Template("/modcontrol/spamqueue/submission", "modcontrol_spamqueue_submission",
+                   {"GET": moderation.modcontrol_spamqueue_submission_get_,
+                    "POST": moderation.modcontrol_spamqueue_submission_post_, },
+                   renderer='weasyl:templates/modcontrol/spamqueue/submission.jinja2'),
 
+    # Admin Control Routes
+    Route_Template("/admincontrol", "admincontrol", admin.admincontrol_,
+                   renderer='weasyl:templates/admincontrol/admincontrol.jinja2'),
+    Route_Template("/admincontrol/acctverifylink", "admin_acctverifylink", {'POST': admin.admincontrol_acctverifylink_},
+                   renderer='weasyl:templates/admincontrol/acctverifylink.jinja2'),
+    Route_Template("/admincontrol/finduser", "admincontrol_finduser",
+                   {'GET': admin.admincontrol_finduser_get_, 'POST': admin.admincontrol_finduser_post_, },
+                   renderer='weasyl:templates/admincontrol/finduser.jinja2'),
+    Route_Template("/admincontrol/manageuser", "admin_manageuser",
+                   {'GET': admin.admincontrol_manageuser_get_, 'POST': admin.admincontrol_manageuser_post_},
+                   renderer='weasyl:templates/admincontrol/manageuser.jinja2'),
+    Route_Template("/admincontrol/pending_accounts", "admincontrol_pending_accounts",
+                   {'GET': admin.admincontrol_pending_accounts_get_, 'POST': admin.admincontrol_pending_accounts_post_},
+                   renderer='weasyl:templates/admincontrol/pending_accounts.jinja2'),
+    Route_Template("/admincontrol/siteupdate", "admin_siteupdate",
+                   {'GET': admin.admincontrol_siteupdate_get_, 'POST': admin.admincontrol_siteupdate_post_},
+                   renderer='weasyl:templates/admincontrol/siteupdate.jinja2'),
+    Route_Template("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_,
+                   renderer='weasyl:templates/admincontrol/siteupdate.jinja2'),
 
 )
 
@@ -419,10 +444,7 @@ routes = (
     Route("/modcontrol/editprofiletext", "modcontrol_editprofiletext", {'POST': moderation.modcontrol_editprofiletext_}),
     Route("/modcontrol/editcatchphrase", "modcontrol_editcatchphrase", {'POST': moderation.modcontrol_editcatchphrase_}),
     Route("/modcontrol/edituserconfig", "modcontrol_edituserconfig", {'POST': moderation.modcontrol_edituserconfig_}),
-    Route("/modcontrol/spamqueue/submission", "modcontrol_spamqueue_submission", {
-        "GET": moderation.modcontrol_spamqueue_submission_get_,
-        "POST": moderation.modcontrol_spamqueue_submission_post_,
-    }),
+
     Route("/modcontrol/spam/remove", "modcontrol_spam_remove", {
         "POST": moderation.modcontrol_spam_remove_post_,
     }),
@@ -437,20 +459,7 @@ routes = (
 
 
     # Admin control routes.
-    Route("/admincontrol", "admincontrol", admin.admincontrol_),
-    Route("/admincontrol/siteupdate", "admin_siteupdate",
-          {'GET': admin.admincontrol_siteupdate_get_, 'POST': admin.admincontrol_siteupdate_post_}),
-    Route("/admincontrol/manageuser", "admin_manageuser",
-          {'GET': admin.admincontrol_manageuser_get_, 'POST': admin.admincontrol_manageuser_post_}),
-    Route("/admincontrol/acctverifylink", "admin_acctverifylink", {'POST': admin.admincontrol_acctverifylink_}),
-    Route("/admincontrol/finduser", "admincontrol_finduser", {
-        'GET': admin.admincontrol_finduser_get_,
-        'POST': admin.admincontrol_finduser_post_,
-    }),
-    Route("/admincontrol/pending_accounts", "admincontrol_pending_accounts", {
-        'GET': admin.admincontrol_pending_accounts_get_,
-        'POST': admin.admincontrol_pending_accounts_post_,
-    }),
+
 
     # Director control routes.
     Route("/directorcontrol", "directorcontrol", director.directorcontrol_),
@@ -464,8 +473,6 @@ routes = (
     }),
 
     Route("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_),
-
-    Route("/help/verification", "help_verification", info.help_verification_),
 
     # OAuth2 routes.
     Route("/api/oauth2/authorize", "oauth2_authorize",

@@ -10,36 +10,40 @@
     {% elif feature == "siteupdate" %}
         {% set feature = "updateid" %}
     {% endif %}
-    <form class="comment-form"
-          action="/submit/{{ 'shout' if feature in ['userid', 'staffnotes'] else 'comment' }}"
-          method="post">
-        <input type="hidden" name="token" value="{{ TOKEN() }}"/>
-        <input type="hidden" class="form-target-id" name="{{ feature }}" value="{{ targetid }}"/>
-        <input type="hidden" name="parentid"/>
+    {% if user.is_vouched_for %}
+        <form class="comment-form"
+              action="/submit/{{ 'shout' if feature in ['userid', 'staffnotes'] else 'comment' }}"
+              method="post">
+            <input type="hidden" name="token" value="{{ TOKEN() }}"/>
+            <input type="hidden" class="form-target-id" name="{{ feature }}" value="{{ targetid }}"/>
+            <input type="hidden" name="parentid"/>
 
-        <div class="hypothetical comment">
+            <div class="hypothetical comment">
 
-            <a class="avatar" href="/~{{ user.login_name }}">
-                <img src="{{ user.avatar['display_url'] }}" alt="{{ user.profile['username'] }}">
-            </a>
+                <a class="avatar" href="/~{{ user.login_name }}">
+                    <img src="{{ user.avatar['display_url'] }}" alt="{{ user.profile['username'] }}">
+                </a>
 
-            <div class="comment-content">
-                <p class="byline"><a class="username"
-                                     href="/~{{ user.login_name }}">{{ user.profile['username'] }}</a>
-                    <span id="comment_form_reply_text"></span></p>
-                <textarea class="form-content markdown expanding"
-                          name="content"
-                          placeholder="Leave a comment"
-                          required></textarea>
+                <div class="comment-content">
+                    <p class="byline"><a class="username"
+                                         href="/~{{ user.login_name }}">{{ user.profile['username'] }}</a>
+                        <span id="comment_form_reply_text"></span></p>
+                    <textarea class="form-content markdown expanding"
+                              name="content"
+                              placeholder="Leave a comment"
+                              required></textarea>
+                </div>
+
+                <div class="comment-submit clear">
+                    <button class="button positive">Submit Comment</button>
+                    <a href="/help/markdown" class="comment-formatting-help" target="_blank">Formatting Help</a>
+                </div>
+
             </div>
-
-            <div class="comment-submit clear">
-                <button class="button positive">Submit Comment</button>
-                <a href="/help/markdown" class="comment-formatting-help" target="_blank">Formatting Help</a>
-            </div>
-
-        </div>
-    </form>
+        </form>
+    {% else %}
+        <p>Your account has to be verified to comment. <a href="/help/verification">How do I verify my account?</a></p>
+    {% endif %}
 
     <form name="removecomment" action="/remove/comment" method="post">
         <input type="hidden" name="token" value="{{ TOKEN() }}"/>
@@ -59,9 +63,9 @@
                 <li>
             {% endif %}
 
-            {% set hidden = comment['hidden'] %}
+        {% set hidden = comment['hidden'] %}
 
-            <div class="comment{{ ' hidden-comment' if hidden else '' }}"  id="cid{{ comment['commentid'] }}"  data-id="{{ comment['commentid'] }}">
+        <div class="comment{{ ' hidden-comment' if hidden else '' }}" id="cid{{ comment['commentid'] }}" data-id="{{ comment['commentid'] }}">
             <a href="/~{{ comment['username']| LOGIN }}" class="avatar">
                 {% set avatar = comment['user_media']['avatar'][0] %}
                 <img src="{{ avatar['display_url'] }}" alt=""/>
@@ -69,7 +73,7 @@
             <div class="comment-content">
                 <p class="actions">
                     {% if not hidden %}
-                        {% if user %}
+                        {% if user and user.is_vouched_for %}
                             <a href="#" class="comment-reply-link needs-js">Reply</a>
                         {% endif %}
                         {% set has_replies = loop.index0 + 1 < size and comments[loop.index0 + 1]['indent'] == comment['indent'] + 1 %}
@@ -117,7 +121,7 @@
                 <li>
             {% endif %}
         {% endif %}
-    {% endfor %}
+        {% endfor %}
     </div>
 {%- endmacro %}
 

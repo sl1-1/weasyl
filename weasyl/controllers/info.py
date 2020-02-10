@@ -112,5 +112,4 @@ def help_two_factor_authentication_(request):
 def help_verification_(request):
     username = define.get_display_name(request.userid)
 
-    return Response(define.webpage(request.userid, "help/verification.html", [username],
-                                   title="Account Verification"))
+    return {'username': username, 'title': "Account Verification"}
