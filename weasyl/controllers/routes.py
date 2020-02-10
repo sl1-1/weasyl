@@ -472,8 +472,6 @@ routes = (
         'POST': director.directorcontrol_globaltagrestrictions_post_,
     }),
 
-    Route("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_),
-
     # OAuth2 routes.
     Route("/api/oauth2/authorize", "oauth2_authorize",
           {'GET': oauth2.authorize_get_, 'POST': oauth2.authorize_post_}),

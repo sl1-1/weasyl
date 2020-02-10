@@ -18,10 +18,10 @@
 
                 <div class="text-post-text">
                     <h4 class="text-post-title">
-                        <a href="{{ path_for(update) }}">{{ update.title }}</a>
+                        <a href="{{ 'site_update' | route_url(update_id=update.updateid) }}">{{ update.title }}</a>
                         {% if req.user.is_admin %}
                             <span class="text-post-actions">
-                                <a href="{{ path_for(update, operation='edit') }}">Edit</a>
+                                <a href="{{ 'site_update_edit' | route_url(update_id=update.updateid) }}">Edit</a>
                             </span>
                         {% endif %}
                     </h4>

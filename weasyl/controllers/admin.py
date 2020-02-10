@@ -18,12 +18,12 @@ import weasyl.define as d
 
 @admin_only
 def admincontrol_(request):
-    return Response(d.webpage(request.userid, "admincontrol/admincontrol.html", title="Admin Control Panel"))
+    return {'title': "Admin Control Panel"}
 
 
 @admin_only
 def admincontrol_siteupdate_get_(request):
-    return Response(d.webpage(request.userid, "admincontrol/siteupdate.html", (SiteUpdate(),), title="Submit Site Update"))
+    return {'update': SiteUpdate(), 'title': "Submit Site Update"}
 
 
 @admin_only
@@ -47,7 +47,7 @@ def admincontrol_siteupdate_post_(request):
 def site_update_edit_(request):
     updateid = int(request.matchdict['update_id'])
     update = SiteUpdate.query.get_or_404(updateid)
-    return Response(d.webpage(request.userid, "admincontrol/siteupdate.html", (update,), title="Edit Site Update"))
+    return {'update': update, 'title': "Edit Site Update"}
 
 
 @admin_only
@@ -83,10 +83,7 @@ def admincontrol_manageuser_get_(request):
     if request.userid != otherid and otherid in staff.ADMINS and request.userid not in staff.TECHNICAL:
         return Response(d.errorpage(request.userid, errorcode.permission))
 
-    return Response(d.webpage(request.userid, "admincontrol/manageuser.html", [
-        # Manage user information
-        profile.select_manage(otherid),
-    ], title="User Management"))
+    return {'profile': profile.select_manage(otherid), 'title': "User Management"}
 
 
 @admin_only
@@ -120,7 +117,7 @@ def admincontrol_acctverifylink_(request):
         username=form.username, email=form.email)
 
     if token:
-        return Response(d.webpage(request.userid, "admincontrol/acctverifylink.html", [token]))
+        return {'token': token}
 
     return Response(d.errorpage(request.userid, "No pending account found."))
 
@@ -139,12 +136,7 @@ def admincontrol_pending_accounts_get_(request):
         ORDER BY username
     """).fetchall()
 
-    return Response(d.webpage(
-        request.userid,
-        "admincontrol/pending_accounts.html",
-        [query],
-        title="Accounts Pending Creation"
-    ))
+    return {'query': query, 'title': "Accounts Pending Creation"}
 
 
 @admin_only
@@ -168,7 +160,7 @@ def admincontrol_pending_accounts_post_(request):
 
 @admin_only
 def admincontrol_finduser_get_(request):
-    return Response(d.webpage(request.userid, "admincontrol/finduser.html", title="Search Users"))
+    return {'title': "Search Users"}
 
 
 @admin_only
@@ -181,10 +173,9 @@ def admincontrol_finduser_post_(request):
     if int(form.row_offset) < 0:
         raise HTTPSeeOther("/admincontrol/finduser")
 
-    return Response(d.webpage(request.userid, "admincontrol/finduser.html", [
-        # Search results
-        moderation.finduser(request.userid, form),
-        # Pass the form and row offset in to enable pagination
-        form,
-        int(form.row_offset)
-    ], title="Search Users: Results"))
+    return {
+        'query': moderation.finduser(request.userid, form),
+        'form': form,
+        'row_offset': int(form.row_offset),
+        'title': "Search Users: Results"
+    }
