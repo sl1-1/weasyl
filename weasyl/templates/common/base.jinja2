@@ -1,3 +1,4 @@
+{% from 'common/image_select.jinja2' import image_select %}
 <!DOCTYPE html>
 <html class="no-js" data-csrf-token="{{ TOKEN() }}" lang="en">
 <head>
@@ -69,7 +70,7 @@
 
 {% if options and "imageselect" in options %}
     <script src="{{ '/static/scripts/imageselect/imageselect.js'|CDNIFY }}"></script>
-    {{ RENDER("common/image_select.html", ["square_select" in options]) }}
+    {{ image_select(["square_select" in options]) }}
 {% endif %}
 {% if options and 'search' in options %}
     <script src="{{ '/static/search.js'|CDNIFY }}"></script>
