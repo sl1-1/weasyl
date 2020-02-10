@@ -6,6 +6,7 @@ from io import open
 import arrow
 import bcrypt
 from publicsuffixlist import PublicSuffixList
+from pyramid.renderers import render
 from sqlalchemy.sql.expression import select
 
 from libweasyl import security
@@ -237,8 +238,8 @@ def create(form):
         })
 
         # Send verification email
-        emailer.send(email, "Weasyl Account Creation", d.render(
-            "email/verify_account.html", [token, sysname]))
+        email_body = render('weasyl:templates/email/verify_account.jinja2', {'token': token, 'username':sysname})
+        emailer.send(email, "Weasyl Account Creation", email_body)
         d.metric('increment', 'createdusers')
     else:
         # Store a dummy record to support plausible deniability of email addresses
@@ -260,8 +261,9 @@ def create(form):
         #   let the already registered user know this via email (perhaps they forgot their username/password)
         query_username_login = d.engine.scalar("SELECT login_name FROM login WHERE email = %(email)s", email=email)
         query_username_logincreate = d.engine.scalar("SELECT login_name FROM logincreate WHERE email = %(email)s", email=email)
-        emailer.send(email, "Weasyl Account Creation - Account Already Exists", d.render(
-            "email/email_in_use_account_creation.html", [query_username_login or query_username_logincreate]))
+        email_body = render("weasyl:templates/email/email_in_use_account_creation.jinja2",
+                            {'username': query_username_login or query_username_logincreate})
+        emailer.send(email, "Weasyl Account Creation - Account Already Exists", email_body)
 
 
 def verify(token, ip_address=None):
