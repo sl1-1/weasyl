@@ -364,6 +364,12 @@ routes_with_templates = (
                     'POST': director.directorcontrol_globaltagrestrictions_post_},
                    renderer='weasyl:templates/directorcontrol/globaltagrestrictions.jinja2'),
 
+    # Notes
+    Route_Template("/notes/compose", "notes_compose",
+                   {'GET': interaction.notes_compose_get_, 'POST': interaction.notes_compose_post_},
+                   renderer='weasyl:templates/note/compose.jinja2'),
+    Route_Template("/notes", "/notes", interaction.notes_, renderer='weasyl:templates/note/message_list.jinja2'),
+    Route_Template("/note", "note", interaction.note_, renderer='weasyl:templates/note/message_view.jinja2'),
 )
 
 routes = (
@@ -437,10 +443,6 @@ routes = (
     Route("/unfollowuser", "unfollowuser", {'POST': interaction.unfollowuser_}),
     Route("/ignoreuser", "ignoreuser", {'POST': interaction.ignoreuser_}),
 
-    Route("/note", "note", interaction.note_),
-    Route("/notes", "/notes", interaction.notes_),
-    Route("/notes/compose", "notes_compose",
-          {'GET': interaction.notes_compose_get_, 'POST': interaction.notes_compose_post_}),
     Route("/notes/remove", "notes_remove", {'POST': interaction.notes_remove_}),
 
     Route("/favorite", "favorite", {'POST': interaction.favorite_}),

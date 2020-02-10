@@ -108,11 +108,7 @@ def note_(request):
 
     data = note.select_view(request.userid, int(form.noteid))
 
-    return Response(define.webpage(request.userid, "note/message_view.html", [
-        # Private message
-        data,
-        profile.select_myself(request.userid),
-    ]))
+    return {'query': data, 'myself': profile.select_myself(request.userid)}
 
 
 @login_required
@@ -126,20 +122,16 @@ def notes_(request):
     filter_ = define.get_userid_list(form.filter)
 
     if form.folder == "inbox":
-        return Response(define.webpage(request.userid, "note/message_list.html", [
-            # Folder
-            "inbox",
-            # Private messages
-            note.select_inbox(request.userid, 50, backid=backid, nextid=nextid, filter=filter_),
-        ]))
+        return {
+            'folder': "inbox",
+            'notes': note.select_inbox(request.userid, 50, backid=backid, nextid=nextid, filter=filter_)
+        }
 
     if form.folder == "outbox":
-        return Response(define.webpage(request.userid, "note/message_list.html", [
-            # Folder
-            "outbox",
-            # Private messages
-            note.select_outbox(request.userid, 50, backid=backid, nextid=nextid, filter=filter_),
-        ]))
+        return {
+            'folder': "outbox",
+            'notes': note.select_outbox(request.userid, 50, backid=backid, nextid=nextid, filter=filter_)
+        }
 
     raise WeasylError("unknownMessageFolder")
 
@@ -151,11 +143,7 @@ def notes_compose_get_(request):
 
     form = request.web_input(recipient="")
 
-    return Response(define.webpage(request.userid, "note/compose.html", [
-        # Recipient
-        form.recipient.strip(),
-        profile.select_myself(request.userid),
-    ]))
+    return {'recipient': form.recipient.strip(), 'myself': profile.select_myself(request.userid)}
 
 
 @login_required
