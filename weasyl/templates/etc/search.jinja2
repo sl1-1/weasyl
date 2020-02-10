@@ -1,6 +1,7 @@
 {% extends 'common/base.jinja2' %}
 {% import 'common/thumbnail_item.jinja2' as thumbnail %}
 {% block content %}
+    {% set id_fields = { 'submit': 'submitid', 'char': 'charid', 'journal': 'journalid', 'user': 'userid'} %}
     <div id="search-stage" class="stage clear">
 
         {% if method['method'] == "search" %}

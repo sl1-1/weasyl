@@ -31,7 +31,7 @@
                 <div id="header-utility">
                     <form class="sfw-toggle" action="{{ 'control_sfw_toggle' | route_url }}" method="POST">
                         <input type="hidden" name="token" value="{{ TOKEN() }}" />
-                        <input type="hidden" name="redirect" value="{{ PATH() }}">
+                        <input type="hidden" name="redirect" value="{{ req.path_url }}">
                         <button class="link-button {{ 'sfw' if sfw() else 'nsfw' }}">
                             sfw {{ 'on' if sfw() else 'off' }}
                         </button>

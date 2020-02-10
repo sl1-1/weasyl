@@ -9,21 +9,8 @@ import arrow
 from pyramid.threadlocal import get_current_request
 from pyramid_jinja2.filters import resource_url_filter, route_url_filter
 
-import define, macro
+from weasyl import define, macro
 
-
-# "STR": str,
-#                 "PRICE": text_price_amount,
-#                 "MARKDOWN_EXCERPT": text.markdown_excerpt,
-#                 "SUMMARIZE": summarize,
-
-#                 "INLINE_JSON": html.inline_json,
-#                 "constants": libweasyl.constants,
-#                 "getattr": getattr,
-#                 "json": json,
-#                 "sorted": sorted,
-#                 "request": the_fake_request,
-#                 "resource_path": get_resource_path,
 
 @evalcontextfilter
 def LOGIN(eval_ctx, username):
@@ -58,11 +45,6 @@ def MARKDOWN_EXCERPT(eval_ctx, markdown):
 @evalcontextfilter
 def SLUG(eval_ctx, title):
     return text.slug_for(title)
-
-
-def _render(*args, **kwargs):
-    # TODO: This goes away once all templates are converted.
-    return Markup(define.render(*args, **kwargs))
 
 
 def msg_submissions():
@@ -103,30 +85,16 @@ def User():
     return request.pg_connection.query(Login).filter(Login.userid == request.userid).one_or_none()
 
 
-def path_for(obj, operation='view'):
-    request = get_current_request()
-    # TODO: Figure out why we get a double / here
-    return obj.canonical_path(request, operation)[1:]
-
-
 jinja2_globals = {
     "arrow": arrow,
     "CAPTCHA": define._captcha_public,
     'THUMB': define.thumb_for_sub,
     'WEBP_THUMB': define.webp_thumb_for_sub,
     'USER_TYPE': define.user_type,
-    'PATH': define._get_path,
     'TOKEN': define.get_token,
     'staff': staff,
     'R': ratings,
     "QUERY_STRING": define.query_string,
-    'RENDER': _render,
-    'id_fields': {
-        'submit': 'submitid',
-        'char': 'charid',
-        'journal': 'journalid',
-        'user': 'userid',
-    },
     'sfw': sfw,
     'msg_submissions': msg_submissions,
     'msg_comments': msg_comments,
@@ -134,7 +102,6 @@ jinja2_globals = {
     'msg_journals': msg_journals,
     'msg_notes': msg_notes,
     "LOCAL_ARROW": define.local_arrow,
-    'path_for': path_for,
     "SYMBOL": define.text_price_symbol,
     'M': macro,
     'SHA': define.CURRENT_SHA,
@@ -153,5 +120,3 @@ filters = {
     'route_url': route_url_filter,
     'resource_url': resource_url_filter,
 }
-
-
