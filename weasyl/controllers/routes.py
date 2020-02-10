@@ -39,6 +39,7 @@ routes_with_templates = (
     Route_Template("/search", "search", general.search_, renderer='weasyl:templates/etc/search.jinja2'),
     Route_Template("/popular", "popular", general.popular_, renderer='weasyl:templates/etc/popular.jinja2'),
     Route_Template("/streaming", "streaming", general.streaming_, renderer='weasyl:templates/etc/streaming.jinja2'),
+    Route_Template("/marketplace", "marketplace", marketplace.search_, renderer='weasyl:templates/etc/marketplace.jinja2'),
 
     # Signin and out views.
     Route_Template("/signin", "signin", {'GET': user.signin_get_, 'POST': user.signin_post_},
@@ -373,9 +374,6 @@ routes_with_templates = (
 )
 
 routes = (
-    # Front page views.
-    Route("/marketplace", "marketplace", marketplace.search_),
-
     # Signin and out views.
     Route("/signout", "signout", user.signout_),
 
