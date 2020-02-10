@@ -13,7 +13,7 @@ from weasyl.controllers.decorators import token_checked
 
 @director_only
 def directorcontrol_(request):
-    return Response(d.webpage(request.userid, "directorcontrol/directorcontrol.html", title="Director Control Panel"))
+    return {'title': "Director Control Panel"}
 
 
 @director_only
@@ -25,8 +25,7 @@ def directorcontrol_emailblacklist_get_(request):
         ORDER BY domain_name
     """)
     blacklist_information = map(dict, query)
-    return Response(d.webpage(request.userid, "directorcontrol/emailblacklist.html", [blacklist_information],
-                              title="Edit Account Creation Email Blacklist"))
+    return {'entries': blacklist_information, 'title': "Edit Account Creation Email Blacklist"}
 
 
 @token_checked
@@ -52,9 +51,7 @@ def directorcontrol_emailblacklist_post_(request):
 @director_only
 def directorcontrol_globaltagrestrictions_get_(request):
     tags = searchtag.get_global_tag_restrictions(request.userid)
-    return Response(d.webpage(request.userid, "directorcontrol/globaltagrestrictions.html", (
-        tags,
-    ), title="Edit Global Community Tagging Restrictions"))
+    return {'tags': tags, 'title': "Edit Global Community Tagging Restrictions"}
 
 
 @director_only

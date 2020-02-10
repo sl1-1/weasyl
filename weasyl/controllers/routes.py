@@ -352,6 +352,18 @@ routes_with_templates = (
     Route_Template("/site-updates/{update_id:[0-9]+}/edit", "site_update_edit", admin.site_update_edit_,
                    renderer='weasyl:templates/admincontrol/siteupdate.jinja2'),
 
+    # Director control routes.
+    Route_Template("/directorcontrol", "directorcontrol", director.directorcontrol_,
+                   renderer='weasyl:templates/directorcontrol/directorcontrol.jinja2'),
+    Route_Template("/directorcontrol/emailblacklist", "directorcontrol_emailblacklist",
+                   {'GET': director.directorcontrol_emailblacklist_get_,
+                    'POST': director.directorcontrol_emailblacklist_post_},
+                   renderer='weasyl:templates/directorcontrol/emailblacklist.jinja2'),
+    Route_Template("/directorcontrol/globaltagrestrictions", "directorcontrol_globaltagrestrictions",
+                   {'GET': director.directorcontrol_globaltagrestrictions_get_,
+                    'POST': director.directorcontrol_globaltagrestrictions_post_},
+                   renderer='weasyl:templates/directorcontrol/globaltagrestrictions.jinja2'),
+
 )
 
 routes = (
@@ -456,21 +468,6 @@ routes = (
 
     # Message routes.
     Route("/messages/remove", "messages_remove", {'POST': messages.messages_remove_}),
-
-
-    # Admin control routes.
-
-
-    # Director control routes.
-    Route("/directorcontrol", "directorcontrol", director.directorcontrol_),
-    Route("/directorcontrol/emailblacklist", "directorcontrol_emailblacklist", {
-        'GET': director.directorcontrol_emailblacklist_get_,
-        'POST': director.directorcontrol_emailblacklist_post_,
-    }),
-    Route("/directorcontrol/globaltagrestrictions", "directorcontrol_globaltagrestrictions", {
-        'GET': director.directorcontrol_globaltagrestrictions_get_,
-        'POST': director.directorcontrol_globaltagrestrictions_post_,
-    }),
 
     # OAuth2 routes.
     Route("/api/oauth2/authorize", "oauth2_authorize",
