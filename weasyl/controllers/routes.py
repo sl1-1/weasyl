@@ -129,11 +129,11 @@ routes_with_templates = (
                    detail.submission_tag_history_, renderer='weasyl:templates/detail/tag_history.jinja2'),
     Route_Template("/character", "character_detail_unnamed", detail.character_,
                    renderer='weasyl:templates/detail/character.jinja2'),
-    Route_Template("/character/{charid:[0-9]+}*remainder", "character_detail", detail.character_,
+    Route_Template("/character/{charid:[0-9]+}/{slug:[^/.]*}", "character_detail", detail.character_,
                    renderer='weasyl:templates/detail/character.jinja2'),
     Route_Template("/journal", "journal_detail_unnamedited", detail.journal_,
                    renderer='weasyl:templates/detail/journal.jinja2'),
-    Route_Template("/journal/{journalid:[0-9]+}*remainder", "journal_detail", detail.journal_,
+    Route_Template("/journal/{journalid:[0-9]+}/{slug:[^/.]*}", "journal_detail", detail.journal_,
                    renderer='weasyl:templates/detail/journal.jinja2'),
 
     # Submitting, reuploading, and removing content
@@ -173,7 +173,7 @@ routes_with_templates = (
                    renderer='weasyl:templates/submit/journal.jinja2'),
 
     # Site Updates
-    Route_Template("/site-updates", "site_update_list", general.site_update_list_,
+    Route_Template("/site-updates/", "site_update_list", general.site_update_list_,
                    renderer='weasyl:templates/etc/site_update_list.jinja2'),
     Route_Template("/site-updates/{update_id:[0-9]+}", "site_update",
                    {'GET': general.site_update_, 'POST': admin.site_update_put_},

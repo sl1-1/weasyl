@@ -8,19 +8,28 @@
 
         <figure class="thumb{{ ' collection' if item['contype'] == 40 else '' }}">
             {% if item['contype'] == 20 %}
-                {% set href="/character/"+item['charid']|string+"/"+item['title']|SLUG %}
+                {% set url='character_detail'|route_url(charid=item['charid'], slug=item['title']|SLUG) %}
+                {% set cap_title = item['title']|truncate(52) %}
+                {% set byline = "character of " %}
             {% elif item['contype'] == 30 %}
-                {% set href="/journal/"+item['journalid']|string+"/"+item['title']|SLUG %}
+                {% set url='journal_detail'|route_url(journalid=item['journalid'], slug=item['title']|SLUG) %}
+                {% set cap_title = item['title']|truncate(52) %}
+                {% set byline = "by " %}
             {% elif item['contype'] == 40 %}
                 {% set data_id=item['submitid'] %}
-                {% set href="/submission/"+item['submitid']+"/"+item['title']|SLUG %}
+                {% set url='submission_detail_profile'|route_url(name=item['username']|LOGIN, submitid=item['submitid'], slug=item['title']|SLUG) %}
+                {% set cap_title = item['title']|truncate(52) %}
+                {% set byline = "collected by " %}
             {% elif item['contype'] == 50 %}
-                {% set href="/~"+item['username']|LOGIN %}
+                {% set url='profile_tilde'|route_url(name=item['username']|LOGIN) %}
+                {% set cap_title = item['username'] %}
             {% else %}
                 {% set data_id=item['submitid'] %}
-                {% set href="/~"+item['username']|LOGIN+"/submissions/"+item['submitid']|string+"/"+item['title']|SLUG %}
+                {% set url='submission_detail_profile'|route_url(name=item['username']|LOGIN, submitid=item['submitid'], slug=item['title']|SLUG) %}
+                {% set cap_title = item['title']|truncate(52) %}
+                {% set byline = "by " %}
             {% endif %}
-            <a class="thumb-bounds" data-width="{{ width }}" href="{{ href }}" data-id="{{ data_id }}">
+            <a class="thumb-bounds" data-width="{{ width }}" href="{{ url }}" data-id="{{ data_id }}">
                 {{ macro.RATING(item['rating']) }}
 
                 {% if item['contype'] in (30, 50) %}
@@ -71,31 +80,10 @@
             {% endif %}
 
             <figcaption>
-                {% if item['contype'] == 20 %}
-                    {% set url = "/character/"+item['charid']|string+"/"+item['title']|SLUG %}
-                    {% set cap_title = item['title']|truncate(52) %}
-                    {% set byline = "character of " %}
-                {% elif item['contype'] == 30 %}
-                    {% set url = "/journal/"+item['journalid']|string+"/"+item['title']|SLUG %}
-                    {% set cap_title = item['title']|truncate(52) %}
-                    {% set byline = "by " %}
-                {% elif item['contype'] == 40 %}
-                    {% set url = "/submission/"+item['submitid']|string+"/"+item['title']|SLUG %}
-                    {% set cap_title = item['title']|truncate(52) %}
-                    {% set byline = "collected by " %}
-                {% elif item['contype'] == 50 %}
-                    {% set url = "/~"+item['username']|LOGIN %}
-                    {% set cap_title = item['username'] %}
-                {% else %}
-                    {% set url = "/~"+item['username']|LOGIN+"/submissions/"+item['submitid']|string+"/"+item['title']|SLUG %}
-                    {% set cap_title = item['title']|truncate(52) %}
-                    {% set byline = "by " %}
-                {% endif %}
-
                 <h6 class="title" title="{{ item['title'] }}"><a href="{{ url }}">{{ cap_title }}</a></h6>
                 <p class="byline" title="{{ byline }}{{ item['username'] }}">
                     {% if byline %}
-                        <i>{{ byline }}</i><a href="/~{{ item['username']|LOGIN }}" class="username">{{ item['username'] }}</a>
+                        <i>{{ byline }}</i><a href="{{ 'profile_tilde'|route_url(name=item['username']|LOGIN) }}" class="username">{{ item['username'] }}</a>
                     {% else %}
                         <!-- Keeps formatting consistent -->
                         &nbsp;
@@ -134,9 +122,9 @@
                     <!-- caption -->
                     <a href="/submission/{{ item['submitid'] }}/{{ item['title']|SLUG }}">{{ item['title'] }}</a>
                     {% if caption == "collection_requested" %}
-                    requested by <a class="username" href="/~{{ item['username']|LOGIN }}">{{ item['collector'] }}</a>
+                    requested by <a class="username" href="{{ 'profile_tilde'|route_url(name=item['username']|LOGIN) }}">{{ item['collector'] }}</a>
                     {% else %}
-                    submitted by <a class="username" href="/~{{ item['username']|LOGIN }}">{{ item['username'] }}</a>
+                    submitted by <a class="username" href="{{ 'profile_tilde'|route_url(name=item['username']|LOGIN) }}">{{ item['username'] }}</a>
                     {% endif %}
 
                     {% if caption == "collection_pending" %}
