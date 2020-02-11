@@ -29,3 +29,23 @@
         checked="checked"
     {% endif %}
 {%- endmacro %}
+
+{% macro AVATAR(user) -%}
+    {% if user is mapping %}
+        {% set username = user['username'] %}
+        {% set url = 'profile_tilde'|route_url(name=username | LOGIN) %}
+        {% if 'avatar' in user %}
+            {% set avatar = user['avatar'][0]['display_url'] %}
+        {% else %}
+            {% set avatar = user['user_media']['avatar'][0]['display_url'] %}
+        {% endif %}
+    {% else %}
+        {% set username = user.profile.username %}
+        {% set url = 'profile_tilde'|route_url(name=user.login_name) %}
+        {% set avatar = user.avatar['display_url'] %}
+    {% endif %}
+    <a class="avatar" href="{{ url }}" title="{{ username }}">
+        <img src="{{ avatar }}"
+             alt="avatar of {{ username }}"/>
+    </a>
+{%- endmacro %}

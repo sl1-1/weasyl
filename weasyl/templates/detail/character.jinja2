@@ -1,4 +1,5 @@
 {% extends 'common/base.jinja2' %}
+{% from 'common/macros.jinja2' import AVATAR %}
 {% import 'common/comments.jinja2' as comment_macros %}
 {% import 'user/user_tools.jinja2' as user_macro %}
 {% from 'common/detail_tag_form.jinja2' import detail_tag_form %}
@@ -67,10 +68,7 @@
         </div>
 
         <div id="db-user">
-            {% set avatar = query['user_media']['avatar'][0] %}
-            <a class="avatar" href="/~{{ query['username']|LOGIN }}">
-                <img src="{{ avatar['display_url'] }}" alt=""/>
-            </a>
+            {{ AVATAR(query) }}
             <a class="username" href="/~{{ query['username'] |LOGIN }}">{{ query['username'] }}</a>
             <p class="date">{{ query['unixtime'] | DATE }} <i>at</i> {{ query['unixtime'] | TIME }}</p>
         </div>

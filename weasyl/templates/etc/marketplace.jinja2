@@ -1,6 +1,6 @@
 {% extends 'common/base.jinja2' %}
 {% from 'common/stage_title.jinja2' import stage %}
-{% from 'common/macros.jinja2' import SELECTED %}
+{% from 'common/macros.jinja2' import SELECTED, AVATAR %}
 {% block content %}
     {{ stage("Marketplace") }}
     <div style="background:#DDD" class="clear">
@@ -57,9 +57,7 @@
             {% if results %}
                 {% for artist in results %}
                     <div class="clear marketplace-result">
-                        <a href="/~{{ artist['username'] | LOGIN }}" class="avatar">
-                            <img src="{{ artist['user_media']['avatar'][0]['display_url'] }}" alt=""/>
-                        </a>
+                        {{ AVATAR(artist) }}
                         <div class="artist-links">
                             <a href="/~{{ artist['username'] | LOGIN }}#user-commissions" class="username">{{ artist['username'] }}</a>
                             <a href="/submissions/{{ artist['username'] | LOGIN }}">[Gallery]</a>

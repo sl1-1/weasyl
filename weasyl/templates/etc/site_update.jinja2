@@ -1,14 +1,13 @@
 {% extends 'common/base.jinja2' %}
 {% import 'common/comments.jinja2' as comment_macros %}
+{% from 'common/macros.jinja2' import AVATAR %}
 {% block content %}
 <div id="home-content" class="content">
   <div class="constrained">
     <h3>{{ update.title}}</h3>
     {% set owner = update.get_display_owner() %}
     <figure class="thumbnail thumbnail-left clear">
-      <a class="avatar" href="/~{{ owner.login_name }}" title="{{ owner.profile.username}}">
-        <img src="{{owner.avatar['display_url']}}" alt="avatar of {{owner.profile.username}}" />
-      </a>
+        {{ AVATAR(owner) }}
       <figcaption class="caption">
         <h4 class="title"><i>Posted by</i> <a class="username" href="/~{{ owner.login_name }}">{{owner.profile.username}}</a></h4>
         <h5 class="date">{{ update.unixtime|DATE }} <i>at</i> {{ update.unixtime|TIME }}</h5>

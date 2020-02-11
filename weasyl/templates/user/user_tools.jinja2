@@ -1,3 +1,5 @@
+{% from 'common/macros.jinja2' import AVATAR %}
+
 {% set _STATUS_WORD_ = {'o': "Open", 's': 'Sometimes', 'f': 'Filled', 'c': 'Closed', 'n': 'Online', 'l': 'Later', 'i': 'Offline' } %}
 
 {% macro _STATUS_CLASS_(target) -%}
@@ -37,15 +39,12 @@
         </div>
     {% endif %}
 
-    {% set avatar = profile['user_media']['avatar'][0] %}
     <div id="user-info" class="clear">
 
         <div class="bar pad-left pad-right clear">
-      <span class="avatar">
-          <a href="/~{{ profile['username'] | LOGIN }}">
-              <img src="{{ avatar['display_url'] }}" alt="Avatar for {{ profile['username'] }}"/>
-          </a>
-      </span>
+
+          {{ AVATAR(profile) }}
+
 
             {% if profile['banned'] %}
                 <a href="/~{{ profile['username'] | LOGIN }}"><h2 class="username banned">{{ profile['username'] }}</h2>

@@ -8,6 +8,8 @@
     </div>
 {% endif %}
 
+{% from 'common/macros.jinja2' import AVATAR %}
+
 <header>
     <div id="header" class="clear">
 
@@ -21,16 +23,15 @@
                 or learn more <a href="{{ 'help_about' | route_url }}" class="typeface-a color-a">about Weasyl</a>.
             </h3>
         {% else %}
-            <div id="header-user" data-user-type="{{ req.user.user_type or ''}}">
-                <a class="avatar" href="/~{{ req.user.login_name }}">
-                    <img id="avatar" src="{{ req.user.avatar['display_url']}}" alt="{{ req.user.profile['username'] }}">
-                </a>
+            <div id="header-user" data-user-type="{{ req.user.user_type or '' }}">
+                {{ AVATAR(req.user) }}
                 <h2>
-                    <i>Welcome,</i> <a id="username" class="username" href="/~{{ req.user.login_name }}">{{ req.user.profile['username'] }}</a>
+                    <i>Welcome,</i>
+                    <a id="username" class="username" href="/~{{ req.user.login_name }}">{{ req.user.profile['username'] }}</a>
                 </h2>
                 <div id="header-utility">
                     <form class="sfw-toggle" action="{{ 'control_sfw_toggle' | route_url }}" method="POST">
-                        <input type="hidden" name="token" value="{{ TOKEN() }}" />
+                        <input type="hidden" name="token" value="{{ TOKEN() }}"/>
                         <input type="hidden" name="redirect" value="{{ req.path_url }}">
                         <button class="link-button {{ 'sfw' if sfw() else 'nsfw' }}">
                             sfw {{ 'on' if sfw() else 'off' }}
@@ -57,14 +58,14 @@
                         <span>|</span>
                     {% endif %}
 
-                    <a href="{{ 'signout' | route_url }}?token={{TOKEN()[:8]}}">log&#160;out</a>
+                    <a href="{{ 'signout' | route_url }}?token={{ TOKEN()[:8] }}">log&#160;out</a>
                 </div>
             </div>
 
             <ul id="header-messages">
                 {% if msg_submissions() %}
                     <li>
-                        <a href="{{'messages_submissions'|route_url}}" title="Art">
+                        <a href="{{ 'messages_submissions'|route_url }}" title="Art">
                             <span class="icon icon-20 icon-art">Art:</span> {{ msg_submissions() }}
                         </a>
                     </li>

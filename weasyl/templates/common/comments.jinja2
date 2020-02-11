@@ -1,3 +1,4 @@
+{% from 'common/macros.jinja2' import AVATAR %}
 {% macro comment_form(user, targetid, feature) -%}
     {% if feature == "shouts" %}
         {% set feature = "userid" %}
@@ -20,9 +21,7 @@
 
             <div class="hypothetical comment">
 
-                <a class="avatar" href="/~{{ user.login_name }}">
-                    <img src="{{ user.avatar['display_url'] }}" alt="{{ user.profile['username'] }}">
-                </a>
+                {{ AVATAR(user) }}
 
                 <div class="comment-content">
                     <p class="byline"><a class="username"
@@ -66,10 +65,7 @@
         {% set hidden = comment['hidden'] %}
 
         <div class="comment{{ ' hidden-comment' if hidden else '' }}" id="cid{{ comment['commentid'] }}" data-id="{{ comment['commentid'] }}">
-            <a href="/~{{ comment['username']| LOGIN }}" class="avatar">
-                {% set avatar = comment['user_media']['avatar'][0] %}
-                <img src="{{ avatar['display_url'] }}" alt=""/>
-            </a>
+            {{ AVATAR(comment) }}
             <div class="comment-content">
                 <p class="actions">
                     {% if not hidden %}
@@ -129,10 +125,7 @@
     <div id="${container}" class="comments">
         {% for i in query %}
             <div class="comment">
-                <a href="/~{{ i['username']| LOGIN }}" class="avatar">
-                    {% set avatar = i['user_media']['avatar'][0] %}
-                    <img src="{{ avatar['display_url'] }}" alt=""/>
-                </a>
+                {{ AVATAR(i) }}
                 <div class="comment-content">
                     <p class="byline">
                         <a href="/~{{ i['username'] | LOGIN }}" class="username">{{ i['username'] }}</a>
