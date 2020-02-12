@@ -4,8 +4,6 @@ import arrow
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
-from libweasyl.exceptions import ExpectedWeasylError
-
 from weasyl import define
 from weasyl import login
 from weasyl import two_factor_auth as tfa
@@ -119,11 +117,7 @@ def tfa_init_qrcode_get_(request):
     verified ownership over the account by verifying their password. That said, be helpful and inform
     the user of this instead of erroring without explanation.
     """
-    # Inform the user of where to go to begin
-    raise ExpectedWeasylError((
-                    """This page cannot be accessed directly, and must be accessed as part of the 2FA
-                    setup process. Click <b>2FA Status</b>, below, to go to the 2FA Dashboard to begin.""",
-                    [["2FA Status", "/control/2fa/status"], ["Return to the Home Page", "/"]]))
+    raise HTTPSeeOther(location="/control/2fa/status")
 
 
 @view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init.jinja2', request_method="POST")
@@ -169,11 +163,7 @@ def tfa_init_verify_get_(request):
     of choice (`tfa_init_qrcode_*_()`). That said, be helpful and inform the user of this instead of erroring without
     explanation.
     """
-    # Inform the user of where to go to begin
-    raise ExpectedWeasylError((
-                    """This page cannot be accessed directly, and must be accessed as part of the 2FA
-                    setup process. Click <b>2FA Status</b>, below, to go to the 2FA Dashboard to begin.""",
-                    [["2FA Status", "/control/2fa/status"], ["Return to the Home Page", "/"]]))
+    raise HTTPSeeOther(location="/control/2fa/status")
 
 
 @view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init.jinja2', request_method="POST")
@@ -310,11 +300,7 @@ def tfa_generate_recovery_codes_get_(request):
     in this path to prevent this. That said, be nice and tell the user where to go to proceed.
     """
     # Inform the user of where to go to begin
-    raise ExpectedWeasylError((
-        """This page cannot be accessed directly. Please click <b>Generate Recovery Codes</b>, below, in order to
-        begin generating new recovery codes.""",
-        [["Generate Recovery Codes", "/control/2fa/status"], ["Return to the Home Page", "/"]]
-    ))
+    raise HTTPSeeOther(location="/control/2fa/status")
 
 
 @view_config(route_name="control_2fa_generate_recovery_codes", renderer='/control/2fa/generate_recovery_codes.jinja2', request_method="POST")
