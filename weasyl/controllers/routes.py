@@ -193,6 +193,7 @@ def setup_routes_and_views(config):
     config.add_route("control_apikeys", "/control/apikeys")
     config.add_route("control_tagrestrictions", "/control/tagrestrictions")
     config.add_route("control_following", "/manage/following")
+    config.add_route("control_manage_follow", "/manage/following/{userid:[0-9]+}")
     config.add_route("control_friends", "/manage/friends")
     config.add_route("manage_ignore", "/manage/ignore")
     config.add_route("control_collections", "/manage/collections")

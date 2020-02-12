@@ -4,7 +4,6 @@ import os
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.renderers import render_to_response
 
 import libweasyl.ratings as ratings
 from libweasyl.exceptions import ExpectedWeasylError
@@ -502,25 +501,32 @@ def manage_folders_(request):
 @view_config(route_name="control_following", renderer='/manage/following_list.jinja2', request_method="GET")
 @login_required
 def manage_following_get_(request):
-    form = request.web_input(userid="", backid="", nextid="")
-    form.userid = define.get_int(form.userid)
+    form = request.web_input(backid="", nextid="")
     form.backid = define.get_int(form.backid)
     form.nextid = define.get_int(form.nextid)
 
-    if form.userid:
-        return render_to_response('/manage/following_user.jinja2',
-                                  {'profile': profile.select_profile(form.userid, avatar=True),
-                                   'settings': followuser.select_settings(request.userid, form.userid),
-                                   'title': "Followed User"}, request=request)
-    else:
-        return {'query': followuser.manage_following(request.userid, 44, backid=form.backid, nextid=form.nextid),
-                'title': "Users You Follow"}
+    return {
+        'query': followuser.manage_following(request.userid, 44, backid=form.backid, nextid=form.nextid),
+        'title': "Users You Follow"
+    }
 
 
-@view_config(route_name="control_following", renderer='/manage/following_list.jinja2', request_method="POST")
+@view_config(route_name="control_manage_follow", renderer='/manage/following_user.jinja2', request_method="GET")
+@login_required
+def manage_follow_get_(request):
+    userid = define.get_int(request.matchdict['userid'])
+
+    return {
+        'profile': profile.select_profile(userid, avatar=True),
+        'settings': followuser.select_settings(request.userid, userid),
+        'title': "Followed User"
+    }
+
+
+@view_config(route_name="control_manage_follow", renderer='/manage/following_user.jinja2', request_method="POST")
 @login_required
 @token_checked
-def manage_following_post_(request):
+def manage_follow_post_(request):
     form = request.web_input(userid="", submit="", collect="", char="", stream="", journal="")
 
     watch_settings = followuser.WatchSettings()
