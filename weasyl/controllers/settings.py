@@ -559,7 +559,7 @@ def manage_ignore_(request):
     return {'query': ignoreuser.select(request.userid), 'title': "Ignored Users"}
 
 
-@view_config(route_name="control_collections", renderer='/manage/collections_accepted.jinja2', request_method="GET")
+@view_config(route_name="control_collections", renderer='/manage/collections.jinja2', request_method="GET")
 @login_required
 def manage_collections_get_(request):
     form = request.web_input(feature="", backid="", nextid="")
@@ -569,17 +569,22 @@ def manage_collections_get_(request):
     rating = define.get_rating(request.userid)
 
     if form.feature == "pending":
-        return render_to_response("/manage/collections_pending.jinja2", {
+        return {
             'query': collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid,
                                             nextid=nextid, pending=True),
-            'userid': request.userid, 'title': "Pending Collections"}, request=request)
+            'userid': request.userid, 'title': "Pending Collections",
+            'feature': 'pending'
+        }
 
     return {
         'query': collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid,
-                                        nextid=nextid), 'title': "Accepted Collections"}
+                                        nextid=nextid),
+        'title': "Accepted Collections",
+        'feature': 'accepted'
+    }
 
 
-@view_config(route_name="control_collections", renderer='/manage/collections_accepted.jinja2', request_method="POST")
+@view_config(route_name="control_collections", renderer='/manage/collections.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_collections_post_(request):
@@ -589,11 +594,13 @@ def manage_collections_post_(request):
     # but needs collector's ID for unambiguity
     intermediate = [x.split(";") for x in form.submissions]
     submissions = [(int(x[0]), int(x[1])) for x in intermediate]
-
+    print(submissions)
     if form.action == "accept":
         collection.pending_accept(request.userid, submissions)
     elif form.action == "reject":
         collection.pending_reject(request.userid, submissions)
+    elif form.action == "remove":
+        collection.remove(request.userid, (x[0] for x in submissions))
     else:
         raise WeasylError("Unexpected")
 
