@@ -42,8 +42,7 @@ def unfollowuser_(request):
 
     followuser.remove(request.userid, form.otherid)
 
-    raise ExpectedWeasylError("**Success!** You are no longer following this user.",
-        [("Go Back", "/manage/following"), ("Return Home", "/")])
+    raise HTTPSeeOther(location="/manage/following")
 
 
 @view_config(route_name="frienduser", request_method="POST")
