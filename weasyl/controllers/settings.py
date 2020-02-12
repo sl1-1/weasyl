@@ -534,18 +534,23 @@ def manage_following_post_(request):
     raise HTTPSeeOther(location="/manage/following")
 
 
-@view_config(route_name="control_friends", renderer='/manage/friends_accepted.jinja2', request_method="GET")
+@view_config(route_name="control_friends", renderer='/manage/friends.jinja2', request_method="GET")
 @login_required
 def manage_friends_(request):
     feature = request.params.get("feature")
 
     if feature == "pending":
-        return render_to_response("/manage/friends_pending.jinja2",
-                                  {'query': frienduser.select_requests(request.userid),
-                                   'title': "Pending Friend Requests"},
-                                  request=request)
+        return {
+            'query': frienduser.select_requests(request.userid),
+            'title': "Pending Friend Requests",
+            'feature': 'pending'
+        }
     else:
-        return {'query': frienduser.select_accepted(request.userid), 'title': "Friends"}
+        return {
+            'query': frienduser.select_accepted(request.userid),
+            'title': "Friends",
+            'feature': 'accepted'
+        }
 
 
 @view_config(route_name="manage_ignore", renderer='/manage/ignore.jinja2')
