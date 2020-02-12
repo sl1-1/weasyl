@@ -1,10 +1,8 @@
 from __future__ import absolute_import, unicode_literals
 
 import arrow
-from pyramid.response import Response
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.renderers import render_to_response
 
 from libweasyl.exceptions import ExpectedWeasylError
 
@@ -75,7 +73,8 @@ def tfa_init_get_(request):
     return {
         'username': define.get_display_name(request.userid),
         'error': None,
-        'title': "Enable 2FA: Step 1"
+        'title': "Enable 2FA: Step 1",
+        'step': 1
     }
 
 
@@ -91,7 +90,8 @@ def tfa_init_post_(request):
         return {
             'username': define.get_display_name(request.userid),
             'error': "password",
-            'title': "Enable 2FA: Step 1"
+            'title': "Enable 2FA: Step 1",
+            'step': 1
         }
     # Unlikely that this block will get triggered, but just to be safe, check for it
     elif status == "unicode-failure":
@@ -100,16 +100,17 @@ def tfa_init_post_(request):
     else:
         tfa_secret, tfa_qrcode = tfa.init(request.userid)
         _set_totp_code_on_session(tfa_secret)
-        return render_to_response('weasyl:templates/control/2fa/init_qrcode.jinja2', {
+        return {
             'username': define.get_display_name(request.userid),
             'tfa_secret': tfa_secret,
             'qrcode': tfa_qrcode,
             'error': None,
-            'title': "Enable 2FA: Step 2"
-        }, request=request)
+            'title': "Enable 2FA: Step 2",
+            'step': 2
+        }
 
 
-@view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init_qrcode.jinja2', request_method="GET")
+@view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init.jinja2', request_method="GET")
 @login_required
 @twofactorauth_disabled_required
 def tfa_init_qrcode_get_(request):
@@ -125,7 +126,7 @@ def tfa_init_qrcode_get_(request):
                     [["2FA Status", "/control/2fa/status"], ["Return to the Home Page", "/"]]))
 
 
-@view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init_qrcode.jinja2', request_method="POST")
+@view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_disabled_required
@@ -144,18 +145,20 @@ def tfa_init_qrcode_post_(request):
             'tfa_secret': tfa_secret_sess,
             'qrcode': tfa.generate_tfa_qrcode(request.userid, tfa_secret_sess),
             'error': "2fa",
-            'title': "Enable 2FA: Step 2"
+            'title': "Enable 2FA: Step 2",
+            'step': 2
         }
     else:
         _set_recovery_codes_on_session(','.join(recovery_codes))
-        return render_to_response('weasyl:templates/control/2fa/init_verify.jinja2', {
+        return {
             'tfa_recovery_codes': recovery_codes,
             'error': None,
-            'title': "Enable 2FA: Final Step"
-        }, request=request)
+            'title': "Enable 2FA: Final Step",
+            'step': 3
+        }
 
 
-@view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init_verify.jinja2', request_method="GET")
+@view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init.jinja2', request_method="GET")
 @login_required
 @twofactorauth_disabled_required
 def tfa_init_verify_get_(request):
@@ -173,7 +176,7 @@ def tfa_init_verify_get_(request):
                     [["2FA Status", "/control/2fa/status"], ["Return to the Home Page", "/"]]))
 
 
-@view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init_verify.jinja2', request_method="POST")
+@view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_disabled_required
@@ -200,14 +203,16 @@ def tfa_init_verify_post_(request):
             return {
                     'tfa_recovery_codes': tfarecoverycodes.split(','),
                     'error': "2fa",
-                    'title': "Enable 2FA: Final Step"
+                    'title': "Enable 2FA: Final Step",
+                    'step': 3
             }
     # The user didn't check the verification checkbox (despite HTML5's client-side check); regenerate codes & redisplay
     elif not verify_checkbox:
         return {
             'tfa_recovery_codes': tfarecoverycodes.split(','),
             'error': "verify",
-            'title': "Enable 2FA: Final Step"
+            'title': "Enable 2FA: Final Step",
+            'step': 3
         }
 
 
@@ -249,14 +254,14 @@ def tfa_disable_post_(request):
         }
 
 
-@view_config(route_name="control_2fa_generate_recovery_codes_verify_password", renderer='/control/2fa/generate_recovery_codes_verify_password.jinja2', request_method="GET")
+@view_config(route_name="control_2fa_generate_recovery_codes_verify_password", renderer='/control/2fa/generate_recovery_codes.jinja2', request_method="GET")
 @login_required
 @twofactorauth_enabled_required
 def tfa_generate_recovery_codes_verify_password_get_(request):
-    return {'error': None, 'title': "Generate Recovery Codes: Verify Password"}
+    return {'error': None, 'title': "Generate Recovery Codes: Verify Password", 'step': 1}
 
 
-@view_config(route_name="control_2fa_generate_recovery_codes_verify_password", renderer='/control/2fa/generate_recovery_codes_verify_password.jinja2', request_method="POST")
+@view_config(route_name="control_2fa_generate_recovery_codes_verify_password", renderer='/control/2fa/generate_recovery_codes.jinja2', request_method="POST")
 @token_checked
 @login_required
 @twofactorauth_enabled_required
@@ -265,7 +270,7 @@ def tfa_generate_recovery_codes_verify_password_post_(request):
                                                request.params['password'], request=None)
     # The user's password failed to authenticate
     if status == "invalid":
-        return {'error': "password", 'title': "Generate Recovery Codes: Verify Password"}
+        return {'error': "password", 'title': "Generate Recovery Codes: Verify Password", 'step': 1}
     # The user has authenticated, so continue with generating the new recovery codes.
     else:
         # Edge case prevention: Stop the user from having two Weasyl sessions open and trying
@@ -286,11 +291,11 @@ def tfa_generate_recovery_codes_verify_password_post_(request):
             # Either this is a fresh request to generate codes, or the timelimit was exceeded.
             recovery_codes = tfa.generate_recovery_codes()
             _set_recovery_codes_on_session(','.join(recovery_codes))
-        return render_to_response('weasyl:templates/control/2fa/generate_recovery_codes.jinja2',
-                                  {'tfa_recovery_codes': recovery_codes,
-                                   'error': None,
-                                   'title': "Generate Recovery Codes: Save New Recovery Codes"
-                                   }, request=request)
+        return {'tfa_recovery_codes': recovery_codes,
+                'error': None,
+                'title': "Generate Recovery Codes: Save New Recovery Codes",
+                'step': 2
+                }
 
 
 @view_config(route_name="control_2fa_generate_recovery_codes", renderer='/control/2fa/generate_recovery_codes.jinja2', request_method="GET")
@@ -337,11 +342,13 @@ def tfa_generate_recovery_codes_post_(request):
             return {
                 'tfa_recovery_codes': tfarecoverycodes.split(','),
                 'error': "2fa",
-                'title': "Generate Recovery Codes: Save New Recovery Codes"
+                'title': "Generate Recovery Codes: Save New Recovery Codes",
+                'step': 2,
             }
     elif not verify_checkbox:
         return {
             'tfa_recovery_codes': tfarecoverycodes.split(','),
             'error': "verify",
-            'title': "Generate Recovery Codes: Save New Recovery Codes"
+            'title': "Generate Recovery Codes: Save New Recovery Codes",
+            'step': 2
         }
