@@ -1,10 +1,11 @@
 from __future__ import absolute_import
 
-from pyramid.response import Response
+from pyramid.view import view_config
 
 from weasyl import define, media, commishinfo
 
 
+@view_config(route_name="marketplace", renderer='/etc/marketplace.jinja2')
 def search_(request):
     form = request.web_input(q="", min="", max="", currency="", pc="", c="", o="")
     limit = 30

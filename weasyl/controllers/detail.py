@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from pyramid import httpexceptions
+from pyramid.view import view_config
 from pyramid.response import Response
 
 from libweasyl.models.content import Submission
@@ -10,7 +11,14 @@ from weasyl import (
 from weasyl.error import WeasylError
 
 
-# Content detail functions
+@view_config(route_name="submission_detail_profile;no_s;no_slug", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail_profile;no_s", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail_profile;no_slug", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail_profile", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail_view_unnamed", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail_view", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail_unnamed", renderer='/detail/submission.jinja2')
+@view_config(route_name="submission_detail", renderer='/detail/submission.jinja2')
 def submission_(request):
     username = request.matchdict.get('name')
     submitid = request.matchdict.get('submitid')
@@ -77,6 +85,7 @@ def submission_(request):
     }
 
 
+@view_config(route_name='submission_detail_media')
 def submission_media_(request):
     link_type = request.matchdict['linktype']
     submitid = int(request.matchdict['submitid'])
@@ -98,6 +107,7 @@ def submission_media_(request):
     ])
 
 
+@view_config(route_name="submission_tag_history", renderer='/detail/tag_history.jinja2')
 def submission_tag_history_(request):
     submitid = int(request.matchdict['submitid'])
 
@@ -108,6 +118,8 @@ def submission_tag_history_(request):
     }
 
 
+@view_config(route_name="character_detail_unnamed", renderer='/detail/character.jinja2')
+@view_config(route_name="character_detail", renderer='/detail/character.jinja2')
 def character_(request):
     form = request.web_input(charid="", ignore="", anyway="")
 
@@ -141,6 +153,8 @@ def character_(request):
     }
 
 
+@view_config(route_name="journal_detail_unnamedited", renderer='/detail/journal.jinja2')
+@view_config(route_name="journal_detail", renderer='/detail/journal.jinja2')
 def journal_(request):
     form = request.web_input(journalid="", ignore="", anyway="")
 

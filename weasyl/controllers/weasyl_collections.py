@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 from pyramid.response import Response
 
 from weasyl import define, collection, profile
@@ -8,6 +9,7 @@ from weasyl.error import WeasylError
 from weasyl.controllers.decorators import login_required, token_checked
 
 
+@view_config(route_name="collection_options", renderer='/manage/collection_options.jinja2', request_method='GET')
 @login_required
 def collection_options_get_(request):
     jsonb_settings = define.get_profile_settings(request.userid)
@@ -18,6 +20,7 @@ def collection_options_get_(request):
     return {'settings': form_settings, 'title': "Collection Options"}
 
 
+@view_config(route_name="collection_options", renderer='/manage/collection_options.jinja2', request_method='POST')
 @login_required
 @token_checked
 def collection_options_post_(request):
@@ -31,6 +34,7 @@ def collection_options_post_(request):
     raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="collection_offer", request_method="POST")
 @login_required
 @token_checked
 def collection_offer_(request):
@@ -51,6 +55,7 @@ def collection_offer_(request):
         [["Go Back", "/submission/%i" % (form.submitid,)], ["Return to the Home Page", "/index"]]))
 
 
+@view_config(route_name="collection_request", request_method="POST")
 @login_required
 @token_checked
 def collection_request_(request):
@@ -74,6 +79,7 @@ def collection_request_(request):
         [["Go Back", "/submission/%i" % (form.submitid,)], ["Return to the Home Page", "/index"]]))
 
 
+@view_config(route_name="collection_remove", request_method="POST")
 @login_required
 @token_checked
 def collection_remove_(request):

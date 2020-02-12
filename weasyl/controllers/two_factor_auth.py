@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 import arrow
 from pyramid.response import Response
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 from pyramid.renderers import render_to_response
 
 from weasyl import define
@@ -55,6 +56,7 @@ def _cleanup_session():
     sess.save = True
 
 
+@view_config(route_name="control_2fa_status", renderer='/control/2fa/status.jinja2')
 @login_required
 def tfa_status_get_(request):
     return {
@@ -64,6 +66,7 @@ def tfa_status_get_(request):
     }
 
 
+@view_config(route_name="control_2fa_init", renderer='/control/2fa/init.jinja2', request_method="GET")
 @login_required
 @twofactorauth_disabled_required
 def tfa_init_get_(request):
@@ -74,6 +77,7 @@ def tfa_init_get_(request):
     }
 
 
+@view_config(route_name="control_2fa_init", renderer='/control/2fa/init.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_disabled_required
@@ -103,7 +107,7 @@ def tfa_init_post_(request):
         }, request=request)
 
 
-
+@view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init_qrcode.jinja2', request_method="GET")
 @login_required
 @twofactorauth_disabled_required
 def tfa_init_qrcode_get_(request):
@@ -120,6 +124,7 @@ def tfa_init_qrcode_get_(request):
                     [["2FA Status", "/control/2fa/status"], ["Return to the Home Page", "/"]]))
 
 
+@view_config(route_name="control_2fa_init_qrcode", renderer='/control/2fa/init_qrcode.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_disabled_required
@@ -149,6 +154,7 @@ def tfa_init_qrcode_post_(request):
         }, request=request)
 
 
+@view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init_verify.jinja2', request_method="GET")
 @login_required
 @twofactorauth_disabled_required
 def tfa_init_verify_get_(request):
@@ -167,6 +173,7 @@ def tfa_init_verify_get_(request):
                     [["2FA Status", "/control/2fa/status"], ["Return to the Home Page", "/"]]))
 
 
+@view_config(route_name="control_2fa_init_verify", renderer='/control/2fa/init_verify.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_disabled_required
@@ -204,6 +211,7 @@ def tfa_init_verify_post_(request):
         }
 
 
+@view_config(route_name="control_2fa_disable", renderer='/control/2fa/disable.jinja2', request_method="GET")
 @login_required
 @twofactorauth_enabled_required
 def tfa_disable_get_(request):
@@ -214,6 +222,7 @@ def tfa_disable_get_(request):
     }
 
 
+@view_config(route_name="control_2fa_disable", renderer='/control/2fa/disable.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_enabled_required
@@ -240,12 +249,14 @@ def tfa_disable_post_(request):
         }
 
 
+@view_config(route_name="control_2fa_generate_recovery_codes_verify_password", renderer='/control/2fa/generate_recovery_codes_verify_password.jinja2', request_method="GET")
 @login_required
 @twofactorauth_enabled_required
 def tfa_generate_recovery_codes_verify_password_get_(request):
     return {'error': None, 'title': "Generate Recovery Codes: Verify Password"}
 
 
+@view_config(route_name="control_2fa_generate_recovery_codes_verify_password", renderer='/control/2fa/generate_recovery_codes_verify_password.jinja2', request_method="POST")
 @token_checked
 @login_required
 @twofactorauth_enabled_required
@@ -282,6 +293,7 @@ def tfa_generate_recovery_codes_verify_password_post_(request):
                                    }, request=request)
 
 
+@view_config(route_name="control_2fa_generate_recovery_codes", renderer='/control/2fa/generate_recovery_codes.jinja2', request_method="GET")
 @login_required
 @twofactorauth_enabled_required
 def tfa_generate_recovery_codes_get_(request):
@@ -301,6 +313,7 @@ def tfa_generate_recovery_codes_get_(request):
     ))
 
 
+@view_config(route_name="control_2fa_generate_recovery_codes", renderer='/control/2fa/generate_recovery_codes.jinja2', request_method="POST")
 @login_required
 @token_checked
 @twofactorauth_enabled_required

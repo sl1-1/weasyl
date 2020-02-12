@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 from pyramid.response import Response
 
 from weasyl.controllers.decorators import login_required, token_checked
@@ -10,6 +11,7 @@ from weasyl import (
 
 
 # User interactivity functions
+@view_config(route_name="followuser", request_method="POST")
 @login_required
 @token_checked
 def followuser_(request):
@@ -30,6 +32,7 @@ def followuser_(request):
     raise HTTPSeeOther(location="/~%s" % (define.get_sysname(define.get_display_name(otherid))))
 
 
+@view_config(route_name="unfollowuser", request_method="POST")
 @login_required
 @token_checked
 def unfollowuser_(request):
@@ -43,6 +46,7 @@ def unfollowuser_(request):
         [["Go Back", "/manage/following"], ["Return Home", "/"]]))
 
 
+@view_config(route_name="frienduser", request_method="POST")
 @login_required
 @token_checked
 def frienduser_(request):
@@ -70,6 +74,7 @@ def frienduser_(request):
         raise HTTPSeeOther(location="/~%s" % (define.get_sysname(define.get_display_name(otherid))))
 
 
+@view_config(route_name="unfrienduser", request_method="POST")
 @login_required
 @token_checked
 def unfrienduser_(request):
@@ -84,6 +89,7 @@ def unfrienduser_(request):
     raise HTTPSeeOther(location="/manage/friends?feature=%s" % form.feature)
 
 
+@view_config(route_name="ignoreuser", request_method="POST")
 @login_required
 @token_checked
 def ignoreuser_(request):
@@ -99,6 +105,7 @@ def ignoreuser_(request):
 
 
 # Private messaging functions
+@view_config(route_name="note", renderer='/note/message_view.jinja2', request_method="GET")
 @login_required
 def note_(request):
     if not define.is_vouched_for(request.userid):
@@ -111,6 +118,7 @@ def note_(request):
     return {'query': data, 'myself': profile.select_myself(request.userid)}
 
 
+@view_config(route_name="/notes", renderer='/note/message_list.jinja2', request_method="GET")
 @login_required
 def notes_(request):
     if not define.is_vouched_for(request.userid):
@@ -136,6 +144,7 @@ def notes_(request):
     raise WeasylError("unknownMessageFolder")
 
 
+@view_config(route_name="notes_compose", renderer='/note/compose.jinja2', request_method="GET")
 @login_required
 def notes_compose_get_(request):
     if not define.is_vouched_for(request.userid):
@@ -146,6 +155,7 @@ def notes_compose_get_(request):
     return {'recipient': form.recipient.strip(), 'myself': profile.select_myself(request.userid)}
 
 
+@view_config(route_name="notes_compose", renderer='/note/compose.jinja2', request_method="POST")
 @login_required
 @token_checked
 def notes_compose_post_(request):
@@ -162,6 +172,7 @@ def notes_compose_post_(request):
         raise HTTPSeeOther(location="/notes")  # todo (send to /note/xxx ?)
 
 
+@view_config(route_name="notes_remove", request_method="POST")
 @login_required
 @token_checked
 def notes_remove_(request):
@@ -180,6 +191,7 @@ def notes_remove_(request):
     raise HTTPSeeOther(location=link)
 
 
+@view_config(route_name="favorite", request_method="POST")
 @login_required
 @token_checked
 def favorite_(request):

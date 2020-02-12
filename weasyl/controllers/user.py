@@ -7,6 +7,7 @@ from pyramid.httpexceptions import (
     HTTPFound,
     HTTPSeeOther,
 )
+from pyramid.view import view_config
 from pyramid.response import Response
 
 from weasyl import define, errorcode, index, login, moderation, \
@@ -22,7 +23,7 @@ from weasyl.macro import MACRO_SUPPORT_ADDRESS
 
 
 # Session management functions
-
+@view_config(route_name="signin", renderer='/etc/signin.jinja2', request_method='GET')
 @guest_required
 def signin_get_(request):
     return {
@@ -32,6 +33,7 @@ def signin_get_(request):
     }
 
 
+@view_config(route_name="signin", renderer='/etc/signin.jinja2', request_method='POST')
 @guest_required
 @token_checked
 def signin_post_(request):
@@ -113,6 +115,7 @@ def _cleanup_2fa_session():
     sess.save = True
 
 
+@view_config(route_name="signin_2fa_auth", renderer='/etc/signin_2fa_auth.jinja2', request_method='GET')
 @guest_required
 def signin_2fa_auth_get_(request):
     sess = define.get_weasyl_session()
@@ -142,6 +145,7 @@ def signin_2fa_auth_get_(request):
         }
 
 
+@view_config(route_name="signin_2fa_auth", renderer='/etc/signin_2fa_auth.jinja2', request_method='POST')
 @guest_required
 @token_checked
 def signin_2fa_auth_post_(request):
@@ -199,11 +203,13 @@ def signin_2fa_auth_post_(request):
         }
 
 
+@view_config(route_name='signin-unicode-failure', renderer='/etc/unicode_failure.jinja2', request_method="GET")
 @login_required
 def signin_unicode_failure_get_(request):
     return {'title': 'Fix Your Password'}
 
 
+@view_config(route_name='signin-unicode-failure', renderer='/etc/unicode_failure.jinja2', request_method="POST")
 @login_required
 def signin_unicode_failure_post_(request):
     form = request.web_input(password='', password_confirm='')
@@ -211,6 +217,7 @@ def signin_unicode_failure_post_(request):
     raise HTTPFound(location="/", headers=request.response.headers)
 
 
+@view_config(route_name='signout')
 @login_required
 @disallow_api
 def signout_(request):
@@ -222,11 +229,13 @@ def signout_(request):
     raise HTTPSeeOther(location="/", headers=request.response.headers)
 
 
+@view_config(route_name='signup', renderer='/etc/signup.jinja2', request_method="GET")
 @guest_required
 def signup_get_(request):
     return {'title': "Create a Weasyl Account"}
 
 
+@view_config(route_name='signup', renderer='/etc/signup.jinja2', request_method="POST")
 @guest_required
 @token_checked
 def signup_post_(request):
@@ -271,11 +280,13 @@ def verify_emailchange_get_(request):
     ))
 
 
+@view_config(route_name="forgot_password", renderer='/etc/forgotpassword.jinja2', request_method="GET")
 @guest_required
 def forgotpassword_get_(request):
     return {'title': "Reset Forgotten Password"}
 
 
+@view_config(route_name="forgot_password", renderer='/etc/forgotpassword.jinja2', request_method="POST")
 @guest_required
 @token_checked
 def forgetpassword_post_(request):
@@ -291,6 +302,7 @@ def forgetpassword_post_(request):
         [["Return to the Home Page", "/"]]))
 
 
+@view_config(route_name="reset_password", renderer='/etc/resetpassword.jinja2', request_method="GET")
 @guest_required
 def resetpassword_get_(request):
     form = request.web_input(token="")
@@ -303,6 +315,7 @@ def resetpassword_get_(request):
     return {'token': form.token, 'title': "Reset Forgotten Password"}
 
 
+@view_config(route_name="reset_password", renderer='/etc/resetpassword.jinja2', request_method="POST")
 @guest_required
 def resetpassword_post_(request):
     form = request.web_input(token="", username="", email="", day="", month="", year="", password="", passcheck="")
@@ -319,6 +332,7 @@ def resetpassword_post_(request):
 
 
 # Forced action functions
+@view_config(route_name="force_reset_password", request_method="POST")
 @login_required
 @token_checked
 def force_resetpassword_(request):
@@ -335,6 +349,7 @@ def force_resetpassword_(request):
     raise HTTPSeeOther(location="/", headers=request.response.headers)
 
 
+@view_config(route_name="force_reset_birthday", request_method="POST")
 @login_required
 @token_checked
 def force_resetbirthday_(request):
@@ -348,6 +363,7 @@ def force_resetbirthday_(request):
     raise HTTPSeeOther(location="/", headers=request.response.headers)
 
 
+@view_config(route_name="vouch", request_method="POST")
 @login_required
 @token_checked
 def vouch_(request):

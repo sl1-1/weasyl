@@ -4,7 +4,7 @@ import itertools
 from collections import defaultdict
 
 from pyramid.httpexceptions import HTTPSeeOther
-from pyramid.response import Response
+from pyramid.view import view_config
 
 from weasyl import define, message
 from weasyl.controllers.decorators import login_required, token_checked
@@ -12,6 +12,7 @@ from weasyl.controllers.decorators import login_required, token_checked
 """Contains view callables dealing with notification messages."""
 
 
+@view_config(route_name="messages_remove", request_method="POST")
 @login_required
 @token_checked
 def messages_remove_(request):
@@ -88,6 +89,7 @@ def sort_notifications(notifications):
     return notification_dict
 
 
+@view_config(route_name="messages_notifications", renderer='/message/notifications.jinja2')
 @login_required
 def messages_notifications_(request):
     """ todo finish listing of message types in the template """
@@ -102,6 +104,7 @@ def messages_notifications_(request):
     return {'query': sort_notifications(notifications), 'title': 'Notifications'}
 
 
+@view_config(route_name="messages_submissions", renderer='/message/submissions_thumbnails.jinja2')
 @login_required
 def messages_submissions_(request):
     form = request.web_input(feature="", backtime=None, nexttime=None)

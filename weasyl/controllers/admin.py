@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 from pyramid.response import Response
 
 from libweasyl import staff
@@ -16,16 +17,19 @@ import weasyl.define as d
 """ Administrator control panel view callables """
 
 
+@view_config(route_name="admincontrol", renderer='/admincontrol/admincontrol.jinja2')
 @admin_only
 def admincontrol_(request):
     return {'title': "Admin Control Panel"}
 
 
+@view_config(route_name="admin_siteupdate", renderer='/admincontrol/siteupdate.jinja2', request_method="GET")
 @admin_only
 def admincontrol_siteupdate_get_(request):
     return {'update': SiteUpdate(), 'title': "Submit Site Update"}
 
 
+@view_config(route_name="admin_siteupdate", renderer='/admincontrol/siteupdate.jinja2', request_method="POST")
 @admin_only
 @token_checked
 def admincontrol_siteupdate_post_(request):
@@ -43,6 +47,7 @@ def admincontrol_siteupdate_post_(request):
     raise HTTPSeeOther(location="/site-updates/%d" % (update.updateid,))
 
 
+@view_config(route_name="site_update_edit", renderer='/admincontrol/siteupdate.jinja2', request_method="GET")
 @admin_only
 def site_update_edit_(request):
     updateid = int(request.matchdict['update_id'])
@@ -50,6 +55,7 @@ def site_update_edit_(request):
     return {'update': update, 'title': "Edit Site Update"}
 
 
+@view_config(route_name="site_update", renderer='/admincontrol/siteupdate.jinja2', request_method="POST")
 @admin_only
 @token_checked
 def site_update_put_(request):
@@ -73,6 +79,7 @@ def site_update_put_(request):
     raise HTTPSeeOther(location="/site-updates/%d" % (update.updateid,))
 
 
+@view_config(route_name="admin_manageuser", renderer='/admincontrol/manageuser.jinja2', request_method="GET")
 @admin_only
 def admincontrol_manageuser_get_(request):
     form = request.web_input(name="")
@@ -86,6 +93,7 @@ def admincontrol_manageuser_get_(request):
     return {'profile': profile.select_manage(otherid), 'title': "User Management"}
 
 
+@view_config(route_name="admin_manageuser", renderer='/admincontrol/manageuser.jinja2', request_method="POST")
 @admin_only
 @token_checked
 def admincontrol_manageuser_post_(request):
@@ -108,6 +116,7 @@ def admincontrol_manageuser_post_(request):
     raise HTTPSeeOther(location="/admincontrol")
 
 
+@view_config(route_name="admin_acctverifylink", renderer='/admincontrol/acctverifylink.jinja2', request_method="POST")
 @admin_only
 @token_checked
 def admincontrol_acctverifylink_(request):
@@ -122,6 +131,7 @@ def admincontrol_acctverifylink_(request):
     return Response(d.errorpage(request.userid, "No pending account found."))
 
 
+@view_config(route_name="admincontrol_pending_accounts", renderer='/admincontrol/pending_accounts.jinja2', request_method="GET")
 @admin_only
 def admincontrol_pending_accounts_get_(request):
     """
@@ -139,6 +149,7 @@ def admincontrol_pending_accounts_get_(request):
     return {'query': query, 'title': "Accounts Pending Creation"}
 
 
+@view_config(route_name="admincontrol_pending_accounts", renderer='/admincontrol/pending_accounts.jinja2', request_method="POST")
 @admin_only
 @token_checked
 def admincontrol_pending_accounts_post_(request):
@@ -158,11 +169,13 @@ def admincontrol_pending_accounts_post_(request):
     raise HTTPSeeOther(location="/admincontrol/pending_accounts")
 
 
+@view_config(route_name="admincontrol_finduser",  renderer='/admincontrol/finduser.jinja2', request_method="GET")
 @admin_only
 def admincontrol_finduser_get_(request):
     return {'title': "Search Users"}
 
 
+@view_config(route_name="admincontrol_finduser",  renderer='/admincontrol/finduser.jinja2', request_method="POST")
 @admin_only
 @token_checked
 def admincontrol_finduser_post_(request):

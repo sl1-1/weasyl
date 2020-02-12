@@ -2,6 +2,7 @@ from __future__ import absolute_import
 
 import itertools
 
+from pyramid.view import view_config
 from sqlalchemy.orm import joinedload
 
 from libweasyl import ratings
@@ -11,11 +12,12 @@ from libweasyl.models.site import SiteUpdate
 from weasyl import comment, define, index, macro, search, profile, submission
 
 
-# General browsing functions
+@view_config(route_name="index", renderer='/etc/index.jinja2')
 def index_(request):
     return index.template_fields(request.userid)
 
 
+@view_config(route_name="search", renderer='/etc/search.jinja2')
 def search_(request):
     rating = define.get_rating(request.userid)
 
@@ -107,12 +109,14 @@ def search_(request):
         }
 
 
+@view_config(route_name="streaming", renderer='/etc/streaming.jinja2')
 def streaming_(request):
     rating = define.get_rating(request.userid)
     streaming = profile.select_streaming(request.userid, rating, 300, order_by="start_time desc")
     return {"streaming": streaming, "title": "Streaming"}
 
 
+@view_config(route_name="site_update_list", renderer='/etc/site_update_list.jinja2')
 def site_update_list_(request):
     updates = (
         SiteUpdate.query
@@ -125,6 +129,7 @@ def site_update_list_(request):
     return {"updates": updates, "title": "Site Updates"}
 
 
+@view_config(route_name="site_update", renderer='/etc/site_update.jinja2')
 def site_update_(request):
     updateid = int(request.matchdict['update_id'])
     update = SiteUpdate.query.get_or_404(updateid)
@@ -134,6 +139,7 @@ def site_update_(request):
     return {"myself": myself, "update": update, "comments": comments, "title": "Site Update"}
 
 
+@view_config(route_name="popular", renderer='/etc/popular.jinja2')
 def popular_(request):
     popular = list(
         itertools.islice(

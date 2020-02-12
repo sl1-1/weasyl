@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import urlparse
 
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 from pyramid.response import Response
 
 from libweasyl import ratings
@@ -18,6 +19,7 @@ from weasyl.login import get_user_agent_id
 
 
 # Content submission functions
+@view_config(route_name="submit", renderer='/submit/submit.jinja2')
 @login_required
 def submit_(request):
     if not define.is_vouched_for(request.userid):
@@ -26,6 +28,7 @@ def submit_(request):
     return {'title': "Submit Artwork"}
 
 
+@view_config(route_name="submit_visual", renderer='/submit/visual.jinja2', request_method="GET")
 @login_required
 def submit_visual_get_(request):
     if not define.is_vouched_for(request.userid):
@@ -43,6 +46,7 @@ def submit_visual_get_(request):
     }
 
 
+@view_config(route_name="submit_visual", renderer='/submit/visual.jinja2', request_method="POST")
 @login_required
 @token_checked
 def submit_visual_post_(request):
@@ -82,6 +86,7 @@ def submit_visual_post_(request):
         raise HTTPSeeOther(location="/submission/%i/%s" % (submitid, slug_for(form.title)))
 
 
+@view_config(route_name="submit_literary", renderer='/submit/literary.jinja2', request_method="GET")
 @login_required
 def submit_literary_get_(request):
     if not define.is_vouched_for(request.userid):
@@ -95,6 +100,7 @@ def submit_literary_get_(request):
     }
 
 
+@view_config(route_name="submit_literary", renderer='/submit/literary.jinja2', request_method="POST")
 @login_required
 @token_checked
 def submit_literary_post_(request):
@@ -133,6 +139,7 @@ def submit_literary_post_(request):
         raise HTTPSeeOther(location="/submission/%i/%s" % (submitid, slug_for(form.title)))
 
 
+@view_config(route_name="submit_multimedia", renderer='/submit/multimedia.jinja2', request_method="GET")
 @login_required
 def submit_multimedia_get_(request):
     if not define.is_vouched_for(request.userid):
@@ -146,6 +153,7 @@ def submit_multimedia_get_(request):
     }
 
 
+@view_config(route_name="submit_multimedia", renderer='/submit/multimedia.jinja2', request_method="POST")
 @login_required
 @token_checked
 def submit_multimedia_post_(request):
@@ -187,6 +195,7 @@ def submit_multimedia_post_(request):
         raise HTTPSeeOther(location="/submission/%i/%s" % (submitid, slug_for(form.title)))
 
 
+@view_config(route_name="submit_character", renderer='/submit/character.jinja2', request_method="GET")
 @login_required
 def submit_character_get_(request):
     if not define.is_vouched_for(request.userid):
@@ -198,6 +207,7 @@ def submit_character_get_(request):
     }
 
 
+@view_config(route_name="submit_character", renderer='/submit/character.jinja2', request_method="POST")
 @login_required
 @token_checked
 def submit_character_post_(request):
@@ -232,6 +242,7 @@ def submit_character_post_(request):
     raise HTTPSeeOther(location="/manage/thumbnail?charid=%i" % (charid,))
 
 
+@view_config(route_name="submit_journal", renderer='/submit/journal.jinja2', request_method="GET")
 @login_required
 def submit_journal_get_(request):
     if not define.is_vouched_for(request.userid):
@@ -243,6 +254,7 @@ def submit_journal_get_(request):
     }
 
 
+@view_config(route_name="submit_journal", renderer='/submit/journal.jinja2', request_method="POST")
 @login_required
 @token_checked
 def submit_journal_post_(request):
@@ -271,6 +283,7 @@ def submit_journal_post_(request):
     raise HTTPSeeOther(location="/journal/%i/%s" % (journalid, slug_for(form.title)))
 
 
+@view_config(route_name="submit_shout", request_method="POST")
 @login_required
 @token_checked
 @supports_json
@@ -299,6 +312,7 @@ def submit_shout_(request):
         raise HTTPSeeOther(location="/shouts?userid=%i#cid%i" % (define.get_int(form.userid), commentid))
 
 
+@view_config(route_name="submit_comment", request_method="POST")
 @login_required
 @token_checked
 @supports_json
@@ -331,6 +345,7 @@ def submit_comment_(request):
         raise WeasylError("Unexpected")
 
 
+@view_config(route_name="submit_report", request_method="POST")
 @login_required
 @token_checked
 def submit_report_(request):
@@ -347,6 +362,7 @@ def submit_report_(request):
         raise HTTPSeeOther(location="/journal/%i" % (define.get_int(form.journalid),))
 
 
+@view_config(route_name="submit_tags", request_method="POST")
 @login_required
 @token_checked
 def submit_tags_(request):
@@ -396,6 +412,7 @@ def submit_tags_(request):
         raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="reupload_submission", renderer='/submit/reupload_submission.jinja2', request_method="GET")
 @login_required
 def reupload_submission_get_(request):
     form = request.web_input(submitid="")
@@ -412,6 +429,7 @@ def reupload_submission_get_(request):
     }
 
 
+@view_config(route_name="reupload_submission", renderer='/submit/reupload_submission.jinja2', request_method="POST")
 @login_required
 @token_checked
 def reupload_submission_post_(request):
@@ -425,6 +443,7 @@ def reupload_submission_post_(request):
     raise HTTPSeeOther(location="/submission/%i" % (form.targetid,))
 
 
+@view_config(route_name="reupload_character", renderer='/submit/reupload_submission.jinja2', request_method="GET")
 @login_required
 def reupload_character_get_(request):
     form = request.web_input(charid="")
@@ -440,6 +459,7 @@ def reupload_character_get_(request):
     }
 
 
+@view_config(route_name="reupload_character", renderer='/submit/reupload_submission.jinja2', request_method="POST")
 @login_required
 @token_checked
 def reupload_character_post_(request):
@@ -453,6 +473,7 @@ def reupload_character_post_(request):
     raise HTTPSeeOther(location="/character/%i" % (form.targetid,))
 
 
+@view_config(route_name="reupload_cover", renderer='/submit/reupload_cover.jinja2', request_method="GET")
 @login_required
 def reupload_cover_get_(request):
     form = request.web_input(submitid="")
@@ -466,6 +487,7 @@ def reupload_cover_get_(request):
     }
 
 
+@view_config(route_name="reupload_cover", renderer='/submit/reupload_cover.jinja2', request_method="POST")
 @login_required
 @token_checked
 def reupload_cover_post_(request):
@@ -477,6 +499,7 @@ def reupload_cover_post_(request):
 
 
 # Content editing functions
+@view_config(route_name="edit_submission", renderer='/edit/submission.jinja2', request_method="GET")
 @login_required
 def edit_submission_get_(request):
     form = request.web_input(submitid="", anyway="")
@@ -498,6 +521,7 @@ def edit_submission_get_(request):
     }
 
 
+@view_config(route_name="edit_submission", renderer='/edit/submission.jinja2', request_method="POST")
 @login_required
 @token_checked
 def edit_submission_post_(request):
@@ -525,6 +549,7 @@ def edit_submission_post_(request):
     ))
 
 
+@view_config(route_name="edit_character", renderer='/edit/character.jinja2', request_method="GET")
 @login_required
 def edit_character_get_(request):
     form = request.web_input(charid="", anyway="")
@@ -543,6 +568,7 @@ def edit_character_get_(request):
     }
 
 
+@view_config(route_name="edit_character", renderer='/edit/character.jinja2', request_method="POST")
 @login_required
 @token_checked
 def edit_character_post_(request):
@@ -572,6 +598,7 @@ def edit_character_post_(request):
     ))
 
 
+@view_config(route_name="edit_journal", renderer='/edit/journal.jinja2', request_method="GET")
 @login_required
 def edit_journal_get_(request):
     form = request.web_input(journalid="", anyway="")
@@ -590,6 +617,7 @@ def edit_journal_get_(request):
     }
 
 
+@view_config(route_name="edit_journal", renderer='/edit/journal.jinja2', request_method="POST")
 @login_required
 @token_checked
 def edit_journal_post_(request):
@@ -613,6 +641,7 @@ def edit_journal_post_(request):
 
 
 # Content removal functions
+@view_config(route_name="remove_submission", request_method="POST")
 @login_required
 @token_checked
 def remove_submission_(request):
@@ -625,6 +654,7 @@ def remove_submission_(request):
         raise HTTPSeeOther(location="/submissions?userid=%i" % (ownerid,))
 
 
+@view_config(route_name="remove_character", request_method="POST")
 @login_required
 @token_checked
 def remove_character_(request):
@@ -637,6 +667,7 @@ def remove_character_(request):
         raise HTTPSeeOther(location="/characters?userid=%i" % (ownerid,))
 
 
+@view_config(route_name="remove_journal", request_method="POST")
 @login_required
 @token_checked
 def remove_journal_(request):
@@ -649,6 +680,7 @@ def remove_journal_(request):
         raise HTTPSeeOther(location="/journals?userid=%i" % (ownerid,))
 
 
+@view_config(route_name="remove_comment", request_method="POST")
 @login_required
 @token_checked
 @supports_json

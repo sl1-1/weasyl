@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 
 from pyramid.httpexceptions import HTTPSeeOther
+from pyramid.view import view_config
 from pyramid.response import Response
 from pyramid.renderers import render_to_response
 
@@ -18,6 +19,7 @@ from weasyl import (
 
 
 # Control panel functions
+@view_config(route_name="control", renderer='/control/control.jinja2')
 @login_required
 def control_(request):
     return {
@@ -27,6 +29,7 @@ def control_(request):
     }
 
 
+@view_config(route_name="control_uploadavatar", request_method="POST")
 @login_required
 @token_checked
 def control_uploadavatar_(request):
@@ -39,6 +42,7 @@ def control_uploadavatar_(request):
         raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_editprofile", renderer='/control/edit_profile.jinja2', request_method="GET")
 @login_required
 def control_editprofile_get_(request):
     userinfo = profile.select_userinfo(request.userid)
@@ -50,6 +54,7 @@ def control_editprofile_get_(request):
     }
 
 
+@view_config(route_name="control_editprofile", renderer='/control/edit_profile.jinja2', request_method="POST")
 @login_required
 @token_checked
 def control_editprofile_put_(request):
@@ -84,6 +89,7 @@ def control_editprofile_put_(request):
     raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_editcommissionsettings", renderer='/control/edit_commissionsettings.jinja2', request_method="GET")
 @login_required
 def control_editcommissionsettings_(request):
     return {
@@ -95,6 +101,7 @@ def control_editcommissionsettings_(request):
     }
 
 
+@view_config(route_name="control_editcommishinfo", request_method="POST")
 @login_required
 @token_checked
 def control_editcommishinfo_(request):
@@ -108,6 +115,7 @@ def control_editcommishinfo_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_createcommishclass", request_method="POST")
 @login_required
 @token_checked
 def control_createcommishclass_(request):
@@ -130,6 +138,7 @@ def control_createcommishclass_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_editcommishclass", request_method="POST")
 @login_required
 @token_checked
 def control_editcommishclass_(request):
@@ -142,6 +151,7 @@ def control_editcommishclass_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_removecommishclass", request_method="POST")
 @login_required
 @token_checked
 def control_removecommishclass_(request):
@@ -154,6 +164,7 @@ def control_removecommishclass_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_createcommishprice", request_method="POST")
 @login_required
 @token_checked
 def control_createcommishprice_(request):
@@ -170,6 +181,7 @@ def control_createcommishprice_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_editcommishprice", request_method="POST")
 @login_required
 @token_checked
 def control_editcommishprice_(request):
@@ -187,6 +199,7 @@ def control_editcommishprice_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_removecommishprice", request_method="POST")
 @login_required
 @token_checked
 def control_removecommishprice_(request):
@@ -199,12 +212,14 @@ def control_removecommishprice_(request):
     raise HTTPSeeOther(location="/control/editcommissionsettings")
 
 
+@view_config(route_name="control_editemailpassword", renderer='/control/edit_emailpassword.jinja2', request_method="GET")
 @login_required
 @disallow_api
 def control_editemailpassword_get_(request):
     return {'email': profile.select_manage(request.userid), 'title': "Edit Password and Email Address"}
 
 
+@view_config(route_name="control_editemailpassword", renderer='/control/edit_emailpassword.jinja2', request_method="POST")
 @login_required
 @disallow_api
 @token_checked
@@ -234,6 +249,7 @@ def control_editemailpassword_post_(request):
     )
 
 
+@view_config(route_name="control_editpreferences", renderer='/control/edit_preferences.jinja2', request_method="GET")
 @login_required
 def control_editpreferences_get_(request):
     config = define.get_config(request.userid)
@@ -253,6 +269,8 @@ def control_editpreferences_get_(request):
         'title': "Site Preferences"
     }
 
+
+@view_config(route_name="control_editpreferences", renderer='/control/edit_preferences.jinja2', request_method="POST")
 @login_required
 @token_checked
 def control_editpreferences_post_(request):
@@ -294,6 +312,7 @@ def control_editpreferences_post_(request):
     raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_createfolder", request_method="POST")
 @login_required
 @token_checked
 def control_createfolder_(request):
@@ -303,6 +322,7 @@ def control_createfolder_(request):
     raise HTTPSeeOther(location="/manage/folders")
 
 
+@view_config(route_name="control_renamefolder", request_method="POST")
 @login_required
 @token_checked
 def control_renamefolder_(request):
@@ -313,6 +333,7 @@ def control_renamefolder_(request):
     raise HTTPSeeOther(location="/manage/folders")
 
 
+@view_config(route_name="control_removefolder", request_method="POST")
 @login_required
 @token_checked
 def control_removefolder_(request):
@@ -324,6 +345,7 @@ def control_removefolder_(request):
     raise HTTPSeeOther(location="/manage/folders")
 
 
+@view_config(route_name="control_editfolder", renderer='/manage/folder_options.jinja2', request_method="GET")
 @login_required
 def control_editfolder_get_(request):
     folderid = int(request.matchdict['folderid'])
@@ -333,6 +355,7 @@ def control_editfolder_get_(request):
     return {'info': folder.select_info(folderid), 'title': "Edit Folder Options"}
 
 
+@view_config(route_name="control_editfolder", renderer='/manage/folder_options.jinja2', request_method="POST")
 @login_required
 @token_checked
 def control_editfolder_post_(request):
@@ -345,6 +368,7 @@ def control_editfolder_post_(request):
     raise HTTPSeeOther(location='/manage/folders')
 
 
+@view_config(route_name="control_movefolder", request_method="POST")
 @login_required
 @token_checked
 def control_movefolder_(request):
@@ -356,6 +380,7 @@ def control_movefolder_(request):
     raise HTTPSeeOther(location="/manage/folders")
 
 
+@view_config(route_name="control_ignoreuser", request_method="POST")
 @login_required
 @token_checked
 def control_ignoreuser_(request):
@@ -365,6 +390,7 @@ def control_ignoreuser_(request):
     raise HTTPSeeOther(location="/manage/ignore")
 
 
+@view_config(route_name="control_unignoreuser", request_method="POST")
 @login_required
 @token_checked
 def control_unignoreuser_(request):
@@ -374,6 +400,7 @@ def control_unignoreuser_(request):
     raise HTTPSeeOther(location="/manage/ignore")
 
 
+@view_config(route_name="control_streaming", renderer='/control/edit_streaming.jinja2', request_method="GET")
 @login_required
 def control_streaming_get_(request):
     form = request.web_input(target='')
@@ -391,6 +418,7 @@ def control_streaming_get_(request):
     }
 
 
+@view_config(route_name="control_streaming", renderer='/control/edit_streaming.jinja2', request_method="POST")
 @login_required
 @token_checked
 def control_streaming_post_(request):
@@ -421,6 +449,7 @@ def control_streaming_post_(request):
         raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_apikeys", renderer='/control/edit_apikeys.jinja2', request_method="GET")
 @login_required
 @disallow_api
 def control_apikeys_get_(request):
@@ -431,6 +460,7 @@ def control_apikeys_get_(request):
     }
 
 
+@view_config(route_name="control_apikeys", renderer='/control/edit_apikeys.jinja2', request_method="POST")
 @login_required
 @disallow_api
 @token_checked
@@ -447,6 +477,7 @@ def control_apikeys_post_(request):
     raise HTTPSeeOther(location="/control/apikeys")
 
 
+@view_config(route_name="control_tagrestrictions", renderer='/control/edit_tagrestrictions.jinja2', request_method="GET")
 @login_required
 def control_tagrestrictions_get_(request):
     return {
@@ -455,6 +486,7 @@ def control_tagrestrictions_get_(request):
     }
 
 
+@view_config(route_name="control_tagrestrictions", renderer='/control/edit_tagrestrictions.jinja2', request_method="POST")
 @login_required
 @token_checked
 def control_tagrestrictions_post_(request):
@@ -464,11 +496,13 @@ def control_tagrestrictions_post_(request):
     raise HTTPSeeOther(location=request.route_path('control_tagrestrictions'))
 
 
+@view_config(route_name="manage_folders", renderer='/manage/folders.jinja2', request_method="GET")
 @login_required
 def manage_folders_(request):
     return {'folders': folder.select_list(request.userid, "drop/all"), 'title': "Submission Folders"}
 
 
+@view_config(route_name="control_following", renderer='/manage/following_list.jinja2', request_method="GET")
 @login_required
 def manage_following_get_(request):
     form = request.web_input(userid="", backid="", nextid="")
@@ -477,7 +511,7 @@ def manage_following_get_(request):
     form.nextid = define.get_int(form.nextid)
 
     if form.userid:
-        return render_to_response('weasyl:templates/manage/following_user.jinja2',
+        return render_to_response('/manage/following_user.jinja2',
                                   {'profile': profile.select_profile(form.userid, avatar=True),
                                    'settings': followuser.select_settings(request.userid, form.userid),
                                    'title': "Followed User"}, request=request)
@@ -486,6 +520,7 @@ def manage_following_get_(request):
                 'title': "Users You Follow"}
 
 
+@view_config(route_name="control_following", renderer='/manage/following_list.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_following_post_(request):
@@ -502,12 +537,13 @@ def manage_following_post_(request):
     raise HTTPSeeOther(location="/manage/following")
 
 
+@view_config(route_name="control_friends", renderer='/manage/friends_accepted.jinja2', request_method="GET")
 @login_required
 def manage_friends_(request):
     feature = request.params.get("feature")
 
     if feature == "pending":
-        return render_to_response("weasyl:templates/manage/friends_pending.jinja2",
+        return render_to_response("/manage/friends_pending.jinja2",
                                   {'query': frienduser.select_requests(request.userid),
                                    'title': "Pending Friend Requests"},
                                   request=request)
@@ -515,11 +551,13 @@ def manage_friends_(request):
         return {'query': frienduser.select_accepted(request.userid), 'title': "Friends"}
 
 
+@view_config(route_name="manage_ignore", renderer='/manage/ignore.jinja2')
 @login_required
 def manage_ignore_(request):
     return {'query': ignoreuser.select(request.userid), 'title': "Ignored Users"}
 
 
+@view_config(route_name="control_collections", renderer='/manage/collections_accepted.jinja2', request_method="GET")
 @login_required
 def manage_collections_get_(request):
     form = request.web_input(feature="", backid="", nextid="")
@@ -529,7 +567,7 @@ def manage_collections_get_(request):
     rating = define.get_rating(request.userid)
 
     if form.feature == "pending":
-        return render_to_response("weasyl:templates/manage/collections_pending.jinja2", {
+        return render_to_response("/manage/collections_pending.jinja2", {
             'query': collection.select_list(request.userid, rating, 30, otherid=request.userid, backid=backid,
                                             nextid=nextid, pending=True),
             'userid': request.userid, 'title': "Pending Collections"}, request=request)
@@ -539,6 +577,7 @@ def manage_collections_get_(request):
                                         nextid=nextid), 'title': "Accepted Collections"}
 
 
+@view_config(route_name="control_collections", renderer='/manage/collections_accepted.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_collections_post_(request):
@@ -559,6 +598,7 @@ def manage_collections_post_(request):
     raise HTTPSeeOther(location="/manage/collections?feature=pending")
 
 
+@view_config(route_name="manage_thumbnail_", renderer='/manage/thumbnail.jinja2', request_method="GET")
 @login_required
 def manage_thumbnail_get_(request):
     form = request.web_input(submitid="", charid="")
@@ -594,6 +634,7 @@ def manage_thumbnail_get_(request):
     }
 
 
+@view_config(route_name="manage_thumbnail_", renderer='/manage/thumbnail.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_thumbnail_post_(request):
@@ -622,6 +663,7 @@ def manage_thumbnail_post_(request):
             raise HTTPSeeOther(location="/character/%i" % (charid,))
 
 
+@view_config(route_name="control_tagfilters", renderer='/manage/tagfilters.jinja2', request_method="GET")
 @login_required
 def manage_tagfilters_get_(request):
     return {
@@ -631,6 +673,7 @@ def manage_tagfilters_get_(request):
     }
 
 
+@view_config(route_name="control_tagfilters", renderer='/manage/tagfilters.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_tagfilters_post_(request):
@@ -644,6 +687,7 @@ def manage_tagfilters_post_(request):
     raise HTTPSeeOther(location="/manage/tagfilters")
 
 
+@view_config(route_name="control_avatar", renderer='/manage/avatar.jinja2', request_method="GET")
 @login_required
 def manage_avatar_get_(request):
     try:
@@ -661,6 +705,7 @@ def manage_avatar_get_(request):
     }
 
 
+@view_config(route_name="control_avatar", renderer='/manage/avatar.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_avatar_post_(request):
@@ -670,11 +715,13 @@ def manage_avatar_post_(request):
     raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_banner", renderer='/manage/banner.jinja2', request_method="GET")
 @login_required
 def manage_banner_get_(request):
     return {'title': "Edit Banner"}
 
 
+@view_config(route_name="control_banner", renderer='/manage/banner.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_banner_post_(request):
@@ -684,11 +731,13 @@ def manage_banner_post_(request):
     raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_alias", renderer='/manage/alias.jinja2', request_method="GET")
 @login_required
 def manage_alias_get_(request):
     return {'query': useralias.select(request.userid), 'title': "Edit Username Alias"}
 
 
+@view_config(route_name="control_alias", renderer='/manage/alias.jinja2', request_method="POST")
 @login_required
 @token_checked
 def manage_alias_post_(request):
@@ -698,6 +747,7 @@ def manage_alias_post_(request):
     raise HTTPSeeOther(location="/control")
 
 
+@view_config(route_name="control_sfw_toggle", request_method="POST")
 @login_required
 @token_checked
 @disallow_api

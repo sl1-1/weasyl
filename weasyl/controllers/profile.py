@@ -2,6 +2,8 @@ from __future__ import absolute_import
 
 from pyramid import httpexceptions
 from pyramid.response import Response
+from pyramid.view import view_config
+
 
 from weasyl import (
     character, collection, commishinfo, define, errorcode, favorite, folder,
@@ -11,7 +13,12 @@ from weasyl.controllers.decorators import moderator_only
 from weasyl.error import WeasylError
 
 
-# Profile browsing functions
+@view_config(route_name="profile_tilde_unnamed", renderer='/user/profile.jinja2')
+@view_config(route_name="profile_tilde", renderer='/user/profile.jinja2')
+@view_config(route_name="profile_user_unnamed", renderer='/user/profile.jinja2')
+@view_config(route_name="profile_user", renderer='/user/profile.jinja2')
+@view_config(route_name="profile_unnamed", renderer='/user/profile.jinja2')
+@view_config(route_name="profile", renderer='/user/profile.jinja2')
 def profile_(request):
     form = request.web_input(userid="", name="")
 
@@ -120,6 +127,7 @@ def profile_(request):
     }
 
 
+@view_config(route_name="profile_media")
 def profile_media_(request):
     name = request.matchdict['name']
     link_type = request.matchdict['link_type']
@@ -133,6 +141,8 @@ def profile_media_(request):
     ])
 
 
+@view_config(route_name="profile_submissions_unnamed", renderer='/user/submissions.jinja2')
+@view_config(route_name="profile_submissions", renderer='/user/submissions.jinja2')
 def submissions_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None, folderid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -175,6 +185,8 @@ def submissions_(request):
     }
 
 
+@view_config(route_name="profile_collections_unnamed", renderer='/user/collections.jinja2')
+@view_config(route_name="profile_collections", renderer='/user/collections.jinja2')
 def collections_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None,
                              folderid=None)
@@ -211,6 +223,8 @@ def collections_(request):
     }
 
 
+@view_config(route_name="profile_journals_unnamed", renderer='/user/journals.jinja2')
+@view_config(route_name="profile_journals", renderer='/user/journals.jinja2')
 def journals_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -244,6 +258,8 @@ def journals_(request):
     }
 
 
+@view_config(route_name="profile_characters_unnamed", renderer='/user/characters.jinja2')
+@view_config(route_name="profile_characters", renderer='/user/characters.jinja2')
 def characters_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -281,6 +297,8 @@ def characters_(request):
     }
 
 
+@view_config(route_name="profile_shouts_unnamed", renderer='/user/shouts.jinja2')
+@view_config(route_name="profile_shouts", renderer='/user/shouts.jinja2')
 def shouts_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -326,6 +344,9 @@ def shouts_(request):
         'feature': "shouts",
     }
 
+
+@view_config(route_name="profile_staffnotes_unnamed", renderer='/user/shouts.jinja2')
+@view_config(route_name="profile_staffnotes", renderer='/user/shouts.jinja2')
 @moderator_only
 def staffnotes_(request):
     form = request.web_input(userid="")
@@ -359,6 +380,8 @@ def staffnotes_(request):
     }
 
 
+@view_config(route_name="profile_favorites_unnamed", renderer='/user/favorites.jinja2')
+@view_config(route_name="profile_favorites", renderer='/user/favorites.jinja2')
 def favorites_(request):
     form = request.web_input(userid="", name="", feature="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -425,6 +448,8 @@ def favorites_(request):
     }
 
 
+@view_config(route_name="profile_friends_unnamed", renderer='/user/friends.jinja2')
+@view_config(route_name="profile_friends", renderer='/user/friends.jinja2')
 def friends_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -453,6 +478,8 @@ def friends_(request):
     }
 
 
+@view_config(route_name="profile_following_unnamed", renderer='/user/friends.jinja2')
+@view_config(route_name="profile_following", renderer='/user/friends.jinja2')
 def following_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
@@ -481,6 +508,8 @@ def following_(request):
     }
 
 
+@view_config(route_name="profile_followed_unnamed", renderer='/user/friends.jinja2')
+@view_config(route_name="profile_followed", renderer='/user/friends.jinja2')
 def followed_(request):
     form = request.web_input(userid="", name="", backid=None, nextid=None)
     form.name = request.matchdict.get('name', form.name)
