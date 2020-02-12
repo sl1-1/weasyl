@@ -4,13 +4,14 @@ from pyramid import httpexceptions
 from pyramid.response import Response
 from pyramid.view import view_config
 
+from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import (
     character, collection, commishinfo, define, errorcode, favorite, folder,
     followuser, frienduser, journal, macro, media, profile, shout, submission,
     pagination)
 from weasyl.controllers.decorators import moderator_only
-from weasyl.error import WeasylError
+from weasyl.error import WeasylError, UnverifiedUser
 
 
 @view_config(route_name="profile_tilde_unnamed", renderer='/user/profile.jinja2')
@@ -36,14 +37,7 @@ def profile_(request):
     if otherid != request.userid and not define.is_vouched_for(otherid):
         can_vouch = request.userid != 0 and define.is_vouched_for(request.userid)
 
-        return Response(
-            define.webpage(
-                request.userid,
-                "error/unverified.html",
-                [request, otherid, userprofile['username'], can_vouch],
-            ),
-            status=403,
-        )
+        raise UnverifiedUser({'targetid': otherid, 'target_username': userprofile['username'], 'can_vouch': can_vouch})
 
     extras = {
         "canonical_url": "/~" + define.get_sysname(form.name)
@@ -65,10 +59,7 @@ def profile_(request):
         }
 
     if not request.userid and "h" in userprofile['config']:
-        return Response(define.errorpage(
-            request.userid,
-            "You cannot view this page because the owner does not allow guests to view their profile.",
-            **extras))
+        raise ExpectedWeasylError("You cannot view this page because the owner does not allow guests to view their profile.")
 
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     extras['title'] = u"%s's profile" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
@@ -155,7 +146,7 @@ def submissions_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
@@ -199,7 +190,7 @@ def collections_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
@@ -236,7 +227,7 @@ def journals_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
@@ -271,7 +262,7 @@ def characters_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
@@ -309,21 +300,13 @@ def shouts_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
     if otherid != request.userid and not define.is_vouched_for(otherid):
         can_vouch = request.userid != 0 and define.is_vouched_for(request.userid)
-
-        return Response(
-            define.webpage(
-                request.userid,
-                "error/unverified.html",
-                [request, otherid, userprofile['username'], can_vouch],
-            ),
-            status=403,
-        )
+        raise UnverifiedUser({'targetid': otherid, 'target_username': userprofile['username'], 'can_vouch': can_vouch})
 
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's shouts" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
@@ -394,11 +377,10 @@ def favorites_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
     elif request.userid != otherid and 'v' in define.get_config(otherid):
-        return Response(define.errorpage(
-            request.userid,
-            "You cannot view this page because the owner does not allow anyone to see their favorites."))
+        raise ExpectedWeasylError("You cannot view this page because the owner" 
+                                  "does not allow anyone to see their favorites.")
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
@@ -460,7 +442,7 @@ def friends_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
@@ -490,7 +472,7 @@ def following_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 
@@ -520,7 +502,7 @@ def followed_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     elif not request.userid and "h" in define.get_config(otherid):
-        return Response(define.errorpage(request.userid, errorcode.no_guest_access))
+        raise ExpectedWeasylError(errorcode.no_guest_access)
 
     userprofile = profile.select_profile(otherid, images=True, viewer=request.userid)
 

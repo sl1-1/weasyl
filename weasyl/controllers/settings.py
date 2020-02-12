@@ -4,10 +4,10 @@ import os
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.response import Response
 from pyramid.renderers import render_to_response
 
 import libweasyl.ratings as ratings
+from libweasyl.exceptions import ExpectedWeasylError
 from libweasyl import staff
 
 from weasyl.controllers.decorators import disallow_api, login_required, token_checked
@@ -243,10 +243,7 @@ def control_editemailpassword_post_(request):
     else:  # Changes were made, so inform the user of this
         message = "**Success!** " + return_message
     # Finally return the message about what (if anything) changed to the user
-    return Response(define.errorpage(
-        request.userid, message,
-        [["Go Back", "/control"], ["Return Home", "/"]])
-    )
+    raise ExpectedWeasylError((message, (["Go Back", "/control"], ["Return Home", "/"])))
 
 
 @view_config(route_name="control_editpreferences", renderer='/control/edit_preferences.jinja2', request_method="GET")
@@ -350,7 +347,7 @@ def control_removefolder_(request):
 def control_editfolder_get_(request):
     folderid = int(request.matchdict['folderid'])
     if not folder.check(request.userid, folderid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     return {'info': folder.select_info(folderid), 'title': "Edit Folder Options"}
 
@@ -361,7 +358,7 @@ def control_editfolder_get_(request):
 def control_editfolder_post_(request):
     folderid = int(request.matchdict['folderid'])
     if not folder.check(request.userid, folderid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     form = request.web_input(settings=[])
     folder.update_settings(folderid, form.settings)
@@ -405,7 +402,7 @@ def control_unignoreuser_(request):
 def control_streaming_get_(request):
     form = request.web_input(target='')
     if form.target and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
     elif form.target:
         target = define.get_int(form.target)
     else:
@@ -425,7 +422,7 @@ def control_streaming_post_(request):
     form = request.web_input(target="", set_stream="", stream_length="", stream_url="", stream_text="")
 
     if form.target and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     if form.target:
         target = int(form.target)

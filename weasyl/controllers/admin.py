@@ -2,10 +2,10 @@ from __future__ import absolute_import
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.response import Response
 
 from libweasyl import staff
 from libweasyl.models.site import SiteUpdate
+from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import errorcode, login, moderation, profile, siteupdate
 from weasyl.error import WeasylError
@@ -88,7 +88,7 @@ def admincontrol_manageuser_get_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     if request.userid != otherid and otherid in staff.ADMINS and request.userid not in staff.TECHNICAL:
-        return Response(d.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     return {'profile': profile.select_manage(otherid), 'title': "User Management"}
 
@@ -102,7 +102,7 @@ def admincontrol_manageuser_post_(request):
     userid = d.get_int(form.userid)
 
     if request.userid != userid and userid in staff.ADMINS and request.userid not in staff.TECHNICAL:
-        return d.errorpage(request.userid, errorcode.permission)
+        raise ExpectedWeasylError(errorcode.permission)
 
     profile.do_manage(request.userid, userid,
                       username=form.username.strip() if form.ch_username else None,
@@ -128,7 +128,7 @@ def admincontrol_acctverifylink_(request):
     if token:
         return {'token': token}
 
-    return Response(d.errorpage(request.userid, "No pending account found."))
+    raise ExpectedWeasylError("No pending account found.")
 
 
 @view_config(route_name="admincontrol_pending_accounts", renderer='/admincontrol/pending_accounts.jinja2', request_method="GET")

@@ -4,6 +4,8 @@ from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 from pyramid.response import Response
 
+from libweasyl.exceptions import ExpectedWeasylError
+
 from weasyl import define, collection, profile
 from weasyl.error import WeasylError
 from weasyl.controllers.decorators import login_required, token_checked
@@ -48,8 +50,7 @@ def collection_offer_(request):
         raise WeasylError("cannotSelfCollect")
 
     collection.offer(request.userid, form.submitid, form.otherid)
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Your collection offer has been sent "
         "and the recipient may now add this submission to their gallery.",
         [["Go Back", "/submission/%i" % (form.submitid,)], ["Return to the Home Page", "/index"]]))
@@ -72,8 +73,7 @@ def collection_request_(request):
         raise WeasylError("cannotSelfCollect")
 
     collection.request(request.userid, form.submitid, form.otherid)
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Your collection request has been sent. "
         "The submission author may approve or reject this request.",
         [["Go Back", "/submission/%i" % (form.submitid,)], ["Return to the Home Page", "/index"]]))

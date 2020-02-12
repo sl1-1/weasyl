@@ -4,11 +4,11 @@ import urlparse
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.response import Response
 
 from libweasyl import ratings
 from libweasyl import staff
 from libweasyl.text import slug_for
+from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import (
     character, comment, define, errorcode, folder, journal, macro, profile,
@@ -392,22 +392,19 @@ def submit_tags_(request):
         if not result:
             raise HTTPSeeOther(location=location)
         else:
-            return Response(define.errorpage(request.userid, failed_tag_message,
-                                             [["Return to Content", location]]))
+            raise ExpectedWeasylError((failed_tag_message, [("Return to Content", location)]))
     elif charid:
         location = "/character/%i" % (charid,)
         if not result:
             raise HTTPSeeOther(location=location)
         else:
-            return Response(define.errorpage(request.userid, failed_tag_message,
-                                             [["Return to Content", location]]))
+            raise ExpectedWeasylError((failed_tag_message, [("Return to Content", location)]))
     elif journalid:
         location = "/journal/%i" % (journalid,)
         if not result:
             raise HTTPSeeOther(location=location)
         else:
-            return Response(define.errorpage(request.userid, failed_tag_message,
-                                             [["Return to Content", location]]))
+            raise ExpectedWeasylError((failed_tag_message, [("Return to Content", location)]))
     else:
         raise HTTPSeeOther(location="/control/editcommissionsettings")
 
@@ -419,7 +416,7 @@ def reupload_submission_get_(request):
     form.submitid = define.get_int(form.submitid)
 
     if request.userid != define.get_ownerid(submitid=form.submitid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     return {
         'feature': "submission",
@@ -437,7 +434,7 @@ def reupload_submission_post_(request):
     form.targetid = define.get_int(form.targetid)
 
     if request.userid != define.get_ownerid(submitid=form.targetid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     submission.reupload(request.userid, form.targetid, form.submitfile)
     raise HTTPSeeOther(location="/submission/%i" % (form.targetid,))
@@ -450,7 +447,7 @@ def reupload_character_get_(request):
     form.charid = define.get_int(form.charid)
 
     if request.userid != define.get_ownerid(charid=form.charid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
     return {
         'feature': "character",
         # SubmitID
@@ -467,7 +464,7 @@ def reupload_character_post_(request):
     form.targetid = define.get_int(form.targetid)
 
     if request.userid != define.get_ownerid(charid=form.targetid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     character.reupload(request.userid, form.targetid, form.submitfile)
     raise HTTPSeeOther(location="/character/%i" % (form.targetid,))
@@ -480,7 +477,7 @@ def reupload_cover_get_(request):
     form.submitid = define.get_int(form.submitid)
 
     if request.userid != define.get_ownerid(submitid=form.submitid):
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
     return {
         'submitid': form.submitid,
         'title': "Reupload Cover Artwork"
@@ -508,7 +505,7 @@ def edit_submission_get_(request):
     detail = submission.select_view(request.userid, form.submitid, ratings.EXPLICIT.code, False, anyway=form.anyway)
 
     if request.userid != detail['userid'] and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     submission_category = detail['subtype'] // 1000 * 1000
 
@@ -558,7 +555,7 @@ def edit_character_get_(request):
     detail = character.select_view(request.userid, form.charid, ratings.EXPLICIT.code, False, anyway=form.anyway)
 
     if request.userid != detail['userid'] and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     return {
         # Submission detail
@@ -607,7 +604,7 @@ def edit_journal_get_(request):
     detail = journal.select_view(request.userid, ratings.EXPLICIT.code, form.journalid, False, anyway=form.anyway)
 
     if request.userid != detail['userid'] and request.userid not in staff.MODS:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     return {
         # Journal detail

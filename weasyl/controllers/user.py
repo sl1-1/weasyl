@@ -8,7 +8,8 @@ from pyramid.httpexceptions import (
     HTTPSeeOther,
 )
 from pyramid.view import view_config
-from pyramid.response import Response
+
+from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import define, errorcode, index, login, moderation, \
     profile, resetpassword, two_factor_auth
@@ -83,19 +84,18 @@ def signin_post_(request):
         return {'error': True, 'referer': form.referer}
     elif logerror == "banned":
         reason = moderation.get_ban_reason(logid)
-        return Response(define.errorpage(
-            request.userid,
+        raise ExpectedWeasylError(
             "Your account has been permanently banned and you are no longer allowed "
             "to sign in.\n\n%s\n\nIf you believe this ban is in error, please "
-            "contact %s for assistance." % (reason, MACRO_SUPPORT_ADDRESS)))
+            "contact %s for assistance." % (reason, MACRO_SUPPORT_ADDRESS))
     elif logerror == "suspended":
         suspension = moderation.get_suspension(logid)
-        return Response(define.errorpage(
+        raise ExpectedWeasylError(
             request.userid,
             "Your account has been temporarily suspended and you are not allowed to "
             "be logged in at this time.\n\n%s\n\nThis suspension will be lifted on "
             "%s.\n\nIf you believe this suspension is in error, please contact "
-            "%s for assistance." % (suspension.reason, define.convert_date(suspension.release), MACRO_SUPPORT_ADDRESS)))
+            "%s for assistance." % (suspension.reason, define.convert_date(suspension.release), MACRO_SUPPORT_ADDRESS))
 
     raise WeasylError("Unexpected")  # pragma: no cover
 
@@ -123,15 +123,14 @@ def signin_2fa_auth_get_(request):
     # Only render page if the session exists //and// the password has
     # been authenticated (we have a UserID stored in the session)
     if not sess.additional_data or '2fa_pwd_auth_userid' not in sess.additional_data:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
     tfa_userid = sess.additional_data['2fa_pwd_auth_userid']
 
     # Maximum secondary authentication time: 5 minutes
     session_life = arrow.now().timestamp - sess.additional_data['2fa_pwd_auth_timestamp']
     if session_life > 300:
         _cleanup_2fa_session()
-        return Response(define.errorpage(
-            request.userid,
+        raise ExpectedWeasylError((
             errorcode.error_messages['TwoFactorAuthenticationAuthenticationTimeout'],
             [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
     else:
@@ -154,15 +153,14 @@ def signin_2fa_auth_post_(request):
     # Only render page if the session exists //and// the password has
     # been authenticated (we have a UserID stored in the session)
     if not sess.additional_data or '2fa_pwd_auth_userid' not in sess.additional_data:
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
     tfa_userid = sess.additional_data['2fa_pwd_auth_userid']
 
     session_life = arrow.now().timestamp - sess.additional_data['2fa_pwd_auth_timestamp']
     if session_life > 300:
         # Maximum secondary authentication time: 5 minutes
         _cleanup_2fa_session()
-        return Response(define.errorpage(
-            request.userid,
+        raise ExpectedWeasylError((
             errorcode.error_messages['TwoFactorAuthenticationAuthenticationTimeout'],
             [["Sign In", "/signin"], ["Return to the Home Page", "/"]]
         ))
@@ -174,8 +172,7 @@ def signin_2fa_auth_post_(request):
         # User is out of recovery codes, so force-deactivate 2FA
         if two_factor_auth.get_number_of_recovery_codes(tfa_userid) == 0:
             two_factor_auth.force_deactivate(tfa_userid)
-            return Response(define.errorpage(
-                tfa_userid,
+            raise ExpectedWeasylError((
                 errorcode.error_messages['TwoFactorAuthenticationZeroRecoveryCodesRemaining'],
                 [["2FA Dashboard", "/control/2fa/status"], ["Return to the Home Page", "/"]]
             ))
@@ -184,8 +181,7 @@ def signin_2fa_auth_post_(request):
     elif sess.additional_data['2fa_pwd_auth_attempts'] >= 5:
         # Hinder brute-forcing the 2FA token or recovery code by enforcing an upper-bound on 2FA auth attempts.
         _cleanup_2fa_session()
-        return Response(define.errorpage(
-            request.userid,
+        raise ExpectedWeasylError((
             errorcode.error_messages['TwoFactorAuthenticationAuthenticationAttemptsExceeded'],
             [["Sign In", "/signin"], ["Return to the Home Page", "/"]]
         ))
@@ -222,7 +218,7 @@ def signin_unicode_failure_post_(request):
 @disallow_api
 def signout_(request):
     if request.web_input(token="").token != define.get_token()[:8]:
-        return Response(define.errorpage(request.userid, errorcode.token), status=403)
+        raise ExpectedWeasylError(request.userid, errorcode.token)
 
     login.signout(request)
 
@@ -244,13 +240,11 @@ def signup_post_(request):
         day="", month="", year="")
 
     if not define.captcha_verify(form.get('g-recaptcha-response')):
-        return Response(define.errorpage(
-            request.userid,
-            "There was an error validating the CAPTCHA response; you should go back and try again."))
+        raise ExpectedWeasylError("There was an error validating the CAPTCHA response;"
+                                  "you should go back and try again.")
 
     login.create(form)
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Your username has been reserved and a message "
         "has been sent to the email address you provided with "
         "information on how to complete the registration process. You "
@@ -262,8 +256,7 @@ def signup_post_(request):
 def verify_account_(request):
     # TODO: Don't redirect back here after signing in for the first time. Errors due to being logged in
     login.verify(token=request.web_input(token="").token, ip_address=request.client_addr)
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Your email address has been verified "
         "and you may now sign in to your account.",
         [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
@@ -273,8 +266,7 @@ def verify_account_(request):
 def verify_emailchange_get_(request):
     token = request.web_input(token="").token
     email = login.verify_email_change(request.userid, token)
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Your email address was successfully updated to **" + email + "**.",
         [["Return to the Home Page", "/"]]
     ))
@@ -294,8 +286,7 @@ def forgetpassword_post_(request):
     form = request.web_input(email="")
 
     resetpassword.request(form)
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Provided the supplied email matches a user account in our  "
         "records, information on how to reset your password has been sent to your "
         "email address.",
@@ -308,9 +299,8 @@ def resetpassword_get_(request):
     form = request.web_input(token="")
 
     if not resetpassword.prepare(form.token):
-        return Response(define.errorpage(
-            request.userid,
-            "This link does not appear to be valid. If you followed this link from your email, it may have expired."))
+        raise ExpectedWeasylError(
+            "This link does not appear to be valid. If you followed this link from your email, it may have expired.")
 
     return {'token': form.token, 'title': "Reset Forgotten Password"}
 
@@ -325,8 +315,7 @@ def resetpassword_post_(request):
     # Invalidate all other user sessions for this user.
     profile.invalidate_other_sessions(request.userid)
 
-    return Response(define.errorpage(
-        request.userid,
+    raise ExpectedWeasylError((
         "**Success!** Your password has been reset and you may now sign in to your account.",
         [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
 
@@ -337,7 +326,7 @@ def resetpassword_post_(request):
 @token_checked
 def force_resetpassword_(request):
     if define.common_status_check(request.userid) != "resetpassword":
-        return Response(define.errorpage(request.userid, errorcode.permission))
+        raise ExpectedWeasylError(errorcode.permission)
 
     form = request.web_input(password="", passcheck="")
 
@@ -354,7 +343,7 @@ def force_resetpassword_(request):
 @token_checked
 def force_resetbirthday_(request):
     if define.common_status_check(request.userid) != "resetbirthday":
-        return define.errorpage(request.userid, errorcode.permission)
+        raise ExpectedWeasylError(errorcode.permission)
 
     form = request.web_input(birthday="")
 

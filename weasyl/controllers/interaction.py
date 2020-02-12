@@ -2,7 +2,8 @@ from __future__ import absolute_import
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.response import Response
+
+from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl.controllers.decorators import login_required, token_checked
 from weasyl.error import WeasylError
@@ -22,7 +23,7 @@ def followuser_(request):
     otherid = define.get_int(form.userid)
 
     if request.userid == otherid:
-        return Response(define.errorpage(request.userid, "You cannot follow yourself."))
+        raise ExpectedWeasylError("You cannot follow yourself.")
 
     if form.action == "follow":
         followuser.insert(request.userid, otherid)
@@ -41,9 +42,8 @@ def unfollowuser_(request):
 
     followuser.remove(request.userid, form.otherid)
 
-    return Response(define.errorpage(
-        request.userid, "**Success!** You are no longer following this user.",
-        [["Go Back", "/manage/following"], ["Return Home", "/"]]))
+    raise ExpectedWeasylError("**Success!** You are no longer following this user.",
+        [("Go Back", "/manage/following"), ("Return Home", "/")])
 
 
 @view_config(route_name="frienduser", request_method="POST")
@@ -57,7 +57,7 @@ def frienduser_(request):
     otherid = define.get_int(form.userid)
 
     if request.userid == otherid:
-        return Response(define.errorpage(request.userid, "You cannot friend yourself."))
+        raise ExpectedWeasylError("You cannot friend yourself.")
 
     if form.action == "sendfriendrequest":
         if not frienduser.check(request.userid, otherid) and not frienduser.already_pending(request.userid, otherid):
@@ -82,7 +82,7 @@ def unfrienduser_(request):
     otherid = define.get_int(form.userid)
 
     if request.userid == otherid:
-        return Response(define.errorpage(request.userid, "You cannot friend yourself."))
+        raise ExpectedWeasylError("You cannot friend yourself.")
 
     frienduser.remove(request.userid, otherid)
 
