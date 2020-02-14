@@ -7,6 +7,7 @@ from pyramid.httpexceptions import (
     HTTPFound,
     HTTPSeeOther,
 )
+from pyramid.exceptions import HTTPForbidden
 from pyramid.view import view_config
 
 from libweasyl.exceptions import ExpectedWeasylError
@@ -28,7 +29,6 @@ from weasyl.macro import MACRO_SUPPORT_ADDRESS
 @guest_required
 def signin_get_(request):
     return {
-        'error': False,
         'referer': request.environ.get('HTTP_REFERER', ''),
         'title': "Sign In"
     }
@@ -72,30 +72,29 @@ def signin_post_(request):
         # The number of times the user has attempted to authenticate via 2FA
         sess.additional_data['2fa_pwd_auth_attempts'] = 0
         sess.save = True
-        return {
-            'username': define.get_display_name(logid),
-            'referer': form.referer,
-            'remaining_recovery_codes': remaining_recovery_codes,
-            'error': None,
-            'title': "Sign In - 2FA"
-        }
+        # Ship the user off to the 2fa sign in page.
+        return HTTPSeeOther(location=request.route_url('signin_2fa_auth'))
 
     elif logerror == "invalid":
         return {'error': True, 'referer': form.referer}
     elif logerror == "banned":
         reason = moderation.get_ban_reason(logid)
-        raise ExpectedWeasylError(
-            "Your account has been permanently banned and you are no longer allowed "
-            "to sign in.\n\n%s\n\nIf you believe this ban is in error, please "
-            "contact %s for assistance." % (reason, MACRO_SUPPORT_ADDRESS))
+        return {
+            'notification': "Your account has been permanently banned and you are no longer allowed "
+                            "to sign in.\n\n%s\n\nIf you believe this ban is in error, please "
+                            "contact %s for assistance." % (reason, MACRO_SUPPORT_ADDRESS),
+            'title': "Sign In"
+        }
+
     elif logerror == "suspended":
         suspension = moderation.get_suspension(logid)
-        raise ExpectedWeasylError(
-            request.userid,
-            "Your account has been temporarily suspended and you are not allowed to "
-            "be logged in at this time.\n\n%s\n\nThis suspension will be lifted on "
-            "%s.\n\nIf you believe this suspension is in error, please contact "
-            "%s for assistance." % (suspension.reason, define.convert_date(suspension.release), MACRO_SUPPORT_ADDRESS))
+        return {
+            'notification': "Your account has been temporarily suspended and you are not allowed to "
+                            "be logged in at this time.\n\n%s\n\nThis suspension will be lifted on "
+                            "%s.\n\nIf you believe this suspension is in error, please contact "
+                            "%s for assistance." % (suspension.reason, define.convert_date(suspension.release), MACRO_SUPPORT_ADDRESS),
+            'title': "Sign In"
+        }
 
     raise WeasylError("Unexpected")  # pragma: no cover
 
@@ -123,7 +122,7 @@ def signin_2fa_auth_get_(request):
     # Only render page if the session exists //and// the password has
     # been authenticated (we have a UserID stored in the session)
     if not sess.additional_data or '2fa_pwd_auth_userid' not in sess.additional_data:
-        raise ExpectedWeasylError(errorcode.permission)
+        raise HTTPForbidden
     tfa_userid = sess.additional_data['2fa_pwd_auth_userid']
 
     # Maximum secondary authentication time: 5 minutes
@@ -153,7 +152,7 @@ def signin_2fa_auth_post_(request):
     # Only render page if the session exists //and// the password has
     # been authenticated (we have a UserID stored in the session)
     if not sess.additional_data or '2fa_pwd_auth_userid' not in sess.additional_data:
-        raise ExpectedWeasylError(errorcode.permission)
+        raise HTTPForbidden
     tfa_userid = sess.additional_data['2fa_pwd_auth_userid']
 
     session_life = arrow.now().timestamp - sess.additional_data['2fa_pwd_auth_timestamp']
@@ -240,36 +239,43 @@ def signup_post_(request):
         day="", month="", year="")
 
     if not define.captcha_verify(form.get('g-recaptcha-response')):
-        raise ExpectedWeasylError("There was an error validating the CAPTCHA response;"
-                                  "you should go back and try again.")
+        return {
+            'error': "There was an error validating the CAPTCHA response;"
+                     "you should go back and try again.",
+            'title': "Create a Weasyl Account"
+        }
 
     login.create(form)
-    raise ExpectedWeasylError((
-        "**Success!** Your username has been reserved and a message "
-        "has been sent to the email address you provided with "
-        "information on how to complete the registration process. You "
-        "should receive this email within the next hour.",
-        [["Return to the Home Page", "/"]]))
+    return {
+        'success': "**Success!** Your username has been reserved and a message "
+                   "has been sent to the email address you provided with "
+                   "information on how to complete the registration process. You "
+                   "should receive this email within the next hour.",
+        'title': "Create a Weasyl Account"
+    }
 
 
+@view_config(route_name="verify_account", renderer='/etc/signup.jinja2')
 @guest_required
 def verify_account_(request):
     # TODO: Don't redirect back here after signing in for the first time. Errors due to being logged in
     login.verify(token=request.web_input(token="").token, ip_address=request.client_addr)
-    raise ExpectedWeasylError((
-        "**Success!** Your email address has been verified "
-        "and you may now sign in to your account.",
-        [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
+    return {
+        'success': "**Success!** Your email address has been verified "
+                   "and you may now sign in to your account.",
+        'title': "Email Address Verified"
+    }
 
 
+@view_config(route_name="verify_emailchange", renderer='/etc/signup.jinja2')
 @login_required
 def verify_emailchange_get_(request):
     token = request.web_input(token="").token
     email = login.verify_email_change(request.userid, token)
-    raise ExpectedWeasylError((
-        "**Success!** Your email address was successfully updated to **" + email + "**.",
-        [["Return to the Home Page", "/"]]
-    ))
+    return {
+        'success': "**Success!** Your email address was successfully updated to **{email}**.".format(email=email),
+        'title': "Email Address Verified"
+    }
 
 
 @view_config(route_name="forgot_password", renderer='/etc/forgotpassword.jinja2', request_method="GET")
@@ -286,11 +292,12 @@ def forgetpassword_post_(request):
     form = request.web_input(email="")
 
     resetpassword.request(form)
-    raise ExpectedWeasylError((
-        "**Success!** Provided the supplied email matches a user account in our  "
-        "records, information on how to reset your password has been sent to your "
-        "email address.",
-        [["Return to the Home Page", "/"]]))
+    return {
+        'error': "**Success!** Provided the supplied email matches a user account in our  "
+                 "records, information on how to reset your password has been sent to your "
+                 "email address.",
+        'title': "Reset Forgotten Password"
+    }
 
 
 @view_config(route_name="reset_password", renderer='/etc/resetpassword.jinja2', request_method="GET")
@@ -299,8 +306,11 @@ def resetpassword_get_(request):
     form = request.web_input(token="")
 
     if not resetpassword.prepare(form.token):
-        raise ExpectedWeasylError(
-            "This link does not appear to be valid. If you followed this link from your email, it may have expired.")
+        return {
+            'error': "This link does not appear to be valid. "
+                     "If you followed this link from your email, it may have expired.",
+            'title': "Reset Forgotten Password"
+            }
 
     return {'token': form.token, 'title': "Reset Forgotten Password"}
 
@@ -314,10 +324,10 @@ def resetpassword_post_(request):
 
     # Invalidate all other user sessions for this user.
     profile.invalidate_other_sessions(request.userid)
-
-    raise ExpectedWeasylError((
-        "**Success!** Your password has been reset and you may now sign in to your account.",
-        [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
+    return {
+        'error':  "**Success!** Your password has been reset and you may now sign in to your account.",
+        'title': "Reset Forgotten Password"
+    }
 
 
 # Forced action functions
@@ -326,7 +336,7 @@ def resetpassword_post_(request):
 @token_checked
 def force_resetpassword_(request):
     if define.common_status_check(request.userid) != "resetpassword":
-        raise ExpectedWeasylError(errorcode.permission)
+        raise HTTPForbidden
 
     form = request.web_input(password="", passcheck="")
 
@@ -343,7 +353,7 @@ def force_resetpassword_(request):
 @token_checked
 def force_resetbirthday_(request):
     if define.common_status_check(request.userid) != "resetbirthday":
-        raise ExpectedWeasylError(errorcode.permission)
+        raise HTTPForbidden
 
     form = request.web_input(birthday="")
 
