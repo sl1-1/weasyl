@@ -33,16 +33,16 @@
 {% macro AVATAR(user) -%}
     {% if user is mapping %}
         {% set username = user['username'] %}
-        {% set url = 'profile_tilde'|route_url(name=username | LOGIN) %}
-        {% if 'avatar' in user %}
+        {% set url = 'profile_tilde'|route_path(name=username | LOGIN) %}
+        {% if 'avatar_display_url' in user %}
             {% set avatar = user['avatar'][0]['display_url'] %}
         {% else %}
             {% set avatar = user['user_media']['avatar'][0]['display_url'] %}
         {% endif %}
     {% else %}
         {% set username = user.profile.username %}
-        {% set url = 'profile_tilde'|route_url(name=user.login_name) %}
-        {% set avatar = user.avatar['display_url'] %}
+        {% set url = 'profile_tilde'|route_path(name=user.login_name) %}
+        {% set avatar = user.avatar_display_url() %}
     {% endif %}
     <a class="avatar" href="{{ url }}" title="{{ username }}">
         <img src="{{ avatar }}"
