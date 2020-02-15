@@ -203,16 +203,6 @@ def modcontrol_editcatchphrase_(request):
     raise HTTPSeeOther(location="/modcontrol")
 
 
-@view_config(route_name="modcontrol_edituserconfig", request_method="POST")
-@moderator_only
-@token_checked
-def modcontrol_edituserconfig_(request):
-    form = request.web_input(userid="")
-
-    moderation.edituserconfig(form)
-    raise HTTPSeeOther("/modcontrol")
-
-
 @view_config(route_name="modcontrol_copynotetostaffnotes", request_method="POST")
 @moderator_only
 @token_checked

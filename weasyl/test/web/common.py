@@ -10,21 +10,21 @@ from weasyl.macro import MACRO_APP_ROOT, MACRO_STORAGE_ROOT
 from weasyl.test import db_utils
 
 
-_static_cache = {}
+_asset_cache = {}
 
 
-def read_static(path):
-    full_path = os.path.join(MACRO_APP_ROOT, 'static', path)
+def read_asset(path):
+    full_path = os.path.join(MACRO_APP_ROOT, 'assets', path)
 
-    if full_path not in _static_cache:
+    if full_path not in _asset_cache:
         with open(full_path, 'rb') as f:
-            _static_cache[full_path] = f.read()
+            _asset_cache[full_path] = f.read()
 
-    return _static_cache[full_path]
+    return _asset_cache[full_path]
 
 
-def read_static_image(path):
-    return Image.open(BytesIO(read_static(path))).convert('RGBA')
+def read_asset_image(path):
+    return Image.open(BytesIO(read_asset(path))).convert('RGBA')
 
 
 def read_storage_image(image_url):
@@ -32,7 +32,7 @@ def read_storage_image(image_url):
     return Image.open(full_path).convert('RGBA')
 
 
-_BASE_VISUAL_FORM = {
+BASE_VISUAL_FORM = {
     'submitfile': u'',
     'thumbfile': u'',
     'title': u'Test title',
@@ -46,7 +46,7 @@ _BASE_VISUAL_FORM = {
 
 def create_visual(app, user, **kwargs):
     cookie = db_utils.create_session(user)
-    form = dict(_BASE_VISUAL_FORM, **kwargs)
+    form = dict(BASE_VISUAL_FORM, **kwargs)
     resp = app.post('/submit/visual', form, headers={'Cookie': cookie}).maybe_follow(headers={'Cookie': cookie})
     submitid = int(resp.html.find('input', {'name': 'submitid'})['value'])
 

@@ -24,18 +24,6 @@ def dummy_format_media_link(media, link):
     return None
 
 
-class Bag(object):
-    """
-    An object with attributes.
-
-    It takes keyword arguments and sets their values as attributes.
-    """
-
-    def __init__(self, **kwargs):
-        for kv in kwargs.items():
-            setattr(self, *kv)
-
-
 def user_with_age(age):
     """
     Create a Login, UserInfo, and Profile with the provided age.
@@ -61,12 +49,12 @@ def media_item(db, filename, file_type=None):
     The media item created is added to the session.
 
     Returns:
-        Probably a DiskMediaItem.
+        A MediaItem.
     """
     if file_type is None:
         _, _, file_type = filename.rpartition('.')
     data = datadir.join(filename).read(mode='rb')
-    item = media.fetch_or_create_media_item(data, file_type=file_type)
+    item = media.MediaItem.fetch_or_create(data, file_type=file_type)
     db.flush()
     return item
 
@@ -135,6 +123,6 @@ def make_media(db):
     The file used for the media item is fixed: the data file '2x233.gif'.
 
     Returns:
-        Probably a DiskMediaItem.
+        A MediaItem.
     """
     return media_item(db, '2x233.gif')

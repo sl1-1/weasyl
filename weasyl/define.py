@@ -185,7 +185,6 @@ def _compile(template_name):
                 "SLUG": text.slug_for,
                 "QUERY_STRING": query_string,
                 "INLINE_JSON": html.inline_json,
-                "CDNIFY": cdnify_url,
                 "PATH": _get_path,
                 "arrow": arrow,
                 "constants": libweasyl.constants,
@@ -318,10 +317,10 @@ def _get_csrf_input():
     return '<input type="hidden" name="token" value="%s" />' % (get_token(),)
 
 
-@region.cache_on_arguments()
+@region.cache_on_arguments(namespace='v2')
 def _get_all_config(userid):
     row = engine.execute(
-        "SELECT login.settings, login.voucher IS NOT NULL, profile.config"
+        "SELECT login.settings, login.voucher IS NOT NULL, profile.config, profile.jsonb_settings"
         " FROM login INNER JOIN profile USING (userid)"
         " WHERE userid = %(user)s",
         user=userid,
@@ -344,28 +343,18 @@ def is_vouched_for(userid):
     return _get_all_config(userid)[1]
 
 
-@region.cache_on_arguments()
-@record_timing
-def _get_profile_settings(userid):
-    """
-    This helper function is required because we want to return
-    the ProfileSettings object, which by itself is not serializable
-    by our cacheing library (or at least, I don't know how to make it so)
-    :param userid:
-    :return: json representation of profile settings
-    """
-    if userid is None:
-        return {}
-    jsonb = engine.scalar("SELECT jsonb_settings FROM profile WHERE userid = %(user)s",
-                          user=userid)
-    if jsonb is None:
-        jsonb = {}
-    return jsonb
-
-
 def get_profile_settings(userid):
     from weasyl.profile import ProfileSettings
-    return ProfileSettings(_get_profile_settings(userid))
+
+    if not userid:
+        jsonb = {}
+    else:
+        jsonb = _get_all_config(userid)[3]
+
+        if jsonb is None:
+            jsonb = {}
+
+    return ProfileSettings(jsonb)
 
 
 def get_rating(userid):
@@ -745,36 +734,8 @@ def common_page_start(userid, options=None, **extended_options):
     return [data]
 
 
-def _active_users(seconds):
-    usercount_url_template = config_read_setting('url_template', section='usercount')
-    if not usercount_url_template:
-        return
-    try:
-        resp = http_get(usercount_url_template % (seconds,))
-    except WeasylError:
-        return
-    if resp.status_code != 200:
-        return
-    return resp.json()['users']
-
-
-@region.cache_on_arguments(expiration_time=600)
-@record_timing
-def active_users():
-    active_users = []
-    for span, seconds in [('hour', 60 * 60), ('day', 60 * 60 * 24)]:
-        users = _active_users(seconds)
-        if users:
-            active_users.append((span, users))
-
-    return '; '.join(
-        '%d users active in the last %s' % (users, span)
-        for span, users in active_users)
-
-
 def common_page_end(userid, page, options=None):
-    active_users_string = active_users()
-    data = render("common/page_end.html", (options, active_users_string))
+    data = render("common/page_end.html", (options,))
     page.append(data)
     return "".join(page)
 
@@ -951,7 +912,7 @@ def url_make(targetid, feature, query=None, root=False, file_prefix=None):
         if query and "-" in query[0]:
             result.append("%i.thumb%s" % (targetid, url_type(query[0], feature)))
         else:
-            return None if root else macro.MACRO_BLANK_THUMB
+            return None if root else get_resource_path("img/default-visual.png")
     # Character thumbnail selection
     elif feature == "char/.thumb":
         result.append("%i.new.thumb" % (targetid,))
@@ -972,6 +933,30 @@ def get_resource_path(resource):
         _load_resources()
 
     return '/' + resource_paths[resource]
+
+
+def get_resource_url(resource):
+    """
+    Get a full URL for a resource.
+
+    Useful for <meta name="og:image">, for example.
+    """
+    return 'https://www.weasyl.com' + get_resource_path(resource)
+
+
+DEFAULT_SUBMISSION_THUMBNAIL = [
+    dict.fromkeys(
+        ['display_url', 'file_url'],
+        get_resource_path('img/default-visual.png'),
+    ),
+]
+
+DEFAULT_AVATAR = [
+    dict.fromkeys(
+        ['display_url', 'file_url'],
+        get_resource_path('img/default-avatar.jpg'),
+    ),
+]
 
 
 def absolutify_url(url):

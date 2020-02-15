@@ -1,7 +1,7 @@
 from sqlalchemy import (
     MetaData, Table, Column, CheckConstraint, ForeignKeyConstraint, UniqueConstraint, Index,
     Integer, String, Text, text, DateTime, func, Boolean)
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TIMESTAMP
+from sqlalchemy.dialects.postgresql import ARRAY, BYTEA, JSONB, TIMESTAMP
 from sqlalchemy.schema import ForeignKey
 
 
@@ -157,15 +157,6 @@ Index('ind_classid_userid_title', commishprice.c.classid, commishprice.c.userid,
 cron_runs = Table(
     'cron_runs', metadata,
     Column('last_run', TIMESTAMP(), nullable=False),
-)
-
-
-disk_media = Table(
-    'disk_media', metadata,
-    Column('mediaid', Integer(), primary_key=True, nullable=False),
-    Column('file_path', String(length=255), nullable=False),
-    Column('file_url', String(length=255), nullable=False),
-    default_fkey(['mediaid'], ['media.mediaid'], name='disk_media_mediaid_fkey'),
 )
 
 
@@ -401,7 +392,6 @@ logincreate = Table(
 media = Table(
     'media', metadata,
     Column('mediaid', Integer(), primary_key=True, nullable=False),
-    Column('media_type', String(length=32), nullable=False),
     Column('file_type', String(length=8), nullable=False),
     Column('attributes', JSONValuesColumn(), nullable=False, server_default=text(u"''::hstore")),
     Column('sha256', String(length=64)),
@@ -786,6 +776,7 @@ submission = Table(
     Column('sorttime', WeasylTimestampColumn(), nullable=False),
     Column('submitter_ip_address', String(length=45), nullable=True),
     Column('submitter_user_agent_id', Integer(), nullable=True),
+    Column('image_representations', BYTEA(), nullable=True),
     Column('is_spam', Boolean(), nullable=False, server_default='f'),
     default_fkey(['userid'], ['login.userid'], name='submission_userid_fkey'),
     default_fkey(['folderid'], ['folder.folderid'], name='submission_folderid_fkey'),

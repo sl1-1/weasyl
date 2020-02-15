@@ -49,7 +49,8 @@ def control_editprofile_get_(request):
         'profile': profile.select_profile(request.userid, commish=False),
         # User information
         'userinfo': userinfo,
-        'title': "Edit Profile"
+        'title': "Edit Profile",
+        options=["typeahead"]
     }
 
 
@@ -70,7 +71,7 @@ def control_editprofile_put_(request):
         form.sorted_user_links = [(name, [value]) for name, value in zip(form.site_names, form.site_values)]
         form.settings = form.set_commish + form.set_trade + form.set_request
         form.config = form.profile_display
-        return {'profile': form, 'userinfo': form, 'title': "Edit Profile"}
+        return {'profile': form, 'userinfo': form, 'title': "Edit Profile", options=["typeahead"]}
 
     p = orm.Profile()
     p.full_name = form.full_name

@@ -248,7 +248,6 @@ def setup_routes_and_views(config):
     config.add_route("modcontrol_removebanner", "/modcontrol/removebanner")
     config.add_route("modcontrol_editprofiletext", "/modcontrol/editprofiletext")
     config.add_route("modcontrol_editcatchphrase", "/modcontrol/editcatchphrase")
-    config.add_route("modcontrol_edituserconfig", "/modcontrol/edituserconfig")
     config.add_route("modcontrol_spam_remove", "/modcontrol/spam/remove")
 
     # Admin Control Routes

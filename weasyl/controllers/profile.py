@@ -55,7 +55,7 @@ def profile_(request):
             'type': "website",
             'url': twit_card['url'],
             'description': twit_card['description'],
-            'image': twit_card['image:src'] if 'image:src' in twit_card else define.cdnify_url('/static/images/logo-mark-light.svg'),
+            'image': twit_card['image:src'] if 'image:src' in twit_card else define.get_resource_url('img/logo-mark-light.svg'),
         }
 
     if not request.userid and "h" in userprofile['config']:
@@ -390,7 +390,7 @@ def favorites_(request):
         nextid = define.get_int(form.nextid)
         backid = define.get_int(form.backid)
         url_format = (
-            "/favorites?userid={userid}&feature={feature}&%s".format(userid=userprofile['userid'], feature=form.feature))
+            "/favorites?userid={userid}&feature={feature}&%s".format(userid=otherid, feature=form.feature))
         id_field = form.feature + "id"
 
         count_function = None
