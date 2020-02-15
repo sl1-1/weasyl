@@ -8,7 +8,7 @@
 
         <div class="form skinny clear">
             <h3>{{ profile['username'] }}</h3>
-            <form name="managefollowing" action="{{ 'control_manage_follow'|route_url(userid=profile['userid']) }}" method="post">
+            <form name="managefollowing" action="{{ 'control_manage_follow'|route_path(userid=profile['userid']) }}" method="post">
                 <input type="hidden" name="token" value="{{ TOKEN() }}"/>
                 <input type="hidden" name="userid" value="{{ profile['userid'] }}"/>
 

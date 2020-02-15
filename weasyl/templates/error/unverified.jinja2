@@ -11,7 +11,7 @@
     {% endif %}
   </p>
 
-  <form id="error_buttons" method="POST" action="{{ 'vouch' | route_url }}">
+  <form id="error_buttons" method="POST" action="{{ 'vouch' | route_path }}">
     {% if can_vouch %}
       <input type="hidden" name="token" value="{{ TOKEN() }}"/>
       <input type="hidden" name="targetid" value="{{ targetid }}">

@@ -13,14 +13,14 @@
 <header>
     <div id="header" class="clear">
 
-        <h1 id="logo"><a href="/"><img src="{{ '/static/images/logo.png'|CDNIFY }}" alt="Weasyl"/></a></h1>
+        <h1 id="logo"><a href="/"><img src="{{ resource_path('img/logo.png') }}" alt="Weasyl"/></a></h1>
 
         {% if not req.user %}
             <h3 id="header-guest">
                 Welcome!
-                <a id="hg-login" href="{{ 'signin'| route_url }}" class="typeface-a color-a">Sign in</a>,
-                <a id="hg-register" href="{{ 'signup' | route_url }}" class="typeface-a color-a">register</a>,
-                or learn more <a href="{{ 'help_about' | route_url }}" class="typeface-a color-a">about Weasyl</a>.
+                <a id="hg-login" href="{{ 'signin'| route_path }}" class="typeface-a color-a">Sign in</a>,
+                <a id="hg-register" href="{{ 'signup' | route_path }}" class="typeface-a color-a">register</a>,
+                or learn more <a href="{{ 'help_about' | route_path }}" class="typeface-a color-a">about Weasyl</a>.
             </h3>
         {% else %}
             <div id="header-user" data-user-type="{{ req.user.user_type or '' }}">
@@ -30,7 +30,7 @@
                     <a id="username" class="username" href="/~{{ req.user.login_name }}">{{ req.user.profile['username'] }}</a>
                 </h2>
                 <div id="header-utility">
-                    <form class="sfw-toggle" action="{{ 'control_sfw_toggle' | route_url }}" method="POST">
+                    <form class="sfw-toggle" action="{{ 'control_sfw_toggle' | route_path }}" method="POST">
                         <input type="hidden" name="token" value="{{ TOKEN() }}"/>
                         <input type="hidden" name="redirect" value="{{ req.path_url }}">
                         <button class="link-button {{ 'sfw' if sfw() else 'nsfw' }}">
@@ -38,62 +38,62 @@
                         </button>
                     </form>
                     <span>|</span>
-                    <a href="{{ '/notes' | route_url }}">inbox</a> <span>|</span>
-                    <a href="{{ 'control' | route_url(alias='control') }}">settings</a> <span>|</span>
+                    <a href="{{ '/notes' | route_path }}">inbox</a> <span>|</span>
+                    <a href="{{ 'control' | route_path(alias='control') }}">settings</a> <span>|</span>
 
                     {% if req.user.is_director %}
-                        <a href="{{ 'modcontrol' | route_url }}">mod</a>
+                        <a href="{{ 'modcontrol' | route_path }}">mod</a>
                         <span>|</span>
-                        <a href="{{ 'admincontrol' | route_url }}">admin</a>
+                        <a href="{{ 'admincontrol' | route_path }}">admin</a>
                         <span>|</span>
-                        <a href="{{ 'directorcontrol' |route_url }}">director</a>
+                        <a href="{{ 'directorcontrol' |route_path }}">director</a>
                         <span>|</span>
                     {% elif req.user.is_admin %}
-                        <a href="{{ 'modcontrol' | route_url }}">mod</a>
+                        <a href="{{ 'modcontrol' | route_path }}">mod</a>
                         <span>|</span>
-                        <a href="{{ 'admincontrol' | route_url }}">admin</a>
+                        <a href="{{ 'admincontrol' | route_path }}">admin</a>
                         <span>|</span>
                     {% elif req.user.is_mod %}
-                        <a href="{{ 'modcontrol' | route_url }}">mod</a>
+                        <a href="{{ 'modcontrol' | route_path }}">mod</a>
                         <span>|</span>
                     {% endif %}
 
-                    <a href="{{ 'signout' | route_url }}?token={{ TOKEN()[:8] }}">log&#160;out</a>
+                    <a href="{{ 'signout' | route_path }}?token={{ TOKEN()[:8] }}">log&#160;out</a>
                 </div>
             </div>
 
             <ul id="header-messages">
                 {% if msg_submissions() %}
                     <li>
-                        <a href="{{ 'messages_submissions'|route_url }}" title="Art">
+                        <a href="{{ 'messages_submissions'|route_path }}" title="Art">
                             <span class="icon icon-20 icon-art">Art:</span> {{ msg_submissions() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_comments() %}
                     <li>
-                        <a href="{{ 'messages_notifications' | route_url }}#comments" title="Comments">
+                        <a href="{{ 'messages_notifications' | route_path }}#comments" title="Comments">
                             <span class="icon icon-20 icon-comments">Comments:</span> {{ msg_comments() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_notifications() %}
                     <li>
-                        <a href="{{ 'messages_notifications' | route_url }}#notifications" title="Notifications">
+                        <a href="{{ 'messages_notifications' | route_path }}#notifications" title="Notifications">
                             <span class="icon icon-20 icon-notes">Notifications:</span> {{ msg_notifications() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_journals() %}
                     <li>
-                        <a href="{{ 'messages_notifications' | route_url }}#journals" title="Journals">
+                        <a href="{{ 'messages_notifications' | route_path }}#journals" title="Journals">
                             <span class="icon icon-20 icon-journals">Journals:</span> {{ msg_journals() }}
                         </a>
                     </li>
                 {% endif %}
                 {% if msg_notes() %}
                     <li>
-                        <a href="{{ '/notes' | route_url }}" title="Private Messages">
+                        <a href="{{ '/notes' | route_path }}" title="Private Messages">
                             <span class="icon icon-20 icon-messages">Private Messages:</span> {{ msg_notes() }}
                         </a>
                     </li>
@@ -106,13 +106,13 @@
         <nav>
             <div id="header-nav">
                 <ul>
-                    <li><a href="{{ 'submit' | route_url }}">Submit</a></li>
-                    <li><a href="{{ 'search' | route_url }}">Browse</a></li>
-                    <li><a href="{{ 'marketplace' | route_url }}">Marketplace</a></li>
-                    <li id="header-search-nav"><a href="{{ 'search' | route_url }}">Search</a></li>
+                    <li><a href="{{ 'submit' | route_path }}">Submit</a></li>
+                    <li><a href="{{ 'search' | route_path }}">Browse</a></li>
+                    <li><a href="{{ 'marketplace' | route_path }}">Marketplace</a></li>
+                    <li id="header-search-nav"><a href="{{ 'search' | route_path }}">Search</a></li>
                 </ul>
 
-                <form id="header-search" action="{{ 'search' | route_url }}" method="GET">
+                <form id="header-search" action="{{ 'search' | route_path }}" method="GET">
                     <input name="q" placeholder="Search" title="Search Weasyl" type="search" tabindex="1"/>
                 </form>
             </div>

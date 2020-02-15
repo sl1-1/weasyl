@@ -14,7 +14,7 @@
                                 <h5>
                                     <a class="username one-line" href="/~{{ i['username'] | LOGIN }}" title="{{ i['username'] }}">{{ i['username'] }}</a>
                                 </h5>
-                                <a class="button positive" href="{{ 'control_manage_follow'|route_url(userid=i['userid']) }}">Edit Settings</a>
+                                <a class="button positive" href="{{ 'control_manage_follow'|route_path(userid=i['userid']) }}">Edit Settings</a>
                                 <form action="/unfollowuser" method="post" data-confirm="Unfollow this user?">
                                     <input type="hidden" name="token" value="{{ TOKEN() }}"/>
                                     <input type="hidden" name="userid" value="{{ i['userid'] }}"/>

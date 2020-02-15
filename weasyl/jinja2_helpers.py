@@ -1,14 +1,13 @@
+import arrow
+import pyramid_jinja2.filters
 from jinja2 import Markup
-from jinja2 import evalcontextfilter
+from jinja2 import evalcontextfilter, contextfilter
 from libweasyl import text, staff, ratings
 from libweasyl.legacy import get_sysname
 from libweasyl.models.users import Login
-
-import arrow
-
+import urllib
 from pyramid.threadlocal import get_current_request
-from pyramid_jinja2.filters import resource_url_filter, route_url_filter
-
+from pyramid.traversal import PATH_SAFE
 from weasyl import define, macro
 
 
@@ -85,6 +84,17 @@ def User():
     return request.pg_connection.query(Login).filter(Login.userid == request.userid).one_or_none()
 
 
+def unescape_tilde(url):
+    url = urllib.quote(urllib.unquote(url), safe=PATH_SAFE)
+    return url
+
+
+@contextfilter
+def route_path_filter(ctx, route_name, *elements, **kw):
+    url = pyramid_jinja2.filters.route_path_filter(ctx, route_name, *elements, **kw)
+    return unescape_tilde(url)
+
+
 jinja2_globals = {
     "arrow": arrow,
     "CAPTCHA": define._captcha_public,
@@ -117,6 +127,5 @@ filters = {
     'MARKDOWN': MARKDOWN,
     'MARKDOWN_EXCERPT': MARKDOWN_EXCERPT,
     'SLUG': SLUG,
-    'route_url': route_url_filter,
-    'resource_url': resource_url_filter,
+    'route_path': route_path_filter,
 }
