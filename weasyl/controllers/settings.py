@@ -6,14 +6,13 @@ from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
 import libweasyl.ratings as ratings
-from libweasyl.exceptions import ExpectedWeasylError
 from libweasyl import staff
 
 from weasyl.controllers.decorators import disallow_api, login_required, token_checked
 from weasyl.error import WeasylError
 from weasyl import (
     api, avatar, banner, blocktag, collection, commishinfo,
-    define, emailer, errorcode, folder, followuser, frienduser, ignoreuser,
+    define, emailer, folder, followuser, frienduser, ignoreuser,
     index, oauth2, profile, searchtag, thumbnail, useralias, orm)
 
 
@@ -47,10 +46,9 @@ def control_editprofile_get_(request):
     userinfo = profile.select_userinfo(request.userid)
     return {
         'profile': profile.select_profile(request.userid, commish=False),
-        # User information
         'userinfo': userinfo,
         'title': "Edit Profile",
-        options=["typeahead"]
+        'options': ["typeahead"]
     }
 
 
@@ -71,7 +69,7 @@ def control_editprofile_put_(request):
         form.sorted_user_links = [(name, [value]) for name, value in zip(form.site_names, form.site_values)]
         form.settings = form.set_commish + form.set_trade + form.set_request
         form.config = form.profile_display
-        return {'profile': form, 'userinfo': form, 'title': "Edit Profile", options=["typeahead"]}
+        return {'profile': form, 'userinfo': form, 'title': "Edit Profile", 'options': ["typeahead"]}
 
     p = orm.Profile()
     p.full_name = form.full_name
@@ -239,11 +237,9 @@ def control_editemailpassword_post_(request):
     )
 
     if not return_message:  # No changes were made
-        message = "No changes were made to your account."
+        return {'message': "No changes were made to your account."}
     else:  # Changes were made, so inform the user of this
-        message = "**Success!** " + return_message
-    # Finally return the message about what (if anything) changed to the user
-    raise ExpectedWeasylError((message, (["Go Back", "/control"], ["Return Home", "/"])))
+        return {'message': "**Success!** " + return_message}
 
 
 @view_config(route_name="control_editpreferences", renderer='/control/edit_preferences.jinja2', request_method="GET")
@@ -347,7 +343,7 @@ def control_removefolder_(request):
 def control_editfolder_get_(request):
     folderid = int(request.matchdict['folderid'])
     if not folder.check(request.userid, folderid):
-        raise ExpectedWeasylError(errorcode.permission)
+        raise WeasylError('permission')
 
     return {'info': folder.select_info(folderid), 'title': "Edit Folder Options"}
 
@@ -358,7 +354,7 @@ def control_editfolder_get_(request):
 def control_editfolder_post_(request):
     folderid = int(request.matchdict['folderid'])
     if not folder.check(request.userid, folderid):
-        raise ExpectedWeasylError(errorcode.permission)
+        raise WeasylError('permission')
 
     form = request.web_input(settings=[])
     folder.update_settings(folderid, form.settings)
@@ -402,7 +398,7 @@ def control_unignoreuser_(request):
 def control_streaming_get_(request):
     form = request.web_input(target='')
     if form.target and request.userid not in staff.MODS:
-        raise ExpectedWeasylError(errorcode.permission)
+        raise WeasylError('permission')
     elif form.target:
         target = define.get_int(form.target)
     else:
@@ -422,7 +418,7 @@ def control_streaming_post_(request):
     form = request.web_input(target="", set_stream="", stream_length="", stream_url="", stream_text="")
 
     if form.target and request.userid not in staff.MODS:
-        raise ExpectedWeasylError(errorcode.permission)
+        raise WeasylError('permission')
 
     if form.target:
         target = int(form.target)
