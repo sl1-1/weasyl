@@ -70,6 +70,18 @@ class Login(Base):
         avatar = self.media.get('avatar')
         return avatar and avatar[0]['display_url']
 
+    @reify
+    def is_vouched_for(self):
+        return bool(self.voucher)
+
+    def is_permitted_rating(self, rating):
+        """
+        Returns True if this user's is old enough to view content with the
+        return self.userid in staff.MODS
+        given rating. Otherwise, returns False.
+        """
+        return self.info.age >= rating.minimum_age
+
 
 class AuthBCrypt(Base):
     """
