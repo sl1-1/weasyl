@@ -11,7 +11,7 @@ from weasyl import (
     followuser, frienduser, journal, macro, media, profile, shout, submission,
     pagination)
 from weasyl.controllers.decorators import moderator_only
-from weasyl.error import WeasylError, UnverifiedUser
+from weasyl.error import WeasylError
 
 
 @view_config(route_name="profile_tilde_unnamed", renderer='/user/profile.jinja2')
@@ -37,7 +37,12 @@ def profile_(request):
     if otherid != request.userid and not define.is_vouched_for(otherid):
         can_vouch = request.userid != 0 and define.is_vouched_for(request.userid)
 
-        raise UnverifiedUser({'targetid': otherid, 'target_username': userprofile['username'], 'can_vouch': can_vouch})
+        return {
+            'unverified': True,
+            'targetid': otherid,
+            'target_username': userprofile['username'],
+            'can_vouch': can_vouch
+        }
 
     extras = {
         "canonical_url": "/~" + define.get_sysname(form.name)
@@ -306,7 +311,12 @@ def shouts_(request):
 
     if otherid != request.userid and not define.is_vouched_for(otherid):
         can_vouch = request.userid != 0 and define.is_vouched_for(request.userid)
-        raise UnverifiedUser({'targetid': otherid, 'target_username': userprofile['username'], 'can_vouch': can_vouch})
+        return {
+            'unverified': True,
+            'targetid': otherid,
+            'target_username': userprofile['username'],
+            'can_vouch': can_vouch
+        }
 
     has_fullname = userprofile['full_name'] is not None and userprofile['full_name'].strip() != ''
     page_title = u"%s's shouts" % (userprofile['full_name'] if has_fullname else userprofile['username'],)
