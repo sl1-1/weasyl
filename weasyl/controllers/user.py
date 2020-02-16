@@ -9,8 +9,6 @@ from pyramid.httpexceptions import (
 )
 from pyramid.view import view_config
 
-from libweasyl.exceptions import ExpectedWeasylError
-
 from weasyl import define, errorcode, index, login, moderation, \
     profile, resetpassword, two_factor_auth
 from weasyl.controllers.decorators import (
@@ -128,9 +126,7 @@ def signin_2fa_auth_get_(request):
     session_life = arrow.now().timestamp - sess.additional_data['2fa_pwd_auth_timestamp']
     if session_life > 300:
         _cleanup_2fa_session()
-        raise ExpectedWeasylError((
-            errorcode.error_messages['TwoFactorAuthenticationAuthenticationTimeout'],
-            [["Sign In", "/signin"], ["Return to the Home Page", "/"]]))
+        raise WeasylError('TwoFactorAuthenticationAuthenticationTimeout')
     else:
         ref = request.params["referer"] if "referer" in request.params else "/"
         return {
@@ -158,10 +154,7 @@ def signin_2fa_auth_post_(request):
     if session_life > 300:
         # Maximum secondary authentication time: 5 minutes
         _cleanup_2fa_session()
-        raise ExpectedWeasylError((
-            errorcode.error_messages['TwoFactorAuthenticationAuthenticationTimeout'],
-            [["Sign In", "/signin"], ["Return to the Home Page", "/"]]
-        ))
+        raise WeasylError('TwoFactorAuthenticationAuthenticationTimeout')
     elif two_factor_auth.verify(tfa_userid, request.params["tfaresponse"]):
         # 2FA passed, so login and cleanup.
         _cleanup_2fa_session()
@@ -170,19 +163,15 @@ def signin_2fa_auth_post_(request):
         # User is out of recovery codes, so force-deactivate 2FA
         if two_factor_auth.get_number_of_recovery_codes(tfa_userid) == 0:
             two_factor_auth.force_deactivate(tfa_userid)
-            raise ExpectedWeasylError((
-                errorcode.error_messages['TwoFactorAuthenticationZeroRecoveryCodesRemaining'],
-                [["2FA Dashboard", "/control/2fa/status"], ["Return to the Home Page", "/"]]
-            ))
+            raise WeasylError('TwoFactorAuthenticationZeroRecoveryCodesRemaining',
+                              links=[["2FA Dashboard", "/control/2fa/status"], ["Return to the Home Page", "/"]])
         # Return to the target page, restricting to the path portion of 'ref' per urlparse.
         raise HTTPSeeOther(location=urlparse.urlparse(ref).path)
     elif sess.additional_data['2fa_pwd_auth_attempts'] >= 5:
         # Hinder brute-forcing the 2FA token or recovery code by enforcing an upper-bound on 2FA auth attempts.
         _cleanup_2fa_session()
-        raise ExpectedWeasylError((
-            errorcode.error_messages['TwoFactorAuthenticationAuthenticationAttemptsExceeded'],
-            [["Sign In", "/signin"], ["Return to the Home Page", "/"]]
-        ))
+        raise WeasylError('TwoFactorAuthenticationAuthenticationAttemptsExceeded',
+                          links=[["Sign In", "/signin"], ["Return to the Home Page", "/"]])
     else:
         # Log the failed authentication attempt to the session and save
         sess.additional_data['2fa_pwd_auth_attempts'] += 1
@@ -216,7 +205,7 @@ def signin_unicode_failure_post_(request):
 @disallow_api
 def signout_(request):
     if request.web_input(token="").token != define.get_token()[:8]:
-        raise ExpectedWeasylError(request.userid, errorcode.token)
+        raise WeasylError('token')
 
     login.signout(request)
 

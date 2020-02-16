@@ -351,7 +351,7 @@ def weasyl_exception_view(exc, request):
                 if exc.error_suffix:
                     message = '%s %s' % (message, exc.error_suffix)
                 request.response.status = status_code
-                return {'error': message}
+                return {'error': message, 'links': errorpage_kwargs.get('links', None)}
         request_id = None
         if 'raven.captureException' in request.environ:
             request_id = base64.b64encode(os.urandom(6), '+-')
