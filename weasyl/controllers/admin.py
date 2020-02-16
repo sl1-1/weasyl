@@ -5,7 +5,6 @@ from pyramid.view import view_config
 
 from libweasyl import staff
 from libweasyl.models.site import SiteUpdate
-from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import errorcode, login, moderation, profile, siteupdate
 from weasyl.error import WeasylError
@@ -128,7 +127,7 @@ def admincontrol_acctverifylink_(request):
     if token:
         return {'token': token}
 
-    raise ExpectedWeasylError("No pending account found.")
+    return {'message': "No pending account found."}
 
 
 @view_config(route_name="admincontrol_pending_accounts", renderer='/admincontrol/pending_accounts.jinja2', request_method="GET")
