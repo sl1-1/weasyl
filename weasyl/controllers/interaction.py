@@ -3,8 +3,6 @@ from __future__ import absolute_import
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
 
-from libweasyl.exceptions import ExpectedWeasylError
-
 from weasyl.controllers.decorators import login_required, token_checked
 from weasyl.error import WeasylError
 from weasyl import (
@@ -23,7 +21,7 @@ def followuser_(request):
     otherid = define.get_int(form.userid)
 
     if request.userid == otherid:
-        raise ExpectedWeasylError("You cannot follow yourself.")
+        raise WeasylError("cannotSelfFollow")
 
     if form.action == "follow":
         followuser.insert(request.userid, otherid)
@@ -56,7 +54,7 @@ def frienduser_(request):
     otherid = define.get_int(form.userid)
 
     if request.userid == otherid:
-        raise ExpectedWeasylError("You cannot friend yourself.")
+        raise WeasylError('cannotSelfFriend')
 
     if form.action == "sendfriendrequest":
         if not frienduser.check(request.userid, otherid) and not frienduser.already_pending(request.userid, otherid):
@@ -81,7 +79,7 @@ def unfrienduser_(request):
     otherid = define.get_int(form.userid)
 
     if request.userid == otherid:
-        raise ExpectedWeasylError("You cannot friend yourself.")
+        raise WeasylError('cannotSelfFriend')
 
     frienduser.remove(request.userid, otherid)
 
