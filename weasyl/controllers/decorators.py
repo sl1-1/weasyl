@@ -4,7 +4,6 @@ import json
 from pyramid.response import Response
 
 from libweasyl import staff
-from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import define, errorcode, two_factor_auth
 import weasyl.api
@@ -26,7 +25,7 @@ def login_required(view_callable):
 def guest_required(view_callable):
     def inner(request):
         if request.userid != 0:
-            raise ExpectedWeasylError(errorcode.signed)
+            raise WeasylError('signed')
         return view_callable(request)
     return inner
 
@@ -99,7 +98,7 @@ def twofactorauth_disabled_required(view_callable):
 def token_checked(view_callable):
     def inner(request):
         if not weasyl.api.is_api_user(request) and not define.is_csrf_valid(request, request.params.get('token')):
-            raise ExpectedWeasylError(errorcode.token)
+            raise WeasylError('token')
         return view_callable(request)
     return inner
 
