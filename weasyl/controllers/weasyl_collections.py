@@ -2,9 +2,6 @@ from __future__ import absolute_import
 
 from pyramid.httpexceptions import HTTPSeeOther
 from pyramid.view import view_config
-from pyramid.response import Response
-
-from libweasyl.exceptions import ExpectedWeasylError
 
 from weasyl import define, collection, profile
 from weasyl.error import WeasylError
@@ -36,7 +33,7 @@ def collection_options_post_(request):
     raise HTTPSeeOther(location="/control")
 
 
-@view_config(route_name="collection_offer", request_method="POST")
+@view_config(route_name="collection_offer", renderer='/manage/collection_offer_request.jinja2', request_method="POST")
 @login_required
 @token_checked
 def collection_offer_(request):
@@ -50,13 +47,13 @@ def collection_offer_(request):
         raise WeasylError("cannotSelfCollect")
 
     collection.offer(request.userid, form.submitid, form.otherid)
-    raise ExpectedWeasylError((
-        "**Success!** Your collection offer has been sent "
-        "and the recipient may now add this submission to their gallery.",
-        [["Go Back", "/submission/%i" % (form.submitid,)], ["Return to the Home Page", "/index"]]))
+    return {'message': "**Success!** Your collection offer has been sent "
+                       "and the recipient may now add this submission to their gallery.",
+            'submission': form.submitid
+            }
 
 
-@view_config(route_name="collection_request", request_method="POST")
+@view_config(route_name="collection_request", renderer='/manage/collection_offer_request.jinja2', request_method="POST")
 @login_required
 @token_checked
 def collection_request_(request):
@@ -73,10 +70,10 @@ def collection_request_(request):
         raise WeasylError("cannotSelfCollect")
 
     collection.request(request.userid, form.submitid, form.otherid)
-    raise ExpectedWeasylError((
-        "**Success!** Your collection request has been sent. "
-        "The submission author may approve or reject this request.",
-        [["Go Back", "/submission/%i" % (form.submitid,)], ["Return to the Home Page", "/index"]]))
+    return {'message': "**Success!** Your collection request has been sent. "
+                       "The submission author may approve or reject this request.",
+            'submission': form.submitid
+            }
 
 
 @view_config(route_name="collection_remove", request_method="POST")
