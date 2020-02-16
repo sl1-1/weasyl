@@ -4,7 +4,9 @@
 {% block content %}
     {{ stage("System Message") }}
     <div id="error_content" class="content">
-        {{ error or 'An unspecified error occured' }}
+        <p>
+            {{ error or 'An unspecified error occured' }}
+        </p>
 
         {% if request_id %}
             <p>

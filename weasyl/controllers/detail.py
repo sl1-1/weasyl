@@ -94,9 +94,9 @@ def submission_media_(request):
 
     submission = Submission.query.get(submitid)
     if submission is None:
-        raise httpexceptions.HTTPForbidden()
+        raise WeasylError('permission')
     elif submission.is_hidden or submission.is_friends_only:
-        raise httpexceptions.HTTPForbidden()
+        raise WeasylError('permission')
     media_items = media.get_submission_media(submitid)
     if not media_items.get(link_type):
         raise httpexceptions.HTTPNotFound()

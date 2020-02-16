@@ -1,7 +1,6 @@
 from __future__ import absolute_import
 
 import json
-from pyramid.httpexceptions import HTTPForbidden
 from pyramid.response import Response
 
 from libweasyl import staff
@@ -19,7 +18,7 @@ Contains decorators for weasyl view callables to enforce permissions and the lik
 def login_required(view_callable):
     def inner(request):
         if request.userid == 0:
-            raise ExpectedWeasylError(errorcode.unsigned)
+            raise WeasylError('unsigned')
         return view_callable(request)
     return inner
 
@@ -36,9 +35,9 @@ def moderator_only(view_callable):
     """Implies login_required."""
     def inner(request):
         if weasyl.api.is_api_user(request):
-            raise HTTPForbidden
+            raise WeasylError('permission')
         if request.userid not in staff.MODS:
-            raise ExpectedWeasylError(errorcode.permission)
+            raise WeasylError('permission')
         return view_callable(request)
     return login_required(inner)
 
@@ -47,9 +46,9 @@ def admin_only(view_callable):
     """Implies login_required."""
     def inner(request):
         if weasyl.api.is_api_user(request):
-            raise HTTPForbidden
+            raise WeasylError('permission')
         if request.userid not in staff.ADMINS:
-            raise ExpectedWeasylError(errorcode.permission)
+            raise WeasylError('permission')
         return view_callable(request)
     return login_required(inner)
 
@@ -58,9 +57,9 @@ def director_only(view_callable):
     """Implies login_required."""
     def inner(request):
         if weasyl.api.is_api_user(request):
-            raise HTTPForbidden
+            raise WeasylError('permission')
         if request.userid not in staff.DIRECTORS:
-            raise ExpectedWeasylError(errorcode.permission)
+            raise WeasylError('permission')
         return view_callable(request)
     return login_required(inner)
 
@@ -68,7 +67,7 @@ def director_only(view_callable):
 def disallow_api(view_callable):
     def inner(request):
         if weasyl.api.is_api_user(request):
-            raise HTTPForbidden
+            raise WeasylError('permission')
         return view_callable(request)
     return inner
 

@@ -169,7 +169,7 @@ def status_check_tween_factory(handler, registry):
     def status_check_tween(request):
         status = d.common_status_check(request.userid)
         if status:
-            return Response(d.common_status_page(request.userid, status))
+            return d.common_status_page(request.userid, status)
         return handler(request)
     return status_check_tween
 
@@ -350,8 +350,8 @@ def weasyl_exception_view(exc, request):
                 message = errorcode.error_messages[exc.value]
                 if exc.error_suffix:
                     message = '%s %s' % (message, exc.error_suffix)
-                return Response(d.errorpage(userid, message, **errorpage_kwargs),
-                                status_code=status_code)
+                request.response.status = status_code
+                return {'error': message}
         request_id = None
         if 'raven.captureException' in request.environ:
             request_id = base64.b64encode(os.urandom(6), '+-')
@@ -362,7 +362,9 @@ def weasyl_exception_view(exc, request):
         if getattr(exc, "__render_as_json", False):
             return Response(json={'error': {}}, status_code=500)
         else:
-            return Response(d.errorpage(userid, request_id=request_id, **errorpage_kwargs), status_code=500)
+            request.response.status = 500
+            errorpage_kwargs['request_id'] = request_id
+            return errorpage_kwargs
 
 
 class RemoveSessionCookieProcessor(raven.processors.Processor):

@@ -2,7 +2,6 @@ from __future__ import absolute_import
 
 from pyramid.config import Configurator
 from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
 
 from libweasyl.configuration import configure_libweasyl
 from weasyl.controllers.routes import setup_routes_and_views
@@ -39,13 +38,12 @@ config.action(None, setup_jinja2_env, order=999)
 
 # Set up some exception handling and all our views.
 def weasyl_404(request):
-    userid = d.get_userid()
-    return Response(d.errorpage(userid, "**404!** The page you requested could not be found."),
-                    status="404 Not Found")
+    request.response.status = 404
+    return {'error': "**404!** The page you requested could not be found."}
 
 
-config.add_notfound_view(view=weasyl_404, append_slash=True)
-config.add_view(view=mw.weasyl_exception_view, context=Exception)
+config.add_notfound_view(view=weasyl_404, append_slash=True, renderer='/error/error.jinja2')
+config.add_view(view=mw.weasyl_exception_view, context=Exception, renderer='/error/error.jinja2')
 
 setup_routes_and_views(config)
 

@@ -88,7 +88,7 @@ def admincontrol_manageuser_get_(request):
     if not otherid:
         raise WeasylError("userRecordMissing")
     if request.userid != otherid and otherid in staff.ADMINS and request.userid not in staff.TECHNICAL:
-        raise ExpectedWeasylError(errorcode.permission)
+        raise WeasylError('permission')
 
     return {'profile': profile.select_manage(otherid), 'title': "User Management"}
 
@@ -102,7 +102,7 @@ def admincontrol_manageuser_post_(request):
     userid = d.get_int(form.userid)
 
     if request.userid != userid and userid in staff.ADMINS and request.userid not in staff.TECHNICAL:
-        raise ExpectedWeasylError(errorcode.permission)
+        raise WeasylError('permission')
 
     profile.do_manage(request.userid, userid,
                       username=form.username.strip() if form.ch_username else None,

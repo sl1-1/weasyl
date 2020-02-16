@@ -107,6 +107,7 @@ error_messages = {
     "passwordIncorrect": "The password you entered was incorrect.",
     "passwordInsecure": "Passwords must be at least 10 characters in length.",
     "passwordMismatch": "The password you entered did not match the password confirmation.",
+    'permission': permission,
     "priceidInvalid": "You did not specify a price to edit.",
     "RatingExceeded": rating,
     "ratingInvalid": "The specified rating is invalid.",
@@ -149,6 +150,7 @@ error_messages = {
     "TwoFactorAuthenticationZeroRecoveryCodesRemaining": (
         "Your account had zero recovery codes remaining, and as such 2FA was disabled to prevent "
         "you from being permanently unable to log into your account. You may re-enable 2FA if you desire to do so."),
+    "unsigned": "You must be signed in to perform this operation.",
     "unknownMessageFolder": "The specified message folder does not exist.",
     "UserIgnored": "This content was posted by a user you have chosen to ignore.",
     "userRecordMissing": userid,
@@ -169,11 +171,13 @@ error_messages = {
 # put it here. Errors without a corresponding entry in this list will use
 # the default status code.
 error_status_code = {
+    'permission': 403,
     "userRecordMissing": 404,
     "submissionRecordMissing": 404,
     "journalRecordMissing": 404,
     "characterRecordMissing": 404,
     "vouchRequired": 403,
+    "unsigned": 403
 }
 
 
