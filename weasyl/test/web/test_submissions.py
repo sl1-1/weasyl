@@ -28,9 +28,9 @@ def test_rating_accessibility(app, age):
 
         if success:
             resp = resp.maybe_follow(headers={'Cookie': cookie})
-            assert "Rating: %s" % (expected_rating,) in resp.html.find(id='di-info').dl.text
+            assert "Rating:\n%s" % (expected_rating,) in resp.html.find(id='di-info').dl.text.strip()
         else:
-            assert resp.html.find(id='error_content').p.text == "The specified rating is invalid."
+            assert resp.html.find(id='error_content').p.text.strip() == "The specified rating is invalid."
 
     form = dict(
         BASE_VISUAL_FORM,

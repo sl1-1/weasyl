@@ -33,7 +33,7 @@ def test_profile_empty(app):
 @pytest.mark.usefixtures('db', 'journal_user', 'journals')
 def test_profile_guest(app):
     resp = app.get('/~journal_test')
-    assert resp.html.find(id='user-journal').h4.string == u'Public journal'
+    assert resp.html.find(id='user-journal').h4.text.strip() == u'Public journal'
 
 
 @pytest.mark.usefixtures('db', 'journal_user', 'journals')
@@ -42,7 +42,7 @@ def test_profile_user(app):
     cookie = db_utils.create_session(user)
 
     resp = app.get('/~journal_test', headers={'Cookie': cookie})
-    assert resp.html.find(id='user-journal').h4.string == u'Restricted journal'
+    assert resp.html.find(id='user-journal').h4.text.strip() == u'Restricted journal'
 
 
 @pytest.mark.usefixtures('db', 'journal_user', 'journals')
@@ -52,7 +52,7 @@ def test_profile_friend(app, journal_user):
     db_utils.create_friendship(user, journal_user)
 
     resp = app.get('/~journal_test', headers={'Cookie': cookie})
-    assert resp.html.find(id='user-journal').h4.string == u'Recent journal'
+    assert resp.html.find(id='user-journal').h4.text.strip() == u'Recent journal'
 
 
 @pytest.mark.usefixtures('db', 'journal_user', 'journals')
@@ -69,7 +69,7 @@ def test_create(app, journal_user):
     app.post('/submit/journal', {'title': u'Created journal', 'rating': '10', 'content': u'A journal'}, headers={'Cookie': cookie})
 
     resp = app.get('/~journal_test')
-    assert resp.html.find(id='user-journal').h4.string == u'Created journal'
+    assert resp.html.find(id='user-journal').h4.text.strip() == u'Created journal'
 
 
 @pytest.mark.usefixtures('db', 'journal_user')
@@ -84,7 +84,8 @@ def test_csrf_on_journal_edit(app, journal_user):
         headers={'Cookie': cookie},
         status=403,
     )
-    assert resp.html.find(id='error_content').p.text.startswith(u"This action appears to have been performed illegitimately")
+    print(resp)
+    assert resp.html.find(id='error_content').p.text.strip().startswith(u"This action appears to have been performed illegitimately")
 
 
 @pytest.mark.usefixtures('db', 'journal_user')
@@ -94,6 +95,6 @@ def test_login_required_to_edit_journal(app, journal_user):
 
     resp = app.post(
         '/edit/journal',
-        {'title': u'Created journal', 'rating': '10', 'content': u'A journal', 'journalid': journalid},
+        {'title': u'Created journal', 'rating': '10', 'content': u'A journal', 'journalid': journalid}, status=403,
     )
     assert "You must be signed in to perform this operation." in resp.html.find(id='error_content').text

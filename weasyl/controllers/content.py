@@ -436,7 +436,7 @@ def reupload_submission_post_(request):
         raise WeasylError('permission')
 
     submission.reupload(request.userid, form.targetid, form.submitfile)
-    raise HTTPSeeOther(location="/submission/%i" % (form.targetid,))
+    raise HTTPSeeOther(location="/submission/%i/" % (form.targetid,))
 
 
 @view_config(route_name="reupload_character", renderer='/submit/reupload_submission.jinja2', request_method="GET")
@@ -466,7 +466,7 @@ def reupload_character_post_(request):
         raise WeasylError('permission')
 
     character.reupload(request.userid, form.targetid, form.submitfile)
-    raise HTTPSeeOther(location="/character/%i" % (form.targetid,))
+    raise HTTPSeeOther(location="/character/%i/" % (form.targetid,))
 
 
 @view_config(route_name="reupload_cover", renderer='/submit/reupload_cover.jinja2', request_method="GET")

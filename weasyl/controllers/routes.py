@@ -14,7 +14,6 @@ from weasyl.controllers import (
 from weasyl import oauth2
 
 
-Route_Template = namedtuple('Route', ['name', 'view', 'renderer'])
 Route = namedtuple('Route', ['pattern', 'name', 'view'])
 
 """
@@ -24,19 +23,15 @@ A route to be added to the Weasyl application.
 dict mapping http methods to view callables.
 """
 
-routes = (
-    # Verification and password management views.
-    Route("/verify/account", "verify_account", user.verify_account_),
-    Route("/verify/emailchange", "verify_emailchange", {'GET': user.verify_emailchange_get_}),
-
-    # OAuth2 routes.
-    Route("/api/oauth2/authorize", "oauth2_authorize",
-          {'GET': oauth2.authorize_get_, 'POST': oauth2.authorize_post_}),
-    Route("/api/oauth2/token", "oauth2_token", {'POST': oauth2.token_}),
-
-    # Routes for static event pages, such as holidays.
-    Route("/events/halloweasyl2014", "events_halloweasyl2014", events.halloweasyl2014_),
-)
+# routes = (
+#     # OAuth2 routes.
+#     Route("/api/oauth2/authorize", "oauth2_authorize",
+#           {'GET': oauth2.authorize_get_, 'POST': oauth2.authorize_post_}),
+#     Route("/api/oauth2/token", "oauth2_token", {'POST': oauth2.token_}),
+#
+#     # Routes for static event pages, such as holidays.
+#     Route("/events/halloweasyl2014", "events_halloweasyl2014", events.halloweasyl2014_),
+# )
 
 
 def setup_routes_and_views(config):
@@ -47,12 +42,12 @@ def setup_routes_and_views(config):
         config: A pyramid Configuration for the wsgi application.
     """
 
-    for route in routes:
-        if isinstance(route.view, dict):
-            for method in route.view:
-                config.add_view(view=route.view[method], route_name=route.name, request_method=method)
-        else:
-            config.add_view(view=route.view, route_name=route.name, request_method="GET")
+    # for route in routes:
+    #     if isinstance(route.view, dict):
+    #         for method in route.view:
+    #             config.add_view(view=route.view[method], route_name=route.name, request_method=method)
+    #     else:
+    #         config.add_view(view=route.view, route_name=route.name, request_method="GET")
 
     # Front page views.
     config.add_route("index", "/{index:(index)?}")
@@ -77,6 +72,22 @@ def setup_routes_and_views(config):
     config.add_route("verify_emailchange", "/verify/emailchange")
     config.add_route("vouch", "/vouch")
 
+    # Details of specific content
+    config.add_route("submission_detail_view_unnamed", "/view")
+    config.add_route("submission_detail_view", "/view/{submitid:[0-9]+}{ignore_name:(/.*)?}")
+    config.add_route("submission_detail_unnamed", "/submission")
+    config.add_route("submission_detail", "/submission/{submitid:[0-9]+}{ignore_name:(/.*)?}")
+    config.add_route("submission_detail_profile;no_s;no_slug", "/~{name}/submission/{submitid:[0-9]+}")
+    config.add_route("submission_detail_profile;no_s", "/~{name}/submission/{submitid:[0-9]+}/{slug:[^/.]*}")
+    config.add_route("submission_detail_profile;no_slug", "/~{name}/submissions/{submitid:[0-9]+}")
+    config.add_route("submission_detail_profile", "/~{name}/submissions/{submitid}/{slug}")
+    config.add_route("submission_tag_history", "/submission/tag-history/{submitid:[0-9]+}")
+    config.add_route("submission_detail_media", "/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}")
+    config.add_route("character_detail_unnamed", "/character")
+    config.add_route("character_detail", "/character/{charid:[0-9]+}/{slug:[^/.]*}")
+    config.add_route("journal_detail_unnamedited", "/journal")
+    config.add_route("journal_detail", "/journal/{journalid:[0-9]+}/{slug:[^/.]*}")
+
     # Profile views.
     config.add_route("profile_tilde_unnamed", "/~")
     config.add_route("profile_tilde", "/~{name}")
@@ -84,10 +95,6 @@ def setup_routes_and_views(config):
     config.add_route("profile_user", "/user/{name}")
     config.add_route("profile_unnamed", "/profile")
     config.add_route("profile", "/profile/{name}")
-    config.add_route("submission_detail_profile;no_s;no_slug", "/~{name}/submission/{submitid:[0-9]+}")
-    config.add_route("submission_detail_profile;no_s", "/~{name}/submission/{submitid:[0-9]+}/{slug:[^/.]*}")
-    config.add_route("submission_detail_profile;no_slug", "/~{name}/submissions/{submitid:[0-9]+}")
-    config.add_route("submission_detail_profile", "/~{name}/submissions/{submitid:[0-9]+}/{slug:[^/.]*}")
     config.add_route("profile_submissions_unnamed", "/submissions")
     config.add_route("profile_submissions", "/submissions/{name:[^/]*}")
     config.add_route("profile_journals_unnamed", "/journals")
@@ -109,18 +116,6 @@ def setup_routes_and_views(config):
     config.add_route("profile_followed_unnamed", "/followed")
     config.add_route("profile_followed", "/followed/{name:[^/]*}")
     config.add_route("profile_media", "/~{name}/{link_type}")
-    config.add_route("submission_detail_media", "/~{name}/{linktype}/{submitid:[0-9]+}/{ignore_name:.*}")
-
-    # Details of specific content
-    config.add_route("submission_detail_view_unnamed", "/view")
-    config.add_route("submission_detail_view", "/view/{submitid:[0-9]+}{ignore_name:(/.*)?}")
-    config.add_route("submission_detail_unnamed", "/submission")
-    config.add_route("submission_detail", "/submission/{submitid:[0-9]+}{ignore_name:(/.*)?}")
-    config.add_route("submission_tag_history", "/submission/tag-history/{submitid:[0-9]+}")
-    config.add_route("character_detail_unnamed", "/character")
-    config.add_route("character_detail", "/character/{charid:[0-9]+}/{slug:[^/.]*}")
-    config.add_route("journal_detail_unnamedited", "/journal")
-    config.add_route("journal_detail", "/journal/{journalid:[0-9]+}/{slug:[^/.]*}")
 
     # Submitting, reuploading, and removing content
     config.add_route("reupload_submission", "/reupload/submission")
