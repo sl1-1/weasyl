@@ -42,10 +42,13 @@
     {% else %}
         {% set username = user.profile.username %}
         {% set url = 'profile_tilde'|route_path(name=user.login_name) %}
-        {% set avatar = user.avatar_display_url() %}
+        {% if user.avatar_display_url %}
+            {% set avatar = user.avatar_display_url %}
+        {% else %}
+            {% set avatar = 'img/default-avatar.jpg' | route_path %}
+        {% endif %}
     {% endif %}
     <a class="avatar" href="{{ url }}" title="{{ username }}">
-        <img src="{{ avatar }}"
-             alt="avatar of {{ username }}"/>
+        <img src="{{ avatar }}" alt="avatar of {{ username }}"/>
     </a>
 {%- endmacro %}
