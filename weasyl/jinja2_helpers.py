@@ -1,74 +1,15 @@
+import urllib
+
 import arrow
 import pyramid_jinja2.filters
-from jinja2 import Markup
-from jinja2 import evalcontextfilter, contextfilter
-from libweasyl import text, staff, ratings
-from libweasyl.legacy import get_sysname
-from libweasyl.models.users import Login
-import urllib
+from jinja2 import Markup, contextfilter
 from pyramid.threadlocal import get_current_request
 from pyramid.traversal import PATH_SAFE
+
+from libweasyl import text, staff, ratings
+from libweasyl.legacy import get_sysname
+
 from weasyl import define, macro
-
-
-@evalcontextfilter
-def LOGIN(eval_ctx, username):
-    return get_sysname(username)
-
-
-@evalcontextfilter
-def DATE(eval_ctx, unixtime):
-    return define.convert_date(unixtime)
-
-
-@evalcontextfilter
-def TIME(eval_ctx, unixtime):
-    return define._convert_time(unixtime)
-
-
-@evalcontextfilter
-def CDNIFY(eval_ctx, url):
-    return define.cdnify_url(url)
-
-
-@evalcontextfilter
-def MARKDOWN(eval_ctx, markdown):
-    return Markup(text.markdown(markdown))
-
-
-@evalcontextfilter
-def MARKDOWN_EXCERPT(eval_ctx, markdown):
-    return Markup(text.markdown_excerpt(markdown))
-
-
-@evalcontextfilter
-def SLUG(eval_ctx, title):
-    return text.slug_for(title)
-
-
-def msg_submissions():
-    request = get_current_request()
-    return define._page_header_info(request.userid)[3]
-
-
-def msg_comments():
-    request = get_current_request()
-    return define._page_header_info(request.userid)[1]
-
-
-def msg_notifications():
-    request = get_current_request()
-    return define._page_header_info(request.userid)[2]
-
-
-def msg_journals():
-    request = get_current_request()
-    return define._page_header_info(request.userid)[4]
-
-
-def msg_notes():
-    request = get_current_request()
-    return define._page_header_info(request.userid)[0]
 
 
 def sfw():
@@ -79,20 +20,14 @@ def sfw():
         return True
 
 
-def User():
-    request = get_current_request()
-    return request.pg_connection.query(Login).filter(Login.userid == request.userid).one_or_none()
-
-
-def unescape_tilde(url):
-    url = urllib.quote(urllib.unquote(url), safe=PATH_SAFE)
-    return url
-
-
 @contextfilter
 def route_path_filter(ctx, route_name, *elements, **kw):
     url = pyramid_jinja2.filters.route_path_filter(ctx, route_name, *elements, **kw)
-    return unescape_tilde(url)
+
+    # Fixes urls returned from pyramids route_path so that that tildes are not url quoted.
+    url = urllib.quote(urllib.unquote(url), safe=PATH_SAFE)
+
+    return url
 
 
 jinja2_globals = {
@@ -106,26 +41,19 @@ jinja2_globals = {
     'R': ratings,
     "QUERY_STRING": define.query_string,
     'sfw': sfw,
-    'msg_submissions': msg_submissions,
-    'msg_comments': msg_comments,
-    'msg_notifications': msg_notifications,
-    'msg_journals': msg_journals,
-    'msg_notes': msg_notes,
     "LOCAL_ARROW": define.local_arrow,
     "SYMBOL": define.text_price_symbol,
     'M': macro,
     'SHA': define.CURRENT_SHA,
     "NOW": define.get_time,
-    "resource_path": define.get_resource_path,
 }
 
 filters = {
-    'LOGIN': LOGIN,
-    'DATE': DATE,
-    'TIME': TIME,
-    'CDNIFY': CDNIFY,
-    'MARKDOWN': MARKDOWN,
-    'MARKDOWN_EXCERPT': MARKDOWN_EXCERPT,
-    'SLUG': SLUG,
+    'LOGIN': get_sysname,
+    'DATE': define.convert_date,
+    'TIME': define._convert_time,
+    'MARKDOWN': lambda x: Markup(text.markdown(x)),
+    'MARKDOWN_EXCERPT': lambda x: Markup(text.markdown_excerpt(x)),
+    'SLUG': text.slug_for,
     'route_path': route_path_filter,
 }
