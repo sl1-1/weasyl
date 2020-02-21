@@ -1,3 +1,4 @@
+from collections import Counter
 import datetime
 
 import arrow
@@ -6,11 +7,19 @@ from dateutil.relativedelta import relativedelta
 import pytz
 from pyramid.decorator import reify
 from sqlalchemy import orm
+from sqlalchemy import select, func
 
 from libweasyl.models.helpers import clauses_for
 from libweasyl.models.meta import Base
 from libweasyl.models import tables
+from libweasyl.models.site import SavedNotification
 from libweasyl import cache, ratings, staff
+
+
+class Message(Base):
+    __table__ = tables.message
+
+    recipient = orm.relationship("Login", backref='inbox_messages', foreign_keys="Message.otherid")
 
 
 class Login(Base):
@@ -31,44 +40,19 @@ class Login(Base):
         return avatar and avatar[0]['display_url']
 
     @reify
-    def is_staff(self):
-        return self.userid in staff.MODS
-
-    @reify
-    def is_mod(self):
-        return self.userid in staff.MODS
-
-    @reify
-    def is_admin(self):
-        return self.userid in staff.ADMINS
-
-    @reify
-    def is_director(self):
-        return self.userid in staff.DIRECTORS
-
-    @reify
-    def is_tech(self):
-        return self.userid in staff.TECHNICAL
-
-    @reify
-    def is_dev(self):
-        return self.userid in staff.DEVELOPERS
-
-    @reify
     def user_type(self):
-        if self.is_director:
+        if self.userid in staff.DIRECTORS:
             return "director"
-        if self.is_tech:
+        elif self.userid in staff.TECHNICAL:
             return "tech"
-        if self.is_admin:
+        elif self.userid in staff.ADMINS:
             return "admin"
-        if self.is_mod:
+        elif self.userid in staff.MODS:
             return "mod"
-        if self.is_dev:
+        elif self.userid in staff.DEVELOPERS:
             return "dev"
-    def avatar_display_url(self):
-        avatar = self.media.get('avatar')
-        return avatar and avatar[0]['display_url']
+        else:
+            return "user"
 
     @reify
     def is_vouched_for(self):
@@ -81,6 +65,30 @@ class Login(Base):
         given rating. Otherwise, returns False.
         """
         return self.info.age >= rating.minimum_age
+
+    journal_notifications = orm.column_property(select([func.count(SavedNotification.welcomeid)])
+                                                   .where(SavedNotification.userid == __table__.c.userid)
+                                                   .where(SavedNotification.type >= 1000)
+                                                   .where(SavedNotification.type < 2000))
+
+    submission_notifications = orm.column_property(select([func.count(SavedNotification.welcomeid)])
+                                                   .where(SavedNotification.userid == __table__.c.userid)
+                                                   .where(SavedNotification.type >= 2000)
+                                                   .where(SavedNotification.type < 3000))
+
+    interaction_notifications = orm.column_property(select([func.count(SavedNotification.welcomeid)])
+                                                    .where(SavedNotification.userid == __table__.c.userid)
+                                                    .where(SavedNotification.type >= 3000)
+                                                    .where(SavedNotification.type < 4000))
+
+    comment_notifications = orm.column_property(select([func.count(SavedNotification.welcomeid)])
+                                                   .where(SavedNotification.userid == __table__.c.userid)
+                                                   .where(SavedNotification.type >= 4000)
+                                                   .where(SavedNotification.type < 5000))
+
+    message_notifications = orm.column_property(select([func.count(Message.noteid)])
+                                                .where(Message.otherid == __table__.c.userid)
+                                                .where(Message.settings == 'u'))
 
 
 class AuthBCrypt(Base):

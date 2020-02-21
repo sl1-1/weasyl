@@ -23,7 +23,7 @@
                 or learn more <a href="{{ 'help_about' | route_path }}" class="typeface-a color-a">about Weasyl</a>.
             </h3>
         {% else %}
-            <div id="header-user" data-user-type="{{ req.user.user_type or '' }}">
+            <div id="header-user" data-user-type="{{ req.user.user_type }}">
                 {{ AVATAR(req.user) }}
                 <h2>
                     <i>Welcome,</i>
@@ -40,20 +40,19 @@
                     <span>|</span>
                     <a href="{{ '/notes' | route_path }}">inbox</a> <span>|</span>
                     <a href="{{ 'control' | route_path(alias='control') }}">settings</a> <span>|</span>
-
-                    {% if req.user.is_director %}
+                    {% if req.user.user_type == 'director' %}
                         <a href="{{ 'modcontrol' | route_path }}">mod</a>
                         <span>|</span>
                         <a href="{{ 'admincontrol' | route_path }}">admin</a>
                         <span>|</span>
                         <a href="{{ 'directorcontrol' |route_path }}">director</a>
                         <span>|</span>
-                    {% elif req.user.is_admin %}
+                    {% elif req.user.user_type == 'admin' %}
                         <a href="{{ 'modcontrol' | route_path }}">mod</a>
                         <span>|</span>
                         <a href="{{ 'admincontrol' | route_path }}">admin</a>
                         <span>|</span>
-                    {% elif req.user.is_mod %}
+                    {% elif req.user.user_type == 'mod' %}
                         <a href="{{ 'modcontrol' | route_path }}">mod</a>
                         <span>|</span>
                     {% endif %}
@@ -63,38 +62,38 @@
             </div>
 
             <ul id="header-messages">
-                {% if msg_submissions() %}
+                {% if req.user.submission_notifications %}
                     <li>
                         <a href="{{ 'messages_submissions'|route_path }}" title="Art">
-                            <span class="icon icon-20 icon-art">Art:</span> {{ msg_submissions() }}
+                            <span class="icon icon-20 icon-art">Art:</span> {{ req.user.submission_notifications }}
                         </a>
                     </li>
                 {% endif %}
-                {% if msg_comments() %}
+                {% if req.user.comment_notifications %}
                     <li>
                         <a href="{{ 'messages_notifications' | route_path }}#comments" title="Comments">
-                            <span class="icon icon-20 icon-comments">Comments:</span> {{ msg_comments() }}
+                            <span class="icon icon-20 icon-comments">Comments:</span> {{ req.user.comment_notifications  }}
                         </a>
                     </li>
                 {% endif %}
-                {% if msg_notifications() %}
+                {% if req.user.interaction_notifications %}
                     <li>
                         <a href="{{ 'messages_notifications' | route_path }}#notifications" title="Notifications">
-                            <span class="icon icon-20 icon-notes">Notifications:</span> {{ msg_notifications() }}
+                            <span class="icon icon-20 icon-notes">Notifications:</span> {{ req.user.interaction_notifications }}
                         </a>
                     </li>
                 {% endif %}
-                {% if msg_journals() %}
+                {% if req.user.journal_notifications %}
                     <li>
                         <a href="{{ 'messages_notifications' | route_path }}#journals" title="Journals">
-                            <span class="icon icon-20 icon-journals">Journals:</span> {{ msg_journals() }}
+                            <span class="icon icon-20 icon-journals">Journals:</span> {{ req.user.journal_notifications }}
                         </a>
                     </li>
                 {% endif %}
-                {% if msg_notes() %}
+                {% if req.user.message_notifications %}
                     <li>
                         <a href="{{ '/notes' | route_path }}" title="Private Messages">
-                            <span class="icon icon-20 icon-messages">Private Messages:</span> {{ msg_notes() }}
+                            <span class="icon icon-20 icon-messages">Private Messages:</span> {{ req.user.message_notifications }}
                         </a>
                     </li>
                 {% endif %}
