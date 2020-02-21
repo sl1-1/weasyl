@@ -23,7 +23,7 @@
             </select>
             <a id="tz-autodetect" class="button" style="margin-top: 0.5em; display: none">Autodetect</a>
             <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jstimezonedetect/1.0.4/jstz.min.js"></script>
-            <script type="text/javascript" src="{{ '/static/tz-autodetect.js' | CDNIFY }}"></script>
+            <script type="text/javascript" src="{{ '/static/tz-autodetect.js' | route_path }}"></script>
 
             <label class="input-checkbox" style="margin-top: 0.5em">
                 <input type="checkbox" name="twelvehour" {{ CHECKED("2", config) }} />

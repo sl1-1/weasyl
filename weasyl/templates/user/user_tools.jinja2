@@ -30,7 +30,7 @@
         <div id="user-image">
             <img class="lazy"
                  data-src="{{ banner['display_url'] }}"
-                 src="{{ '/static/images/user-image-blank.png'|CDNIFY }}"
+                 src="{{ 'img/user-image-blank.png'|route_path }}"
                  alt=""/>
             <noscript><img src="{{ banner['display_url'] }}" alt=""/></noscript>
             <svg class="img-space"

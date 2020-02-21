@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 
 from collections import namedtuple
-
+import json
+import os.path
 
 from weasyl.controllers import (
     events,
@@ -12,6 +13,7 @@ from weasyl.controllers import (
     weasyl_collections,
 )
 from weasyl import oauth2
+from weasyl import macro
 
 
 Route = namedtuple('Route', ['pattern', 'name', 'view'])
@@ -48,6 +50,12 @@ def setup_routes_and_views(config):
     #             config.add_view(view=route.view[method], route_name=route.name, request_method=method)
     #     else:
     #         config.add_view(view=route.view, route_name=route.name, request_method="GET")
+
+    with open(os.path.join(macro.MACRO_APP_ROOT, 'build/rev-manifest.json'), 'r') as f:
+        resource_paths = json.loads(f.read())
+        for key, item in resource_paths.items():
+            config.add_route(key, item, static=True)
+
 
     # Front page views.
     config.add_route("index", "/{index:(index)?}")
